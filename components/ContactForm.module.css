@@ -1,0 +1,126 @@
+.formulaire {
+  display: grid;
+  gap: clamp(22px, 2.6vw, 32px);
+  max-width: 720px;
+}
+
+.paire {
+  display: grid;
+  gap: clamp(22px, 2.6vw, 32px);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 620px) {
+  .paire {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.champ {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.etiquette {
+  font-size: var(--t-menu);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.facultatif {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: var(--encre-4);
+}
+
+.saisie,
+.zone,
+.choix {
+  width: 100%;
+  padding: 0.9rem 0;
+  font: inherit;
+  color: var(--encre);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--encre-4);
+  border-radius: 0;
+  transition: border-color 250ms var(--ease);
+}
+
+.saisie:hover,
+.zone:hover,
+.choix:hover {
+  border-bottom-color: var(--encre-3);
+}
+
+.saisie:focus,
+.zone:focus,
+.choix:focus {
+  outline: none;
+  border-bottom-color: var(--cuivre);
+}
+
+.saisie:focus-visible,
+.zone:focus-visible,
+.choix:focus-visible {
+  outline: 2px solid var(--cuivre);
+  outline-offset: 4px;
+}
+
+.zone {
+  min-height: 148px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.choix {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--encre-3) 50%),
+    linear-gradient(135deg, var(--encre-3) 50%, transparent 50%);
+  background-position: calc(100% - 12px) 1.35rem, calc(100% - 7px) 1.35rem;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 2rem;
+}
+
+.choix option {
+  background: var(--noir-eleve);
+  color: var(--encre);
+}
+
+.consentement {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  font-size: var(--t-petit);
+  color: var(--encre-3);
+  max-width: 60ch;
+  cursor: pointer;
+}
+
+.consentement input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 0.28em;
+  accent-color: var(--cuivre);
+}
+
+.pied {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.6rem;
+}
+
+.etat {
+  font-size: var(--t-petit);
+  color: var(--encre-2);
+  max-width: 46ch;
+}
+
+.etat[data-ton='erreur'] {
+  color: var(--cuivre);
+}

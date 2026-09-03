@@ -1,0 +1,710 @@
+/* ==========================================================================
+   Kevin Machy — direction « Chambre noire »
+   Hiérarchie construite sur l'échelle typographique et le vide.
+   Aucune ombre portée, aucun coin arrondi sur les images, aucun dégradé
+   décoratif. Une seule couleur d'accent, employée sur moins de 5 % de la
+   surface : les filets d'appui, les numéros de section, le focus clavier.
+   ========================================================================== */
+
+:root {
+  /* — Encres et fonds — */
+  --noir: #0a0a0b;
+  --noir-profond: #060607;
+  --noir-eleve: #101012;
+  --encre: #e9e5de;
+  --encre-2: rgb(233 229 222 / 0.62);
+  --encre-3: rgb(233 229 222 / 0.38);
+  --encre-4: rgb(233 229 222 / 0.18);
+  --filet: rgb(233 229 222 / 0.14);
+  --cuivre: #b9784f;
+
+  /* — Typographie — */
+  --pile-titre: var(--police-titre), 'Bodoni Moda', 'Didot', 'Times New Roman', serif;
+  --pile-texte: var(--police-texte), ui-sans-serif, system-ui, sans-serif;
+
+  --t-hero: clamp(2.65rem, 7.4vw, 7rem);
+  --t-h2: clamp(2rem, 4.4vw, 4rem);
+  --t-h3: clamp(1.35rem, 2.1vw, 1.9rem);
+  --t-h4: clamp(1.06rem, 1.35vw, 1.24rem);
+  --t-lede: clamp(1.06rem, 1.5vw, 1.45rem);
+  --t-corps: clamp(1.0625rem, 1rem + 0.28vw, 1.15rem);
+  --t-petit: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --t-menu: 0.7rem;
+
+  /* — Rythme vertical : jamais moins de 120 px en desktop — */
+  --section: clamp(88px, 13vw, 208px);
+  --section-serree: clamp(64px, 8vw, 128px);
+  --gouttiere: clamp(14px, 1.6vw, 26px);
+  --marge-page: clamp(20px, 5vw, 76px);
+  --largeur-max: 1560px;
+  --mesure: 62ch;
+  --mesure-courte: 46ch;
+
+  /* — Mouvement — */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duree: 600ms;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--noir);
+  color: var(--encre);
+  font-family: var(--pile-texte);
+  font-size: var(--t-corps);
+  line-height: 1.68;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure,
+blockquote,
+ul,
+ol,
+dl {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+picture,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--cuivre);
+  color: var(--noir);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cuivre);
+  outline-offset: 4px;
+  border-radius: 1px;
+}
+
+/* ————————————————————————————————— Squelette ————————————————————————————— */
+
+.wrap {
+  width: 100%;
+  max-width: var(--largeur-max);
+  margin-inline: auto;
+  padding-inline: var(--marge-page);
+}
+
+.wrap-etroit {
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-inline: var(--marge-page);
+}
+
+.section {
+  padding-block: var(--section);
+}
+
+.section-serree {
+  padding-block: var(--section-serree);
+}
+
+/* Un moment de silence visuel : uniquement du noir, avant un appel à l'action. */
+.silence {
+  height: clamp(120px, 22vh, 260px);
+}
+
+.filet {
+  height: 1px;
+  background: var(--filet);
+  border: 0;
+  margin: 0;
+}
+
+.saut-contenu {
+  position: absolute;
+  left: var(--marge-page);
+  top: 0;
+  z-index: 200;
+  padding: 0.75rem 1.25rem;
+  background: var(--encre);
+  color: var(--noir);
+  font-size: var(--t-petit);
+  transform: translateY(-140%);
+  transition: transform 200ms var(--ease);
+}
+
+.saut-contenu:focus {
+  transform: translateY(0.75rem);
+}
+
+/* ————————————————————————————————— Typographie ——————————————————————————— */
+
+.surtitre {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85em;
+  font-family: var(--pile-texte);
+  font-size: var(--t-menu);
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.surtitre__num {
+  color: var(--cuivre);
+  font-variant-numeric: tabular-nums;
+}
+
+.h1 {
+  font-family: var(--pile-titre);
+  font-size: var(--t-hero);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+
+.h2 {
+  font-family: var(--pile-titre);
+  font-size: var(--t-h2);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+  max-width: 22ch;
+}
+
+.h2-large {
+  max-width: 30ch;
+}
+
+.h3 {
+  font-family: var(--pile-titre);
+  font-size: var(--t-h3);
+  font-weight: 400;
+  line-height: 1.16;
+  letter-spacing: -0.012em;
+}
+
+.h4 {
+  font-family: var(--pile-texte);
+  font-size: var(--t-h4);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: -0.006em;
+}
+
+.lede {
+  font-size: var(--t-lede);
+  line-height: 1.5;
+  color: var(--encre-2);
+  max-width: 48ch;
+  text-wrap: pretty;
+}
+
+.corps {
+  max-width: var(--mesure);
+  color: var(--encre-2);
+  text-wrap: pretty;
+}
+
+.corps + .corps {
+  margin-top: 1.15em;
+}
+
+.corps strong,
+.corps b {
+  color: var(--encre);
+  font-weight: 500;
+}
+
+.corps em {
+  font-style: italic;
+}
+
+.italique {
+  font-family: var(--pile-titre);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.legende {
+  font-size: var(--t-petit);
+  letter-spacing: 0.02em;
+  color: var(--encre-3);
+}
+
+.meta {
+  font-size: var(--t-petit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+/* ————————————————————————————————— Liens et boutons ————————————————————— */
+
+.lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  font-size: var(--t-petit);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--encre);
+  padding-block: 0.55em;
+  border-bottom: 1px solid var(--encre-4);
+  transition: border-color 300ms var(--ease), color 300ms var(--ease);
+}
+
+.lien:hover {
+  border-bottom-color: var(--cuivre);
+}
+
+.lien__fleche {
+  display: inline-block;
+  transition: transform 300ms var(--ease);
+}
+
+.lien:hover .lien__fleche {
+  transform: translateX(5px);
+}
+
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7em;
+  min-height: 52px;
+  padding: 0 1.9em;
+  font-size: var(--t-petit);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--noir);
+  background: var(--encre);
+  transition: background-color 300ms var(--ease), color 300ms var(--ease);
+}
+
+.bouton:hover {
+  background: var(--cuivre);
+  color: var(--noir);
+}
+
+.bouton-fantome {
+  color: var(--encre);
+  background: none;
+  border: 1px solid var(--encre-4);
+}
+
+.bouton-fantome:hover {
+  background: none;
+  color: var(--encre);
+  border-color: var(--encre);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.1rem;
+}
+
+/* ————————————————————————————————— Grilles ——————————————————————————————— */
+
+.duo {
+  display: grid;
+  gap: var(--section-serree) clamp(32px, 6vw, 96px);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .duo {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  }
+  .duo-inverse {
+    grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  }
+  .duo-collant > :first-child {
+    position: sticky;
+    top: clamp(120px, 18vh, 200px);
+  }
+}
+
+.trio {
+  display: grid;
+  gap: clamp(40px, 5vw, 72px) var(--gouttiere);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 760px) {
+  .trio {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.entete-section {
+  display: grid;
+  gap: clamp(24px, 3vw, 40px);
+  margin-bottom: clamp(48px, 6vw, 92px);
+}
+
+@media (min-width: 1000px) {
+  .entete-section {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: end;
+    gap: clamp(32px, 4vw, 72px);
+  }
+}
+
+/* ————————————————————————————————— Héros ————————————————————————————————— */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  align-items: flex-end;
+  overflow: clip;
+  isolation: isolate;
+}
+
+.hero__media {
+  position: absolute;
+  inset: -6% 0 -6% 0;
+  z-index: -2;
+  will-change: transform;
+}
+
+.hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Assombrissement fonctionnel : garantit le contraste du texte sur la photo. */
+.hero__ombre {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to top, rgb(10 10 11 / 0.95) 0%, rgb(10 10 11 / 0.66) 30%, rgb(10 10 11 / 0.2) 62%, transparent 88%),
+    linear-gradient(to right, rgb(10 10 11 / 0.72) 0%, rgb(10 10 11 / 0.3) 44%, transparent 74%),
+    linear-gradient(to bottom, rgb(10 10 11 / 0.62), transparent 26%);
+}
+
+.hero__contenu {
+  width: 100%;
+  padding-bottom: clamp(56px, 9vh, 128px);
+  padding-top: clamp(140px, 22vh, 220px);
+  display: grid;
+  gap: clamp(20px, 2.6vw, 34px);
+}
+
+.hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6em 1.1em;
+  font-size: var(--t-petit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.hero__meta span:not(:last-child)::after {
+  content: '·';
+  margin-left: 1.1em;
+  color: var(--cuivre);
+}
+
+.hero__defiler {
+  position: absolute;
+  right: var(--marge-page);
+  bottom: clamp(56px, 9vh, 128px);
+  display: none;
+  writing-mode: vertical-rl;
+  font-size: var(--t-menu);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+@media (min-width: 1100px) {
+  .hero__defiler {
+    display: block;
+  }
+}
+
+/* Bandeau photographique pleine largeur, sans marge ni cadre. */
+.bande {
+  position: relative;
+  width: 100%;
+}
+
+.bande img {
+  width: 100%;
+  height: auto;
+}
+
+.bande-haute img {
+  height: clamp(340px, 68vh, 760px);
+  object-fit: cover;
+}
+
+/* ————————————————————————————————— Photo ————————————————————————————————— */
+
+.photo {
+  position: relative;
+  display: block;
+  overflow: clip;
+  background: var(--noir-eleve);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-absente {
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: var(--noir-eleve);
+  border: 1px dashed var(--encre-4);
+  color: var(--encre-3);
+  font-size: var(--t-petit);
+}
+
+.photo-absente code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  color: var(--cuivre);
+}
+
+figure.figure {
+  display: grid;
+  gap: 0.85rem;
+}
+
+/* ————————————————————————————————— Révélations ——————————————————————————— */
+
+html[data-js] [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+html[data-js] [data-reveal].est-visible {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--duree) var(--ease) var(--retard, 0ms),
+    transform var(--duree) var(--ease) var(--retard, 0ms);
+}
+
+/* Le voile qui se lève sur une image : la seule révélation par masque du site.
+   Le masque porte sur l'enfant, jamais sur l'élément observé — un élément
+   entièrement clippé n'intersecte plus rien : ni IntersectionObserver, ni le
+   chargement différé des images ne se déclencheraient. */
+html[data-js] [data-voile] > * {
+  clip-path: inset(100% 0 0 0);
+}
+
+html[data-js] [data-voile].est-visible > * {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 700ms var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html[data-js] [data-reveal] {
+    transform: none;
+  }
+  html[data-js] [data-reveal].est-visible {
+    transform: none;
+    transition: opacity 300ms linear;
+  }
+  html[data-js] [data-voile] > * {
+    clip-path: none;
+    opacity: 0;
+  }
+  html[data-js] [data-voile].est-visible > * {
+    clip-path: none;
+    opacity: 1;
+    transition: opacity 300ms linear;
+  }
+  .hero__media {
+    transform: none !important;
+    inset: 0;
+  }
+  .lien__fleche,
+  .lien:hover .lien__fleche {
+    transform: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ————————————————————————————————— Listes et tableaux —————————————————— */
+
+.liste-filets {
+  border-top: 1px solid var(--filet);
+}
+
+.liste-filets > li {
+  border-bottom: 1px solid var(--filet);
+  padding-block: clamp(20px, 2.4vw, 30px);
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (min-width: 760px) {
+  .liste-filets > li {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: clamp(24px, 4vw, 64px);
+    align-items: baseline;
+  }
+}
+
+.liste-pointee > li {
+  position: relative;
+  padding-left: 1.35em;
+  color: var(--encre-2);
+}
+
+.liste-pointee > li + li {
+  margin-top: 0.6em;
+}
+
+.liste-pointee > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 5px;
+  height: 1px;
+  background: var(--cuivre);
+}
+
+.prix {
+  font-family: var(--pile-titre);
+  font-size: clamp(1.5rem, 2.4vw, 2.15rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ————————————————————————————————— Citations ————————————————————————————— */
+
+.citation {
+  display: grid;
+  gap: clamp(20px, 2.4vw, 30px);
+}
+
+.citation blockquote {
+  font-family: var(--pile-titre);
+  font-size: clamp(1.1rem, 1.42vw, 1.36rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.44;
+  color: var(--encre);
+}
+
+.citation figcaption {
+  font-size: var(--t-petit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.citation figcaption b {
+  display: block;
+  color: var(--encre-2);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.35em;
+}
+
+/* ————————————————————————————————— Divers ———————————————————————————————— */
+
+.distinctions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 1.4em;
+  font-size: var(--t-petit);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.distinctions li {
+  display: flex;
+  align-items: center;
+  gap: 1.4em;
+}
+
+.distinctions li:not(:last-child)::after {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--cuivre);
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,0 +1,353 @@
+/* Motifs partagés par les pages intérieures. */
+
+/* ————————————————————————— Déroulé d'une journée ————————————————————————— */
+
+.jalons {
+  display: grid;
+  gap: clamp(64px, 9vw, 148px);
+}
+
+.jalon {
+  display: grid;
+  gap: clamp(24px, 3vw, 44px);
+  grid-template-columns: 1fr;
+  align-items: center;
+}
+
+@media (min-width: 820px) {
+  .jalon {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 5fr);
+    gap: clamp(40px, 6vw, 96px);
+  }
+
+  .jalon:nth-child(even) > :first-child {
+    order: 2;
+  }
+
+  .jalon:nth-child(even) {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 5fr);
+  }
+
+  .jalon:nth-child(even) > :last-child {
+    order: 1;
+  }
+}
+
+.jalonTexte {
+  display: grid;
+  gap: clamp(12px, 1.4vw, 18px);
+  align-content: center;
+  max-width: 46ch;
+}
+
+.jalonNum {
+  font-size: var(--t-menu);
+  letter-spacing: 0.22em;
+  color: var(--cuivre);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ————————————————————————————— Collections ——————————————————————————————— */
+
+.collections {
+  border-top: 1px solid var(--filet);
+}
+
+.offre {
+  border-bottom: 1px solid var(--filet);
+  padding-block: clamp(32px, 4vw, 56px);
+  display: grid;
+  gap: clamp(20px, 2.4vw, 32px);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .offre {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 6fr) auto;
+    gap: clamp(28px, 4vw, 72px);
+    align-items: start;
+  }
+}
+
+.offreTete {
+  display: grid;
+  gap: 0.7rem;
+  align-content: start;
+}
+
+.offreDuree {
+  font-size: var(--t-petit);
+  letter-spacing: 0.04em;
+  color: var(--encre-3);
+  max-width: 30ch;
+}
+
+.offreCorps {
+  display: grid;
+  gap: 1rem;
+}
+
+.offrePromesse {
+  color: var(--encre-2);
+  max-width: 42ch;
+}
+
+.offreAction {
+  align-self: center;
+}
+
+.socle {
+  display: grid;
+  gap: clamp(20px, 2.4vw, 30px);
+  padding: clamp(28px, 3.4vw, 44px) 0;
+  border-top: 1px solid var(--filet);
+  border-bottom: 1px solid var(--filet);
+  margin-bottom: clamp(48px, 6vw, 88px);
+}
+
+@media (min-width: 900px) {
+  .socle {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    gap: clamp(28px, 4vw, 72px);
+  }
+}
+
+/* ————————————————————————————— Options ——————————————————————————————————— */
+
+.options {
+  display: grid;
+  gap: clamp(28px, 3.4vw, 44px) var(--gouttiere);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.option {
+  display: grid;
+  gap: 0.65rem;
+  align-content: start;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(16px, 1.8vw, 22px);
+}
+
+.optionPrix {
+  font-size: var(--t-petit);
+  letter-spacing: 0.1em;
+  color: var(--cuivre);
+}
+
+.optionTexte {
+  font-size: var(--t-petit);
+  color: var(--encre-3);
+}
+
+/* ————————————————————————————— Inclus ———————————————————————————————————— */
+
+.inclus {
+  display: grid;
+  gap: clamp(26px, 3vw, 40px) var(--gouttiere);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .inclus {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .inclus {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.inclusItem {
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(14px, 1.6vw, 20px);
+}
+
+.inclusItem p {
+  font-size: var(--t-petit);
+  color: var(--encre-3);
+  max-width: 34ch;
+}
+
+/* ————————————————————————————— Garantie ————————————————————————————————— */
+
+.garantie {
+  border-left: 1px solid var(--cuivre);
+  padding-left: clamp(20px, 3vw, 40px);
+  max-width: 62ch;
+  display: grid;
+  gap: clamp(14px, 1.6vw, 20px);
+}
+
+/* ————————————————————————————— Contact —————————————————————————————————— */
+
+.contact {
+  display: grid;
+  gap: clamp(48px, 6vw, 88px) clamp(32px, 6vw, 104px);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 980px) {
+  .contact {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+  }
+}
+
+.coordonnees {
+  display: grid;
+  gap: clamp(26px, 3vw, 40px);
+  align-content: start;
+}
+
+.coordonneesBloc {
+  display: grid;
+  gap: 0.5rem;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(14px, 1.6vw, 20px);
+}
+
+.coordonneesBloc a,
+.coordonneesBloc p {
+  color: var(--encre-2);
+}
+
+.coordonneesBloc a {
+  width: fit-content;
+  border-bottom: 1px solid transparent;
+  transition: color 250ms var(--ease), border-color 250ms var(--ease);
+}
+
+.coordonneesBloc a:hover {
+  color: var(--encre);
+  border-bottom-color: var(--cuivre);
+}
+
+.grand {
+  font-family: var(--pile-titre);
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  letter-spacing: -0.01em;
+}
+
+/* ————————————————————————————— Tarifs iris —————————————————————————————— */
+
+.tarifs {
+  display: grid;
+  gap: clamp(40px, 5vw, 72px) clamp(32px, 5vw, 88px);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .tarifs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tarif {
+  display: grid;
+  gap: clamp(16px, 2vw, 24px);
+  align-content: start;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(20px, 2.4vw, 30px);
+}
+
+.supports {
+  display: grid;
+  gap: clamp(20px, 2.4vw, 30px) var(--gouttiere);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .supports {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .supports {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.support {
+  display: grid;
+  gap: 0.45rem;
+  align-content: start;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(14px, 1.6vw, 20px);
+}
+
+.supportPrix {
+  color: var(--cuivre);
+  font-size: var(--t-petit);
+  letter-spacing: 0.08em;
+}
+
+.supportNote {
+  font-size: 0.8125rem;
+  color: var(--encre-3);
+}
+
+/* ————————————————————————————— Mosaïque iris ——————————————————————————— */
+
+.iris {
+  display: grid;
+  gap: var(--gouttiere);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 760px) {
+  .iris {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ————————————————————————————— À propos ————————————————————————————————— */
+
+.parcours {
+  display: grid;
+  gap: clamp(48px, 6vw, 96px);
+  max-width: 74ch;
+}
+
+.chapitre {
+  display: grid;
+  gap: clamp(16px, 2vw, 24px);
+}
+
+/* ————————————————————— Ouverture sans photographie ————————————————————— */
+
+/* Toutes les pages n'ouvrent pas sur un plein écran : l'alternance de densités
+   fait partie du rythme. Ici, le noir seul, puis le texte. */
+.ouverture {
+  padding-top: clamp(148px, 24vh, 260px);
+  padding-bottom: clamp(56px, 8vw, 112px);
+}
+
+.ouvertureTitre {
+  display: grid;
+  gap: clamp(22px, 2.6vw, 34px);
+  /* En `ch`, la mesure se calcule sur la police du conteneur, pas sur celle du
+     titre : un plafond en pixels évite les coupures de mots absurdes. */
+  max-width: min(100%, 1020px);
+}
+
+.ouvertureChapo {
+  max-width: 46ch;
+}

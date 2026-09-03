@@ -1,0 +1,62 @@
+.collections {
+  display: grid;
+  gap: clamp(56px, 7vw, 96px) var(--gouttiere);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 860px) {
+  .collections {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Décalage vertical : trois colonnes qui ne s'alignent pas. */
+  .collections > :nth-child(2) {
+    margin-top: clamp(32px, 5vw, 88px);
+  }
+  .collections > :nth-child(3) {
+    margin-top: clamp(64px, 10vw, 176px);
+  }
+}
+
+.collection {
+  display: grid;
+  gap: clamp(18px, 2vw, 26px);
+  align-content: start;
+}
+
+.collection picture {
+  transition: opacity 500ms var(--ease);
+}
+
+.collection:hover picture {
+  opacity: 0.84;
+}
+
+.collectionNum {
+  font-size: var(--t-menu);
+  letter-spacing: 0.22em;
+  color: var(--cuivre);
+  font-variant-numeric: tabular-nums;
+}
+
+.collectionTexte {
+  color: var(--encre-2);
+  max-width: 34ch;
+}
+
+.appoint {
+  margin-top: clamp(56px, 7vw, 96px);
+  padding-top: clamp(24px, 3vw, 36px);
+  border-top: 1px solid var(--filet);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.appoint p {
+  color: var(--encre-3);
+  max-width: 52ch;
+  font-size: var(--t-petit);
+}

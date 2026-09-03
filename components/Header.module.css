@@ -1,0 +1,180 @@
+.entete {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  transition: background-color 400ms var(--ease), border-color 400ms var(--ease);
+  border-bottom: 1px solid transparent;
+}
+
+.entete[data-pose='true'] {
+  background: var(--noir-profond);
+  border-bottom-color: var(--filet);
+}
+
+.barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  height: clamp(68px, 8.5vh, 92px);
+}
+
+.logo {
+  display: block;
+  flex: none;
+}
+
+.logo img {
+  height: clamp(20px, 2.4vw, 27px);
+  width: auto;
+}
+
+.nav {
+  display: none;
+}
+
+@media (min-width: 1000px) {
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 2.6vw, 40px);
+  }
+}
+
+.lienNav {
+  position: relative;
+  font-size: var(--t-menu);
+  font-weight: 500;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--encre-2);
+  padding-block: 0.5rem;
+  transition: color 300ms var(--ease);
+}
+
+.lienNav:hover,
+.lienNav[data-actif='true'] {
+  color: var(--encre);
+}
+
+.lienNav::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--cuivre);
+  opacity: 0;
+  transition: opacity 300ms var(--ease);
+}
+
+.lienNav[data-actif='true']::after {
+  opacity: 1;
+}
+
+.appoints {
+  display: none;
+}
+
+@media (min-width: 1000px) {
+  .appoints {
+    display: flex;
+    align-items: center;
+    gap: clamp(16px, 2vw, 28px);
+  }
+}
+
+.separateur {
+  width: 1px;
+  height: 18px;
+  background: var(--filet);
+}
+
+.bascule {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: var(--t-menu);
+  font-weight: 500;
+  letter-spacing: 0.19em;
+  text-transform: uppercase;
+  color: var(--encre);
+  padding-block: 0.75rem;
+}
+
+@media (min-width: 1000px) {
+  .bascule {
+    display: none;
+  }
+}
+
+.traits {
+  display: grid;
+  gap: 5px;
+  width: 22px;
+}
+
+.traits span {
+  display: block;
+  height: 1px;
+  background: currentColor;
+  transition: transform 300ms var(--ease), opacity 200ms var(--ease);
+}
+
+.bascule[aria-expanded='true'] .traits span:first-child {
+  transform: translateY(3px) rotate(45deg);
+}
+
+.bascule[aria-expanded='true'] .traits span:last-child {
+  transform: translateY(-3px) rotate(-45deg);
+}
+
+/* ————————————————— Panneau plein écran (petits écrans) ————————————————— */
+
+.panneau {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: var(--noir-profond);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding-top: clamp(68px, 8.5vh, 92px);
+  overflow-y: auto;
+}
+
+.panneauNav {
+  display: grid;
+  align-content: center;
+  gap: clamp(6px, 1.6vh, 14px);
+  padding: clamp(28px, 6vh, 64px) 0;
+}
+
+.lienPanneau {
+  font-family: var(--pile-titre);
+  font-size: clamp(2rem, 8.5vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+  color: var(--encre);
+  padding-block: 0.12em;
+}
+
+.lienPanneau[data-actif='true'] {
+  color: var(--cuivre);
+}
+
+.panneauPied {
+  display: grid;
+  gap: 1rem;
+  padding-bottom: clamp(28px, 5vh, 56px);
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(20px, 3vh, 32px);
+}
+
+.panneauLien {
+  font-size: var(--t-petit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-2);
+}
