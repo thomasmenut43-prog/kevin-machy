@@ -1,0 +1,51 @@
+# Build sur GitHub, envoi des fichiers sur Hostinger.
+#
+# Le site est un export statique : Hostinger n'a rien à exécuter, il sert des
+# fichiers. La fonction « Advanced → Git » de hPanel ne lance aucune étape de
+# build — c'est donc GitHub qui construit, et qui téléverse le résultat.
+#
+# Secrets à créer dans GitHub (Settings → Secrets → Actions) :
+#   HOSTINGER_FTP_SERVER    ex. ftp.kevinmachy.fr
+#   HOSTINGER_FTP_USERNAME
+#   HOSTINGER_FTP_PASSWORD
+# Les identifiants FTP se trouvent dans hPanel → Fichiers → Comptes FTP.
+
+name: Déploiement Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploiement
+  cancel-in-progress: true
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Les images encodées sont versionnées dans public/img : rien à
+      # régénérer ici. Relancer `npm run images` en local après toute
+      # modification de scripts/build-images.mjs.
+      - run: npm run build
+
+      - name: Envoi FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_FTP_SERVER }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          local-dir: ./out/
+          server-dir: ./public_html/
+          # Ne transfère que les fichiers modifiés depuis le dernier envoi.
+          state-name: .ftp-deploy-sync-state.json
