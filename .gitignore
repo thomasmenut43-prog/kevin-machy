@@ -4,3 +4,7 @@ out/
 .cache/
 next-env.d.ts
 *.tsbuildinfo
+
+# Document commercial interne : chiffrage, marges, tarif de lancement.
+# Le dépôt est public — ce fichier reste hors de git tant que c'est le cas.
+PROPOSITION-PHASE-2.md

@@ -19,8 +19,37 @@ npm run dev      # http://localhost:3000
 ```
 
 `npm run build:full` enchaîne l'encodage des images et la construction du site.
-La sortie statique est écrite dans `out/` : elle se déploie telle quelle sur Vercel,
-Netlify, ou n'importe quel hébergement de fichiers.
+La sortie statique est écrite dans `out/`.
+
+---
+
+## Déploiement — GitHub → Hostinger
+
+Le site est un export statique : Hostinger n'exécute rien, il sert des fichiers. Son plan
+d'hébergement actuel suffit.
+
+**Attention** : la fonction « Advanced → Git » de hPanel *ne lance aucune étape de build*, elle
+recopie les fichiers du dépôt tels quels. C'est donc GitHub Actions qui construit puis
+téléverse — voir `.github/workflows/deploy.yml`, déclenché à chaque push sur `main`.
+
+Trois secrets à créer dans GitHub (Settings → Secrets and variables → Actions), depuis
+hPanel → Fichiers → Comptes FTP :
+
+```
+HOSTINGER_FTP_SERVER
+HOSTINGER_FTP_USERNAME
+HOSTINGER_FTP_PASSWORD
+```
+
+Le transfert est incrémental : seuls les fichiers modifiés partent, ce qui compte avec 57 Mo
+d'images. `public/.htaccess` est copié dans `out/` au build : il déclare la page 404 et le
+cache long sur les images et les polices.
+
+Le nom de domaine est chez OVH : il suffit de pointer ses enregistrements DNS vers Hostinger.
+
+**Les images encodées (`public/img/`) sont versionnées** — la CI ne les régénère pas, car les
+sources vivent dans `.cache/raw/`, ignoré par git. Après toute modification de
+`scripts/build-images.mjs`, relancer `npm run images` en local et committer le résultat.
 
 ---
 
@@ -58,6 +87,33 @@ C'est le cas aujourd'hui de `iris-support-bijou`.
 **Profils disponibles** — `heroWide` (16/9), `heroTall` (3/4, écrans étroits), `wide` (3/2),
 `tall` (4/5), `square` (1/1), `portraitBook` (2/3). Chacun produit quatre largeurs en AVIF,
 WebP et JPEG, plus un manifeste typé (`lib/images.generated.ts`).
+
+---
+
+## Simulateur de tarifs iris
+
+Le site actuel propose un sélecteur « nombre d'humains / nombre d'animaux » sur la formule
+Prise de vue. Il est rebranché dans `components/SimulateurIris.tsx`.
+
+**Les montants vivent dans `IRIS_GRILLE.tarifs` (`lib/site.ts`)**, une entrée par combinaison :
+
+```ts
+tarifs: {
+  '1x0': 49,   // 1 humain, aucun animal
+  '2x0': 79,   // 2 humains
+  '1x1': 89,   // 1 humain + 1 animal
+  '0x1': 59,   // 1 animal seul
+}
+```
+
+Comportement :
+
+- grille vide → la page affiche « À partir de 49 € » et le simulateur reste masqué. **Aucun
+  tarif n'est deviné ni interpolé** ;
+- combinaison absente de la grille → « Sur devis », avec un lien vers le contact ;
+- `maxHumains` / `maxAnimaux` bornent les compteurs, et le total ne descend jamais sous un sujet.
+
+Accessible : boutons étiquetés, montant annoncé dans une zone `aria-live`, navigation clavier.
 
 ---
 
