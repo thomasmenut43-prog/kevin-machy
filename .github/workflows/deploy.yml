@@ -39,7 +39,11 @@ jobs:
       # modification de scripts/build-images.mjs.
       - run: npm run build
 
+      # Tant que les secrets FTP n'existent pas, l'envoi est sauté plutôt que
+      # de faire échouer la CI : le build reste vérifié à chaque push, et le
+      # déploiement s'active tout seul le jour où les secrets sont créés.
       - name: Envoi FTP
+        if: ${{ secrets.HOSTINGER_FTP_SERVER != '' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
@@ -49,3 +53,11 @@ jobs:
           server-dir: ./public_html/
           # Ne transfère que les fichiers modifiés depuis le dernier envoi.
           state-name: .ftp-deploy-sync-state.json
+
+      - name: Secrets FTP manquants
+        if: ${{ secrets.HOSTINGER_FTP_SERVER == '' }}
+        run: |
+          echo "::notice title=Déploiement sauté::Le site a bien été construit, mais rien n'a été envoyé sur Hostinger."
+          echo "Créer les trois secrets dans Settings → Secrets and variables → Actions :"
+          echo "  HOSTINGER_FTP_SERVER, HOSTINGER_FTP_USERNAME, HOSTINGER_FTP_PASSWORD"
+          echo "Ils se trouvent dans hPanel → Fichiers → Comptes FTP." 
