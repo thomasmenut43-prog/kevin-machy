@@ -15,6 +15,10 @@ name: Déploiement Hostinger
 on:
   push:
     branches: [main]
+  # Sur une pull request, le build est vérifié mais rien n'est déployé :
+  # une relecture n'a d'intérêt que si la CI dit déjà si ça compile.
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -48,7 +52,7 @@ jobs:
       # de faire échouer la CI : le build reste vérifié à chaque push, et le
       # déploiement s'active tout seul le jour où les secrets sont créés.
       - name: Envoi FTP
-        if: env.FTP_SERVER != ''
+        if: github.event_name != 'pull_request' && env.FTP_SERVER != ''
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.HOSTINGER_FTP_SERVER }}
@@ -60,7 +64,7 @@ jobs:
           state-name: .ftp-deploy-sync-state.json
 
       - name: Secrets FTP manquants
-        if: env.FTP_SERVER == ''
+        if: github.event_name == 'push' && env.FTP_SERVER == ''
         run: |
           echo "::notice title=Déploiement sauté::Le site a bien été construit, mais rien n'a été envoyé sur Hostinger."
           echo "Créer les trois secrets dans Settings → Secrets and variables → Actions :"
