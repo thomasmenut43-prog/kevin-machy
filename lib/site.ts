@@ -9,7 +9,7 @@ export const SITE = {
   /** À remplacer par le domaine définitif avant mise en ligne. */
   url: 'https://www.kevinmachy.fr',
   ville: 'Le Puy-en-Velay',
-  /** Adresse du studio, relevée sur la page Studio de l’Iris. À confirmer avec Kevin. */
+  /** Adresse du studio, confirmée par la page de réservation SumUp. */
   adresse: '14 avenue Foch',
   codePostal: '43000',
   region: 'Haute-Loire',
@@ -289,33 +289,52 @@ export const IRIS_ETAPES = [
    ————————————————————————————————————————————————————————————————————————— */
 
 export type GrilleIris = {
-  /** Bornes du sélecteur. Au-delà, la séance passe sur devis. */
+  /** Bornes des compteurs. Au-delà du dernier palier, la séance passe sur devis. */
   maxHumains: number;
   maxAnimaux: number;
-  /** Montants en euros, clé « <humains>x<animaux> ». Une clé absente = sur devis. */
-  tarifs: Partial<Record<`${number}x${number}`, number>>;
+  /**
+   * Le tarif dépend du NOMBRE TOTAL D'IRIS photographiés, pas de la répartition
+   * entre humains et animaux : la page de réservation ne vend que « 1 Iris »,
+   * « 2 Iris », etc. Les compteurs humains / animaux servent au visiteur à
+   * compter, pas au calcul.
+   */
+  parIris: Record<number, { prix: number; duree: string }>;
 };
 
+/**
+ * Relevé sur la page de réservation de Kevin — sumupbookings.com/kevin-photographe.
+ * Chaque montant et chaque durée vient de là, tel quel.
+ */
 export const IRIS_GRILLE: GrilleIris = {
-  maxHumains: 4,
-  maxAnimaux: 3,
-  tarifs: {
-    // À REMPLIR avec la grille de Kevin. Format attendu :
-    //   '1x0': …,   // 1 humain, aucun animal
-    //   '2x0': …,   // 2 humains
-    //   '1x1': …,   // 1 humain + 1 animal
-    //   '0x1': …,   // 1 animal seul
-    // Toute combinaison non listée bascule automatiquement sur « sur devis ».
+  maxHumains: 5,
+  maxAnimaux: 5,
+  parIris: {
+    1: { prix: 49, duree: '30 min' },
+    2: { prix: 79, duree: '45 min' },
+    3: { prix: 99, duree: '1 h' },
+    4: { prix: 129, duree: '1 h 15' },
+    5: { prix: 159, duree: '1 h 30' },
   },
 };
 
-/** `true` dès qu'au moins un montant est renseigné. */
-export const grilleIrisRenseignee = Object.keys(IRIS_GRILLE.tarifs).length > 0;
+/** `true` dès qu'au moins un palier est renseigné. */
+export const grilleIrisRenseignee = Object.keys(IRIS_GRILLE.parIris).length > 0;
 
-/** Montant pour une combinaison, ou `null` si elle n'est pas dans la grille. */
-export function tarifIris(humains: number, animaux: number): number | null {
-  return IRIS_GRILLE.tarifs[`${humains}x${animaux}`] ?? null;
+/** Tarif et durée pour une combinaison, ou `null` au-delà du dernier palier. */
+export function tarifIris(humains: number, animaux: number) {
+  return IRIS_GRILLE.parIris[humains + animaux] ?? null;
 }
+
+/** Horaires du studio, relevés sur la page de réservation. */
+export const HORAIRES = [
+  { jour: 'Lundi', ouverture: null },
+  { jour: 'Mardi', ouverture: '17:00 – 20:30' },
+  { jour: 'Mercredi', ouverture: '09:45 – 20:30' },
+  { jour: 'Jeudi', ouverture: '17:00 – 20:30' },
+  { jour: 'Vendredi', ouverture: '16:00 – 20:30' },
+  { jour: 'Samedi', ouverture: '09:45 – 20:00' },
+  { jour: 'Dimanche', ouverture: null },
+] as const;
 
 export const IRIS_TARIFS = [
   {

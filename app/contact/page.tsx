@@ -3,7 +3,7 @@ import { ContactForm } from '@/components/ContactForm';
 import { Photo } from '@/components/Photo';
 import { Reveal } from '@/components/Reveal';
 import { DonneesStructurees, schemaFilAriane } from '@/lib/schema';
-import { LIENS, SITE, ZONE } from '@/lib/site';
+import { HORAIRES, LIENS, SITE, ZONE } from '@/lib/site';
 import s from '@/styles/pages.module.css';
 
 export const metadata: Metadata = {
@@ -76,6 +76,21 @@ export default function Contact() {
                 {SITE.codePostal} {SITE.ville}
               </p>
               <p className="legende">Sur rendez-vous uniquement.</p>
+            </div>
+
+            <div className={s.coordonneesBloc}>
+              <p className="surtitre">
+                <span>Le studio est ouvert</span>
+              </p>
+              <ul className={s.horaires}>
+                {HORAIRES.map((h) => (
+                  <li key={h.jour}>
+                    <span>{h.jour}</span>
+                    <span>{h.ouverture ?? 'Fermé'}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="legende">Toujours sur rendez-vous.</p>
             </div>
 
             <div className={s.coordonneesBloc}>

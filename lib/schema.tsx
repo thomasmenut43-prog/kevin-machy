@@ -1,4 +1,4 @@
-import { LIENS, SITE } from './site';
+import { HORAIRES, LIENS, SITE } from './site';
 
 /**
  * Données structurées LocalBusiness. Uniquement des faits relevés sur le
@@ -31,6 +31,19 @@ export const schemaEntreprise = {
     latitude: SITE.geo.lat,
     longitude: SITE.geo.lon,
   },
+  openingHoursSpecification: HORAIRES.filter((h) => h.ouverture).map((h) => {
+    const jours: Record<string, string> = {
+      Lundi: 'Monday',
+      Mardi: 'Tuesday',
+      Mercredi: 'Wednesday',
+      Jeudi: 'Thursday',
+      Vendredi: 'Friday',
+      Samedi: 'Saturday',
+      Dimanche: 'Sunday',
+    };
+    const [opens, closes] = h.ouverture!.split(' – ');
+    return { '@type': 'OpeningHoursSpecification', dayOfWeek: jours[h.jour], opens, closes };
+  }),
   areaServed: [
     { '@type': 'AdministrativeArea', name: 'Haute-Loire' },
     { '@type': 'AdministrativeArea', name: 'Loire' },

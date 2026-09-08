@@ -239,6 +239,25 @@
   border-bottom-color: var(--cuivre);
 }
 
+.horaires {
+  display: grid;
+  gap: 0.35rem;
+  font-size: var(--t-petit);
+  color: var(--encre-2);
+}
+
+.horaires li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  border-bottom: 1px solid rgb(233 229 222 / 0.06);
+  padding-bottom: 0.35rem;
+}
+
+.horaires li:last-child {
+  border-bottom: 0;
+}
+
 .grand {
   font-family: var(--pile-titre);
   font-size: clamp(1.3rem, 2vw, 1.7rem);

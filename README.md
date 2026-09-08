@@ -92,28 +92,35 @@ WebP et JPEG, plus un manifeste typé (`lib/images.generated.ts`).
 
 ## Simulateur de tarifs iris
 
-Le site actuel propose un sélecteur « nombre d'humains / nombre d'animaux » sur la formule
-Prise de vue. Il est rebranché dans `components/SimulateurIris.tsx`.
+Le sélecteur « nombre d'humains / nombre d'animaux » de la page Iris est rebranché dans
+`components/SimulateurIris.tsx`.
 
-**Les montants vivent dans `IRIS_GRILLE.tarifs` (`lib/site.ts`)**, une entrée par combinaison :
+**Le tarif dépend du nombre total d'iris photographiés**, pas de la répartition entre humains
+et animaux : la page de réservation ne vend que « 1 Iris », « 2 Iris », etc. Les deux compteurs
+servent au visiteur à compter, pas au calcul. La grille vit dans `IRIS_GRILLE.parIris`
+(`lib/site.ts`) et vient telle quelle de sumupbookings.com/kevin-photographe :
 
-```ts
-tarifs: {
-  '1x0': 49,   // 1 humain, aucun animal
-  '2x0': 79,   // 2 humains
-  '1x1': 89,   // 1 humain + 1 animal
-  '0x1': 59,   // 1 animal seul
-}
-```
+| Iris | Prix | Durée |
+|---|---|---|
+| 1 | 49 € | 30 min |
+| 2 | 79 € | 45 min |
+| 3 | 99 € | 1 h |
+| 4 | 129 € | 1 h 15 |
+| 5 | 159 € | 1 h 30 |
 
 Comportement :
 
-- grille vide → la page affiche « À partir de 49 € » et le simulateur reste masqué. **Aucun
+- au-delà de cinq iris → « Sur devis », avec un lien vers le contact ;
+- grille vidée → la page retombe sur « À partir de 49 € » et masque les compteurs. **Aucun
   tarif n'est deviné ni interpolé** ;
-- combinaison absente de la grille → « Sur devis », avec un lien vers le contact ;
-- `maxHumains` / `maxAnimaux` bornent les compteurs, et le total ne descend jamais sous un sujet.
+- le total ne descend jamais sous un sujet photographié.
 
-Accessible : boutons étiquetés, montant annoncé dans une zone `aria-live`, navigation clavier.
+Accessible : boutons étiquetés, montant et durée annoncés dans une zone `aria-live`,
+navigation clavier.
+
+**À maintenir en même temps que SumUp.** Si Kevin change ses prix sur sa page de réservation,
+`IRIS_GRILLE.parIris` doit suivre — sinon le site annonce un tarif que la réservation ne
+pratique plus.
 
 ---
 

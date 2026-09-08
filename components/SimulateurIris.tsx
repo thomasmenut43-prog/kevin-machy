@@ -102,8 +102,8 @@ export function SimulateurIris({ repli, repliNote, hrefDevis }: Props) {
     );
   }
 
-  const total = humains + animaux;
-  const montant = tarifIris(humains, animaux);
+  const iris = humains + animaux;
+  const palier = tarifIris(humains, animaux);
 
   // On ne descend jamais en dessous d'un sujet photographié.
   const minHumains = animaux > 0 ? 0 : 1;
@@ -142,23 +142,25 @@ export function SimulateurIris({ repli, repliNote, hrefDevis }: Props) {
       <p className={s.resultat} aria-live="polite">
         <span className={s.recap}>{recap}</span>
         <span className="visuellement-cache"> — </span>
-        {montant === null ? (
+        {palier === null ? (
           <span className={s.devis}>Sur devis</span>
         ) : (
-          <span className={s.montant}>{euros(montant)}</span>
+          <span className={s.montant}>{euros(palier.prix)}</span>
         )}
       </p>
 
-      {montant === null ? (
+      {palier === null ? (
         <p className={s.mention}>
-          Cette combinaison sort de la grille.{' '}
+          Au-delà de cinq iris, la séance se construit sur mesure.{' '}
           <Link className="lien" href={hrefDevis} style={{ display: 'inline', border: 0, padding: 0 }}>
             Écrivez-moi
           </Link>{' '}
           et je vous réponds avec un tarif.
         </p>
       ) : (
-        <p className={s.mention}>Tarif de la prise de vue pour {accord(total, 'sujet', 'sujets')}.</p>
+        <p className={s.mention}>
+          {accord(iris, 'iris photographié', 'iris photographiés')} · séance de {palier.duree}.
+        </p>
       )}
     </div>
   );
