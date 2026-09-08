@@ -278,6 +278,45 @@ export const IRIS_ETAPES = [
   },
 ] as const;
 
+/* ————————————————————————— Simulateur de tarifs iris —————————————————————————
+
+   Le site actuel propose un sélecteur « nombre d'humains / nombre d'animaux ».
+   Cette grille le rebranche. Elle est VIDE tant que Kevin n'a pas fourni ses
+   montants : aucun tarif n'est deviné, ni interpolé, ni arrondi.
+
+   Tant que `tarifs` est vide, la page affiche le tarif « à partir de » du site
+   actuel et le simulateur reste masqué. Il apparaît dès la première entrée.
+   ————————————————————————————————————————————————————————————————————————— */
+
+export type GrilleIris = {
+  /** Bornes du sélecteur. Au-delà, la séance passe sur devis. */
+  maxHumains: number;
+  maxAnimaux: number;
+  /** Montants en euros, clé « <humains>x<animaux> ». Une clé absente = sur devis. */
+  tarifs: Partial<Record<`${number}x${number}`, number>>;
+};
+
+export const IRIS_GRILLE: GrilleIris = {
+  maxHumains: 4,
+  maxAnimaux: 3,
+  tarifs: {
+    // À REMPLIR avec la grille de Kevin. Format attendu :
+    //   '1x0': …,   // 1 humain, aucun animal
+    //   '2x0': …,   // 2 humains
+    //   '1x1': …,   // 1 humain + 1 animal
+    //   '0x1': …,   // 1 animal seul
+    // Toute combinaison non listée bascule automatiquement sur « sur devis ».
+  },
+};
+
+/** `true` dès qu'au moins un montant est renseigné. */
+export const grilleIrisRenseignee = Object.keys(IRIS_GRILLE.tarifs).length > 0;
+
+/** Montant pour une combinaison, ou `null` si elle n'est pas dans la grille. */
+export function tarifIris(humains: number, animaux: number): number | null {
+  return IRIS_GRILLE.tarifs[`${humains}x${animaux}`] ?? null;
+}
+
 export const IRIS_TARIFS = [
   {
     nom: 'Prise de vue',
@@ -292,6 +331,7 @@ export const IRIS_TARIFS = [
       '1 tirage papier 10 × 15 cm',
     ],
     exclus: 'Tirage et support grande taille non inclus.',
+    simulateur: true,
     cta: { label: 'Commander une séance', href: LIENS.reservation },
   },
   {
@@ -306,6 +346,7 @@ export const IRIS_TARIFS = [
       'Exclusivité sur votre commune pendant 1 an',
     ],
     exclus: null,
+    simulateur: false,
     cta: { label: 'Demander un devis', href: '/contact/?projet=entreprise' },
   },
 ] as const;

@@ -4,6 +4,7 @@ import { Hero } from '@/components/Hero';
 import { Photo } from '@/components/Photo';
 import { Reveal } from '@/components/Reveal';
 import { Faq } from '@/components/Faq';
+import { SimulateurIris } from '@/components/SimulateurIris';
 import { AppelAction, EnteteSection } from '@/components/Blocs';
 import { DonneesStructurees, schemaFaq, schemaFilAriane } from '@/lib/schema';
 import { IRIS_ETAPES, IRIS_FAQ, IRIS_SUPPORTS, IRIS_TARIFS, LIENS, SITE } from '@/lib/site';
@@ -210,12 +211,18 @@ export default function StudioIris() {
             <Reveal as="article" className={s.tarif} key={t.nom} retard={i * 100}>
               <div>
                 <h3 className="h3">{t.nom}</h3>
-                <p className="prix" style={{ marginTop: '0.6rem' }}>
-                  {t.prix}
-                </p>
-                <p className={s.offreDuree} style={{ marginTop: '0.5rem' }}>
-                  {t.note}
-                </p>
+                {t.simulateur ? (
+                  <SimulateurIris repli={t.prix} repliNote={t.note} hrefDevis="/contact/?projet=iris" />
+                ) : (
+                  <>
+                    <p className="prix" style={{ marginTop: '0.6rem' }}>
+                      {t.prix}
+                    </p>
+                    <p className={s.offreDuree} style={{ marginTop: '0.5rem' }}>
+                      {t.note}
+                    </p>
+                  </>
+                )}
               </div>
               <ul className="liste-pointee">
                 {t.inclus.map((item) => (
