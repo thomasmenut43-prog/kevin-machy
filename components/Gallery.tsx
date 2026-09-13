@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Photo } from './Photo';
 import { Reveal } from './Reveal';
-import { IMAGES, type ImageName, type ImageRecord } from '@/lib/images.generated';
+import { Image, nomManifeste } from './sections/Image';
+import { IMAGES, type ImageRecord } from '@/lib/images.generated';
+import { urlMedia, type Media } from '@/lib/modeles';
 import s from './Gallery.module.css';
 
-export type ItemGalerie = { name: ImageName; alt: string };
+export type ItemGalerie = Media;
 
 type GalerieProps = {
   items: readonly ItemGalerie[];
@@ -18,6 +19,29 @@ type GalerieProps = {
 
 function srcSet(rec: ImageRecord, ext: string) {
   return rec.widths.map((w) => `${rec.base}-${w}.${ext} ${w}w`).join(', ');
+}
+
+/** Les jeux de sources de la visionneuse, quelle que soit l'origine de l'image. */
+function sourcesVisionneuse(media: Media) {
+  const nom = nomManifeste(media.fichier);
+  if (nom) {
+    const rec = IMAGES[nom];
+    return {
+      avif: srcSet(rec, 'avif'),
+      webp: srcSet(rec, 'webp'),
+      jpg: srcSet(rec, 'jpg'),
+      repli: `${rec.base}-${rec.widths[rec.widths.length - 1]}.jpg`,
+      ratio: rec.ratio,
+    };
+  }
+  const webp = media.tailles.map((t) => `${urlMedia(t.fichier)} ${t.largeur}w`).join(', ');
+  return {
+    avif: undefined,
+    webp,
+    jpg: undefined,
+    repli: urlMedia(media.fichier),
+    ratio: (media.largeur ?? 3) / (media.hauteur ?? 2),
+  };
 }
 
 export function Gallery({ items, action = 'Voir' }: GalerieProps) {
@@ -96,7 +120,7 @@ export function Gallery({ items, action = 'Voir' }: GalerieProps) {
     <>
       <div className={s.galerie} ref={zone}>
         {items.map((item, i) => (
-          <Reveal key={item.name} mode="glissement" retard={(i % 3) * 90} className={s.element} as="div">
+          <Reveal key={`${item.id}-${i}`} mode="glissement" retard={(i % 3) * 90} className={s.element} as="div">
             <button
               type="button"
               className={s.declencheur}
@@ -105,11 +129,7 @@ export function Gallery({ items, action = 'Voir' }: GalerieProps) {
                 setOuvert(i);
               }}
             >
-              <Photo
-                name={item.name}
-                alt={item.alt}
-                sizes="(min-width: 860px) 42vw, 100vw"
-              />
+              <Image media={item} sizes="(min-width: 860px) 42vw, 100vw" />
               <span className="visuellement-cache">Agrandir : {item.alt}</span>
             </button>
           </Reveal>
@@ -152,7 +172,7 @@ function Visionneuse({
   }, []);
 
   const item = items[index];
-  const rec: ImageRecord = IMAGES[item.name];
+  const sources = sourcesVisionneuse(item);
 
   return createPortal(
     <div
@@ -178,25 +198,18 @@ function Visionneuse({
           <span className="visuellement-cache">Image précédente</span>
         </button>
 
-        {rec.missing || !rec.base ? (
-          <div className="photo-absente" role="img" aria-label={item.alt}>
-            <span>Image à fournir</span>
-            <code>{item.name}</code>
-          </div>
-        ) : (
-          <picture>
-            <source type="image/avif" srcSet={srcSet(rec, 'avif')} sizes="90vw" />
-            <source type="image/webp" srcSet={srcSet(rec, 'webp')} sizes="90vw" />
-            <img
-              src={`${rec.base}-${rec.widths[rec.widths.length - 1]}.jpg`}
-              srcSet={srcSet(rec, 'jpg')}
-              sizes="90vw"
-              width={rec.widths[rec.widths.length - 1]}
-              height={Math.round(rec.widths[rec.widths.length - 1] / rec.ratio)}
-              alt={item.alt}
-            />
-          </picture>
-        )}
+        <picture>
+          {sources.avif ? <source type="image/avif" srcSet={sources.avif} sizes="90vw" /> : null}
+          <source type="image/webp" srcSet={sources.webp} sizes="90vw" />
+          <img
+            src={sources.repli}
+            srcSet={sources.jpg}
+            sizes="90vw"
+            width={item.largeur ?? undefined}
+            height={item.hauteur ?? undefined}
+            alt={item.alt}
+          />
+        </picture>
 
         <button type="button" className={`${s.fleche} ${s.flecheD}`} onClick={() => onDeplacer(1)}>
           <span aria-hidden="true">→</span>

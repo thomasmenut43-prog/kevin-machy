@@ -1,0 +1,155 @@
+/* Mises en page des sections du catalogue.
+   Les classes globales du site (wrap, duo, h2, corps, bouton…) portent déjà
+   l'essentiel : on ne redéclare ici que ce qui leur manque. */
+
+.heros {
+  position: relative;
+  min-height: min(92vh, 900px);
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+}
+
+.herosMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.herosMedia img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Voile sous le texte : sans lui, un titre clair sur une image claire devient
+   illisible, et c'est le genre de panne qu'on ne voit que sur une photo. */
+.herosMedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(10 10 11 / 0.82) 0%, rgb(10 10 11 / 0.35) 45%, rgb(10 10 11 / 0.1) 100%);
+}
+
+.herosContenu {
+  position: relative;
+  padding-block: clamp(48px, 8vw, 120px);
+  display: grid;
+  gap: clamp(18px, 2.2vw, 28px);
+  max-width: 60ch;
+}
+
+.herosSobre {
+  min-height: 0;
+}
+
+.imagePleine {
+  margin-top: clamp(28px, 4vw, 56px);
+}
+
+.imagePleine img {
+  width: 100%;
+  height: auto;
+}
+
+.duoInverse {
+  direction: rtl;
+}
+
+.duoInverse > * {
+  direction: ltr;
+}
+
+.mosaique {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--gouttiere);
+}
+
+.mosaique img,
+.colonne img {
+  width: 100%;
+  height: auto;
+}
+
+.colonne {
+  display: grid;
+  gap: clamp(28px, 4vw, 64px);
+}
+
+.bande {
+  display: flex;
+  gap: var(--gouttiere);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 12px;
+}
+
+.bande > * {
+  flex: 0 0 clamp(260px, 38vw, 520px);
+  scroll-snap-align: start;
+}
+
+.bande img {
+  width: 100%;
+  height: auto;
+}
+
+.mesure {
+  max-width: var(--mesure);
+}
+
+.mesureCourte {
+  max-width: var(--mesure-courte);
+}
+
+.citationBloc {
+  display: grid;
+  gap: clamp(14px, 1.6vw, 20px);
+  text-align: center;
+  max-width: 24ch;
+  margin-inline: auto;
+}
+
+.auteur {
+  font-size: var(--t-petit);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 5vw, 72px);
+}
+
+.logos img {
+  max-height: 64px;
+  width: auto;
+}
+
+.avis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: clamp(28px, 3.4vw, 52px);
+}
+
+.avisItem {
+  display: grid;
+  gap: 0.9rem;
+  border-top: 1px solid var(--filet);
+  padding-top: clamp(18px, 2vw, 26px);
+}
+
+.source {
+  font-size: var(--t-petit);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--encre-3);
+}
+
+.entete {
+  margin-bottom: clamp(28px, 3.6vw, 56px);
+}

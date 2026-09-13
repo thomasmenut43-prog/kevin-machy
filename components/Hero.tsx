@@ -5,10 +5,12 @@ import { PhotoPleinEcran } from './Photo';
 import type { ImageName } from '@/lib/images.generated';
 
 type HeroProps = {
-  wide: ImageName;
-  tall: ImageName;
-  alt: string;
   children: ReactNode;
+  /** Image déjà construite. Prioritaire sur `wide` / `tall`. */
+  media?: ReactNode;
+  wide?: ImageName;
+  tall?: ImageName;
+  alt?: string;
 };
 
 /**
@@ -17,7 +19,7 @@ type HeroProps = {
  * Seul élément en parallaxe du site : amplitude volontairement faible,
  * désactivée au clavier tactile, en dessous de 900 px et en mouvement réduit.
  */
-export function Hero({ wide, tall, alt, children }: HeroProps) {
+export function Hero({ children, media: image, wide, tall, alt }: HeroProps) {
   const media = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -67,7 +69,7 @@ export function Hero({ wide, tall, alt, children }: HeroProps) {
   return (
     <header className="hero">
       <div className="hero__media" ref={media}>
-        <PhotoPleinEcran wide={wide} tall={tall} alt={alt} priority />
+        {image ?? (wide && tall ? <PhotoPleinEcran wide={wide} tall={tall} alt={alt ?? ''} priority /> : null)}
       </div>
       <div className="hero__ombre" aria-hidden="true" />
       <div className="wrap hero__contenu">{children}</div>
