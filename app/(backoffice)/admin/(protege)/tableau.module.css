@@ -191,50 +191,7 @@
   padding-left: 4px;
 }
 
-/* ———————————————————————— Tableau et mention ————————————————————————— */
-
-.tableau summary {
-  cursor: pointer;
-  font-size: 0.8125rem;
-  color: var(--bo-texte-3);
-}
-
-.tableau summary:hover {
-  color: var(--bo-texte);
-}
-
-.tableau table {
-  width: 100%;
-  max-width: 520px;
-  margin-top: 14px;
-  border-collapse: collapse;
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.tableau caption {
-  text-align: left;
-  color: var(--bo-texte-3);
-  padding-bottom: 8px;
-}
-
-.tableau th,
-.tableau td {
-  text-align: left;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--bo-filet);
-}
-
-.tableau thead th {
-  color: var(--bo-texte-3);
-  font-weight: 500;
-  font-size: 0.78rem;
-}
-
-.tableau tbody th {
-  font-weight: 400;
-  color: var(--bo-texte-2);
-}
+/* ————————————————————————————— Mention —————————————————————————————— */
 
 .note {
   font-size: 0.8125rem;

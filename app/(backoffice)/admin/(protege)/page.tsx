@@ -131,31 +131,6 @@ export default async function TableauDeBord({
         />
       ) : null}
 
-      {/* Les mêmes chiffres en toutes lettres : lisibles au lecteur d'écran,
-          copiables, et consultables si les graphiques ne s'affichent pas. */}
-      <details className={g.tableau}>
-        <summary>Voir les chiffres en tableau</summary>
-        <table>
-          <caption>Fréquentation jour par jour sur {jours} jours</caption>
-          <thead>
-            <tr>
-              <th scope="col">Jour</th>
-              <th scope="col">Visiteurs</th>
-              <th scope="col">Pages vues</th>
-            </tr>
-          </thead>
-          <tbody>
-            {audience.jours.map((j) => (
-              <tr key={j.jour}>
-                <th scope="row">{j.jour}</th>
-                <td>{j.visiteurs}</td>
-                <td>{j.vues}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </details>
-
       <p className={g.note}>
         Aucun cookie, aucune adresse IP enregistrée. Un visiteur est reconnu dans la journée par
         une empreinte qui change chaque nuit et ne permet pas de remonter à lui. C’est ce qui
