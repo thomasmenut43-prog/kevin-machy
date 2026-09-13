@@ -9,6 +9,8 @@ next-env.d.ts
 # cadrage client. Le dépôt est public — ils restent hors de git tant qu'il l'est.
 PROPOSITION-PHASE-2.md
 PRD-v2.md
+DEVIS-KEVIN.md
+Proposition-Nextylab-*.pdf
 
 # Secrets : identifiants de base, clé de signature des sessions, SMTP.
 # Rien de tout cela ne doit partir sur un dépôt public.
