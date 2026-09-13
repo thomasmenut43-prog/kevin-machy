@@ -60,6 +60,15 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
   const aRemplacer = visibles.filter((x) => x.aRemplacer).length;
   const sansDossier = medias.filter((x) => !x.dossierId).length;
 
+  // Le titre de la section dit où l'on regarde : toutes les images, celles
+  // laissées de côté, ou le contenu d'un dossier ouvert.
+  const titreImages =
+    filtre === null
+      ? 'Toutes les images'
+      : filtre === 0
+        ? 'Images non rangées'
+        : (dossiers.find((d) => d.id === filtre)?.nom ?? 'Images');
+
   // Trois aperçus par dossier : de quoi reconnaître son contenu sans l'ouvrir.
   const apercus = new Map<number | null, Media[]>();
   for (const media of medias) {
@@ -70,11 +79,6 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
 
   return (
     <>
-      <div className={m.tete}>
-        <button type="button" className="bo-bouton" onClick={() => setAjout(true)}>
-          Ajouter des images
-        </button>
-      </div>
 
       {/* Le formulaire prenait la moitié de l'écran en permanence pour un geste
           qu'on fait de temps en temps : il s'ouvre maintenant à la demande. */}
@@ -123,6 +127,11 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
         </div>
       ) : null}
 
+      {/* Deux sections nommées plutôt qu'une suite de blocs : on range des
+          dossiers, puis on regarde des images. L'action est posée près de ce
+          qu'elle ajoute, et non en tête de page où elle flottait seule. */}
+      <h2 className={m.sectionTitre}>Dossiers</h2>
+
       <Dossiers
         dossiers={dossiers}
         filtre={filtre}
@@ -135,6 +144,18 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
           glisse.current = [];
         }}
       />
+
+      <div className={m.sectionTete}>
+        <h2 className={m.sectionTitre}>
+          {titreImages}
+          <span className={m.compte}>
+            {visibles.length} image{visibles.length > 1 ? 's' : ''}
+          </span>
+        </h2>
+        <button type="button" className="bo-bouton" onClick={() => setAjout(true)}>
+          Ajouter des images
+        </button>
+      </div>
 
       {message ? (
         <p className={m.succes} role="status">
@@ -504,7 +525,12 @@ function Dossiers({
               disabled={enCours}
               onClick={creer}
             >
-              <IconeDossierPlus />
+              {/* Le « + » occupe la bande d'une chemise : sans elle, son
+                  libellé flottait trente pixels plus haut que les noms de
+                  dossier, et la rangée paraissait bancale. */}
+              <span className={m.bandeIcone}>
+                <IconeDossierPlus />
+              </span>
               <strong>Nouveau dossier</strong>
               <span>
                 {filtre === null

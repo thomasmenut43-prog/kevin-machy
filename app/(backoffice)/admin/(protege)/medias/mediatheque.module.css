@@ -293,7 +293,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(max(248px, (100% - 3 * 12px) / 4), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(max(200px, (100% - 3 * 12px) / 4), 1fr));
   gap: 12px;
 }
 
@@ -307,8 +307,8 @@
   align-content: center;
   gap: 2px;
   width: 100%;
-  min-height: 300px;
-  padding: 24px 16px 28px;
+  min-height: 260px;
+  padding: 18px 14px 22px;
   background: none;
   border: 0;
   border-radius: 16px;
@@ -371,7 +371,15 @@
 .dossierIcone {
   width: 54px;
   height: 45px;
-  margin-bottom: 4px;
+}
+
+/* La même boîte que `.chemise`, pour que les libellés des tuiles s'alignent. */
+.bandeIcone {
+  width: 200px;
+  height: 160px;
+  margin: 0 auto 4px;
+  display: grid;
+  place-items: center;
 }
 
 /* ————————————————————— La chemise qui s'entrouvre —————————————————————
@@ -678,5 +686,36 @@
 }
 
 .chemin span[aria-hidden] {
+  color: var(--bo-texte-3);
+}
+
+/* ————————————————————— En-têtes de section ————————————————————— */
+
+/* Deux sections, deux titres : la page se lit avant de se parcourir. */
+.sectionTitre {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 6px 0 0;
+}
+
+.sectionTete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.sectionTete .sectionTitre {
+  margin: 0;
+}
+
+.compte {
+  font-size: 0.8125rem;
+  font-weight: 400;
   color: var(--bo-texte-3);
 }
