@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Header } from '@/components/Header';
+import { lireEntreprise } from '@/lib/entreprise';
 import { lireNavigation } from '@/lib/navigation';
 import { mediasParIds } from '@/lib/medias';
 import { Footer } from '@/components/Footer';
@@ -61,7 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <Header nav={nav} logo={logo} />
         <main id="contenu">{children}</main>
-        <Footer />
+        <Footer entreprise={await lireEntreprise()} />
         <DonneesStructurees data={schemaEntreprise} />
         <Mesure />
       </body>

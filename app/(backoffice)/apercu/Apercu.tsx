@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Footer } from '@/components/Footer';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Header } from '@/components/Header';
 import { RenduSections } from '@/components/sections/RenduSections';
 import { Surligneur } from './Surligneur';
@@ -18,8 +17,13 @@ import type { Media, Navigation, Section } from '@/lib/modeles';
  * Il ne recharge jamais : l'éditeur lui envoie les sections par message à
  * chaque frappe. C'est ce qui rend l'aperçu instantané, là où recharger la page
  * ferait sauter la position de défilement à chaque lettre tapée.
+ *
+ * Le pied de page arrive tout rendu depuis le serveur : il lit l'entreprise en
+ * base, et cet écran-ci tourne dans le navigateur. L'importer ici embarquerait
+ * le pilote PostgreSQL dans le paquet envoyé au visiteur — Turbopack le refuse,
+ * et il a raison.
  */
-export function Apercu() {
+export function Apercu({ pied }: { pied: ReactNode }) {
   const [sections, setSections] = useState<Section[]>([]);
   const [medias, setMedias] = useState<Media[]>([]);
   const [nav, setNav] = useState<Navigation | null>(null);
@@ -72,7 +76,7 @@ export function Apercu() {
           </section>
         )}
       </main>
-      <Footer />
+      {pied}
       <Surligneur />
     </>
   );
