@@ -851,12 +851,19 @@ body:has(.bo) {
 }
 
 /* Un bouton qui se comporte en onglet de menu : même dessin que les liens. */
+/* Un bouton qui se tient dans la colonne comme un onglet. `font: inherit`
+   reprenait la taille réduite du pied de menu et rendait la ligne deux pixels
+   plus courte que les autres : seule la famille est héritée, la taille reste
+   celle de `.bo-lien`. */
 .bo-lien-bouton {
   width: 100%;
   background: none;
   border: 0;
-  font: inherit;
+  font-family: inherit;
   font-weight: 500;
+  /* Un bouton n'hérite ni de la taille ni de l'interligne : sans cette ligne,
+     il mesure trois pixels de moins que les onglets voisins. */
+  line-height: inherit;
   text-align: left;
   cursor: pointer;
 }

@@ -154,12 +154,9 @@ export function MenuBackOffice({
         </button>
 
         <form action={deconnexion}>
-          <button
-            className="bo-bouton bo-bouton-discret"
-            type="submit"
-            style={{ width: '100%' }}
-            title="Se déconnecter"
-          >
+          {/* Le même habillage que les autres onglets : encadré, il portait un
+              filet d'un pixel qui décalait son icône de la colonne. */}
+          <button className="bo-lien bo-lien-bouton" type="submit" title="Se déconnecter">
             <span className="bo-signe">
               <Sortie />
             </span>
