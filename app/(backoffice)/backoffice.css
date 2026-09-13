@@ -431,6 +431,33 @@ body:has(.bo) {
   padding: 0;
 }
 
+/* Les trois pages légales, en bas de chaque écran : discrètes, et de la même
+   source que le pied de page du site — les changer dans Mon entreprise les
+   change ici aussi. L'éditeur en pleine page n'en veut pas : il occupe tout
+   l'écran, et rien ne doit s'ajouter sous son aperçu. */
+.bo-pied-page {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--bo-filet);
+  font-size: 0.8125rem;
+}
+
+.bo-pied-page a {
+  color: var(--bo-texte-3);
+  transition: color var(--bo-vitesse);
+}
+
+.bo-pied-page a:hover {
+  color: var(--bo-texte);
+}
+
+.bo-contenu:has(.editeur-plein) .bo-pied-page {
+  display: none;
+}
+
 /* Pas de largeur maximale : sur un écran de 1900 px, une mesure plafonnée
    laissait cinq cents pixels morts à droite de chaque écran. Ce sont des
    tableaux et des grilles, pas des colonnes de texte — ce qui doit rester
