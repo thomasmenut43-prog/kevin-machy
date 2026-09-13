@@ -3,6 +3,7 @@ import { listerDossiers, listerMedias } from '@/lib/medias';
 import { utilisateurConnecte } from '@/lib/auth';
 import { listerPages, pageParId } from '@/lib/pages';
 import { lireNavigation } from '@/lib/navigation';
+import { lirePied } from '@/lib/piedDePage';
 import { Editeur } from '../Editeur';
 
 export const dynamic = 'force-dynamic';
@@ -16,12 +17,13 @@ export default async function PageEditeur({ params }: { params: Promise<{ id: st
   const id = Number((await params).id);
   if (!Number.isInteger(id)) notFound();
 
-  const [page, pages, medias, utilisateur, navigation, dossiers] = await Promise.all([
+  const [page, pages, medias, utilisateur, navigation, piedDePage, dossiers] = await Promise.all([
     pageParId(id),
     listerPages(),
     listerMedias(),
     utilisateurConnecte(),
     lireNavigation(),
+    lirePied(),
     listerDossiers(),
   ]);
   if (!page) notFound();
@@ -32,6 +34,7 @@ export default async function PageEditeur({ params }: { params: Promise<{ id: st
       medias={medias}
       administrateur={utilisateur?.role === 'administrateur'}
       navigation={navigation}
+      piedDePage={piedDePage}
       dossiers={dossiers}
     />;
 }

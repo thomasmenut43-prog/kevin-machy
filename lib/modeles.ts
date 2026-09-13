@@ -156,6 +156,28 @@ export type LienNav = { chemin: string; libelle?: string };
  * Ici plutôt que dans `lib/navigation.ts` : l'en-tête du site et l'éditeur sont
  * des composants client, et ne peuvent pas importer un module serveur.
  */
+/**
+ * Le pied de page, tel que Kevin le règle.
+ *
+ * Les coordonnées n'y figurent pas : elles appartiennent à l'entreprise, et
+ * sont réglées une seule fois dans Paramètres → Mon entreprise. Ici vivent
+ * les textes du pied et les interrupteurs qui décident de ce qu'on montre.
+ */
+export type PiedDePage = {
+  signature: string;
+  reseauxActifs: boolean;
+  site: { titre: string; menu: LienNav[] };
+  joindre: {
+    titre: string;
+    telephone: boolean;
+    email: boolean;
+    acces: boolean;
+    reservation: boolean;
+    adresse: boolean;
+  };
+  encadre: { actif: boolean; titre: string; texte: string; lien: boolean; zone: boolean };
+};
+
 export type Navigation = {
   logoActif: boolean;
   logoImage: number | null;

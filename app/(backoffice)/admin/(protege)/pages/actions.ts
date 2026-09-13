@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { utilisateurConnecte } from '@/lib/auth';
 import { ecrireNavigation } from '@/lib/navigation';
+import { ecrirePied } from '@/lib/piedDePage';
 import {
   creerPage,
   depublier,
@@ -145,6 +146,14 @@ export async function actionPublierNavigation(nav: unknown) {
   // L'en-tête est sur toutes les pages : c'est tout le site qu'il faut refaire.
   revalidatePath('/', 'layout');
   return enregistree;
+}
+
+export async function actionPublierPied(pied: unknown) {
+  await exigerConnexion();
+  const enregistre = await ecrirePied(pied as Parameters<typeof ecrirePied>[0]);
+  // Le pied est sur toutes les pages, comme l'en-tête.
+  revalidatePath('/', 'layout');
+  return enregistre;
 }
 
 export async function actionSupprimerPage(id: number) {

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Footer } from '@/components/Footer';
 import { Header } from '@/components/Header';
 import { RenduSections } from '@/components/sections/RenduSections';
 import { Surligneur } from './Surligneur';
-import type { Entreprise, Media, Navigation, Section } from '@/lib/modeles';
+import type { Entreprise, Media, Navigation, PiedDePage, Section } from '@/lib/modeles';
 
 /**
  * L'aperçu du site, dans l'iframe de l'éditeur.
@@ -18,15 +19,22 @@ import type { Entreprise, Media, Navigation, Section } from '@/lib/modeles';
  * chaque frappe. C'est ce qui rend l'aperçu instantané, là où recharger la page
  * ferait sauter la position de défilement à chaque lettre tapée.
  *
- * Le pied de page arrive tout rendu depuis le serveur : il lit l'entreprise en
- * base, et cet écran-ci tourne dans le navigateur. L'importer ici embarquerait
- * le pilote PostgreSQL dans le paquet envoyé au visiteur — Turbopack le refuse,
- * et il a raison.
+ * L'en-tête et le pied de page sont ceux du site, rendus ici : ils reçoivent
+ * leurs réglages, ils ne les lisent pas. C'est ce qui permet de les afficher
+ * dans un écran qui tourne, lui, dans le navigateur — et de les voir changer
+ * à mesure que Kevin tape.
  */
-export function Apercu({ pied, entreprise }: { pied: ReactNode; entreprise: Entreprise }) {
+export function Apercu({
+  entreprise,
+  pied: piedInitial,
+}: {
+  entreprise: Entreprise;
+  pied: PiedDePage;
+}) {
   const [sections, setSections] = useState<Section[]>([]);
   const [medias, setMedias] = useState<Media[]>([]);
   const [nav, setNav] = useState<Navigation | null>(null);
+  const [pied, setPied] = useState<PiedDePage>(piedInitial);
 
   useEffect(() => {
     // Les révélations au défilement du site attendent cet attribut. Sans lui,
@@ -51,6 +59,7 @@ export function Apercu({ pied, entreprise }: { pied: ReactNode; entreprise: Entr
       setSections(Array.isArray(ev.data.sections) ? ev.data.sections : []);
       setMedias(Array.isArray(ev.data.medias) ? ev.data.medias : []);
       if (ev.data.nav) setNav(ev.data.nav as Navigation);
+      if (ev.data.pied) setPied(ev.data.pied as PiedDePage);
     };
 
     window.addEventListener('message', recevoir);
@@ -80,7 +89,7 @@ export function Apercu({ pied, entreprise }: { pied: ReactNode; entreprise: Entr
           </section>
         )}
       </main>
-      {pied}
+      <Footer entreprise={entreprise} pied={pied} />
       <Surligneur />
     </>
   );

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CATALOGUE, PAR_TYPE } from '@/cms/catalogue';
 import { CHAMPS_NAVIGATION } from '@/cms/navigation';
+import { CHAMPS_PIED } from '@/cms/piedDePage';
 import { FAMILLES } from '@/cms/schema';
 import {
   nouvelleCle,
@@ -10,12 +11,14 @@ import {
   type Media,
   type Navigation,
   type Page,
+  type PiedDePage,
   type Section,
 } from '@/lib/modeles';
 import {
   actionEnregistrerBrouillon,
   actionPublier,
   actionPublierNavigation,
+  actionPublierPied,
   actionSupprimerPage,
 } from './actions';
 import { Champs } from './Champs';
@@ -50,12 +53,21 @@ type Props = {
   navigation: Navigation;
   /** Les dossiers de la médiathèque, pour filtrer le choix d'une image. */
   dossiers: Dossier[];
+  piedDePage: PiedDePage;
 };
 
 /** Les trois volets de gauche. L'aperçu, lui, ne quitte jamais l'écran. */
 type Vue = 'sections' | 'reglages' | 'versions';
 
-export function Editeur({ page, pages, medias, administrateur, navigation, dossiers }: Props) {
+export function Editeur({
+  page,
+  pages,
+  medias,
+  administrateur,
+  navigation,
+  piedDePage,
+  dossiers,
+}: Props) {
   const [vue, setVue] = useState<Vue>('sections');
   // L'aperçu s'affiche au format d'un écran d'ordinateur ou d'un téléphone.
   // Plus de la moitié des visiteurs arrivent sur mobile : Kevin doit pouvoir
@@ -70,6 +82,10 @@ export function Editeur({ page, pages, medias, administrateur, navigation, dossi
   // sections, et part en ligne avec elles.
   const [nav, setNav] = useState<Navigation>(navigation);
   const [navModifiee, setNavModifiee] = useState(false);
+  // Le pied de page vit à côté des sections lui aussi : commun à tout le site,
+  // et enregistré avec la page qu'on est en train de mettre en ligne.
+  const [pied, setPied] = useState<PiedDePage>(piedDePage);
+  const [piedModifie, setPiedModifie] = useState(false);
   const [choisie, setChoisie] = useState<string | null>(null);
   // Le champ montré du doigt dans l'aperçu, à ouvrir dans le panneau.
   const [champVise, setChampVise] = useState<string | null>(null);
@@ -84,10 +100,10 @@ export function Editeur({ page, pages, medias, administrateur, navigation, dossi
   // ————————————————————— L'aperçu suit la frappe —————————————————————
   const envoyerApercu = useCallback(() => {
     apercu.current?.contentWindow?.postMessage(
-      { source: 'editeur-km', sections, medias, nav },
+      { source: 'editeur-km', sections, medias, nav, pied },
       window.location.origin,
     );
-  }, [sections, medias, nav]);
+  }, [sections, medias, nav, pied]);
 
   useEffect(() => {
     envoyerApercu();
@@ -202,6 +218,10 @@ export function Editeur({ page, pages, medias, administrateur, navigation, dossi
       if (navModifiee) {
         setNav(await actionPublierNavigation(nav));
         setNavModifiee(false);
+      }
+      if (piedModifie) {
+        setPied(await actionPublierPied(pied));
+        setPiedModifie(false);
       }
       setModifie(false);
       setEtat('publie');
@@ -329,6 +349,7 @@ export function Editeur({ page, pages, medias, administrateur, navigation, dossi
               // écran, et l'on doit pouvoir tout replier pour revoir la pile.
               onChoisir={(cle) => setChoisie((actuelle) => (actuelle === cle ? null : cle))}
               nav={nav}
+              pied={pied}
               medias={medias}
               dossiers={dossiers}
               pages={pages}
@@ -338,6 +359,12 @@ export function Editeur({ page, pages, medias, administrateur, navigation, dossi
               onMajNav={(v) => {
                 setNav(v);
                 setNavModifiee(true);
+                setModifie(true);
+                setEtat('repos');
+              }}
+              onMajPied={(v) => {
+                setPied(v);
+                setPiedModifie(true);
                 setModifie(true);
                 setEtat('repos');
               }}
@@ -474,12 +501,14 @@ function Etat({
 
 /** Clé réservée : la barre n'est pas une section, mais s'ouvre comme elles. */
 export const NAVIGATION = '@navigation';
+export const PIED = '@pied';
 
 function ListeSections({
   sections,
   choisie,
   onChoisir,
   nav,
+  pied,
   medias,
   dossiers,
   pages,
@@ -487,6 +516,7 @@ function ListeSections({
   onVu,
   onMajSection,
   onMajNav,
+  onMajPied,
   onDeplacer,
   onDupliquer,
   onSupprimer,
@@ -497,6 +527,7 @@ function ListeSections({
   choisie: string | null;
   onChoisir: (cle: string) => void;
   nav: Navigation;
+  pied: PiedDePage;
   medias: Media[];
   dossiers: Dossier[];
   pages: Props['pages'];
@@ -504,6 +535,7 @@ function ListeSections({
   onVu: () => void;
   onMajSection: (cle: string, valeurs: Record<string, unknown>) => void;
   onMajNav: (nav: Navigation) => void;
+  onMajPied: (pied: PiedDePage) => void;
   onDeplacer: (de: number, vers: number) => void;
   onDupliquer: (i: number) => void;
   onSupprimer: (i: number) => void;
@@ -523,9 +555,9 @@ function ListeSections({
           aria-expanded={choisie === NAVIGATION}
           onClick={() => onChoisir(NAVIGATION)}
         >
-          <strong>Barre de navigation</strong>
+          <strong>Header</strong>
           <span>
-            {nav.menu.length} lien{nav.menu.length > 1 ? 's' : ''} · commune à tout le site
+            {nav.menu.length} lien{nav.menu.length > 1 ? 's' : ''} · commun à tout le site
           </span>
         </button>
 
@@ -658,6 +690,37 @@ function ListeSections({
       <button type="button" className="bo-bouton bo-bouton-discret" onClick={onAjouter}>
         Ajouter une section
       </button>
+
+      {/* Épinglé comme l'en-tête, et à sa place : en bas de la pile, là où il
+          est sur le site. Ses coordonnées viennent des Paramètres — le pied ne
+          fait que choisir ce qu'il en montre. */}
+      <div className={e.epingleeBloc} data-ouvert={choisie === PIED ? '' : undefined}>
+        <button
+          type="button"
+          className={e.epinglee}
+          aria-expanded={choisie === PIED}
+          onClick={() => onChoisir(PIED)}
+        >
+          <strong>Footer</strong>
+          <span>
+            {pied.site.menu.length} lien{pied.site.menu.length > 1 ? 's' : ''} · commun à tout le
+            site
+          </span>
+        </button>
+
+        {choisie === PIED ? (
+          <div className={e.deroule}>
+            <Champs
+              champs={CHAMPS_PIED}
+              valeurs={pied}
+              medias={medias}
+              dossiers={dossiers}
+              pages={pages.map((p) => ({ id: p.id, titre: p.titre, chemin: p.chemin }))}
+              onChange={(v) => onMajPied(v as PiedDePage)}
+            />
+          </div>
+        ) : null}
+      </div>
     </>
   );
 }

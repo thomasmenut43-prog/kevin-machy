@@ -1,17 +1,21 @@
 import Link from 'next/link';
-import { telephoneUri, type Entreprise } from '@/lib/modeles';
-import { NAV } from '@/lib/site';
+import { telephoneUri, type Entreprise, type PiedDePage } from '@/lib/modeles';
 import s from './Footer.module.css';
 
 /**
- * Le pied de page porte les coordonnées.
+ * Le pied de page.
  *
- * Elles lui sont données plutôt que lues ici : l'aperçu du BackOffice affiche
- * ce même pied de page depuis le navigateur, et un composant qui interroge la
+ * Deux sources, et la distinction tient : **l'entreprise** donne les faits —
+ * téléphone, adresse, réseaux, liens légaux, réglés une seule fois dans les
+ * Paramètres — et **le pied** donne ses propres textes et ce qu'il choisit
+ * d'en montrer, réglés dans l'éditeur comme une section.
+ *
+ * Les deux lui sont passés plutôt que lus ici : l'aperçu du BackOffice affiche
+ * ce même composant depuis le navigateur, et un composant qui interroge la
  * base ne peut pas y entrer. Un lien vide n'est pas affiché, plutôt que de
  * mener nulle part.
  */
-export function Footer({ entreprise }: { entreprise: Entreprise }) {
+export function Footer({ entreprise, pied }: { entreprise: Entreprise; pied: PiedDePage }) {
   const reseaux = (
     [
       ['instagram', 'Instagram'],
@@ -21,7 +25,7 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
     ] as const
   )
     .map(([cle, label]) => ({ href: entreprise.liens[cle], label }))
-    .filter((r) => r.href);
+    .filter((r) => r.href && pied.reseauxActifs);
 
   return (
     <footer className={s.pied}>
@@ -29,9 +33,7 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
         <div className={s.grille}>
           <div className={s.bloc}>
             <img className={s.logo} src="/assets/logo-clair.svg" alt={entreprise.nom} width={1774} height={547} />
-            <p className={s.signature}>
-              Photographe professionnel et Artisan d’Art, basé au Puy-en-Velay. Je photographie surtout des gens.
-            </p>
+            {pied.signature ? <p className={s.signature}>{pied.signature}</p> : null}
             <div className={s.reseaux}>
               {reseaux.map((r) => (
                 <a key={r.label} className={s.lien} href={r.href} target="_blank" rel="noopener noreferrer">
@@ -42,33 +44,33 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
           </div>
 
           <nav className={s.bloc} aria-label="Navigation de pied de page">
-            <p className={s.titreBloc}>Le site</p>
+            <p className={s.titreBloc}>{pied.site.titre}</p>
             <div className={s.liste}>
               <Link className={s.lien} href="/">
                 Accueil
               </Link>
-              {NAV.map((item) => (
-                <Link key={item.href} className={s.lien} href={item.href}>
-                  {item.label}
+              {pied.site.menu.map((item) => (
+                <Link key={item.chemin} className={s.lien} href={`/${item.chemin}/`}>
+                  {item.libelle}
                 </Link>
               ))}
             </div>
           </nav>
 
           <div className={s.bloc}>
-            <p className={s.titreBloc}>Me joindre</p>
+            <p className={s.titreBloc}>{pied.joindre.titre}</p>
             <div className={s.liste}>
-              {entreprise.telephone ? (
+              {pied.joindre.telephone && entreprise.telephone ? (
                 <a className={s.lien} href={telephoneUri(entreprise.telephone)}>
                   {entreprise.telephone}
                 </a>
               ) : null}
-              {entreprise.email ? (
+              {pied.joindre.email && entreprise.email ? (
                 <a className={s.lien} href={`mailto:${entreprise.email}`}>
                   {entreprise.email}
                 </a>
               ) : null}
-              {entreprise.liens.accesClients ? (
+              {pied.joindre.acces && entreprise.liens.accesClients ? (
                 <a
                   className={s.lien}
                   href={entreprise.liens.accesClients}
@@ -78,7 +80,7 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
                   Accès clients ↗
                 </a>
               ) : null}
-              {entreprise.liens.reservation ? (
+              {pied.joindre.reservation && entreprise.liens.reservation ? (
                 <a
                   className={s.lien}
                   href={entreprise.liens.reservation}
@@ -89,19 +91,19 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
                 </a>
               ) : null}
             </div>
-            <p className={s.zone}>
-              Studio au {entreprise.adresse}, {entreprise.codePostal} {entreprise.ville}. Sur
-              rendez-vous uniquement.
-            </p>
+            {pied.joindre.adresse && entreprise.adresse ? (
+              <p className={s.zone}>
+                Studio au {entreprise.adresse}, {entreprise.codePostal} {entreprise.ville}. Sur
+                rendez-vous uniquement.
+              </p>
+            ) : null}
           </div>
 
+          {pied.encadre.actif ? (
           <div className={`${s.bloc} ${s.identite}`}>
-            <p className={s.titreBloc}>Photos d’identité</p>
-            <p>
-              Photos d’identité agréées ANTS pour carte d’identité, passeport, permis de conduire et visa. À partir de
-              10 € la planche de 6 photos, uniquement sur rendez-vous au Puy-en-Velay.
-            </p>
-            {entreprise.liens.reservation ? (
+            {pied.encadre.titre ? <p className={s.titreBloc}>{pied.encadre.titre}</p> : null}
+            {pied.encadre.texte ? <p>{pied.encadre.texte}</p> : null}
+            {pied.encadre.lien && entreprise.liens.reservation ? (
               <a
                 className={s.lien}
                 href={entreprise.liens.reservation}
@@ -111,8 +113,11 @@ export function Footer({ entreprise }: { entreprise: Entreprise }) {
                 Prendre rendez-vous ↗
               </a>
             ) : null}
-            <p className={s.zone}>{entreprise.zone}</p>
+            {pied.encadre.zone && entreprise.zone ? (
+              <p className={s.zone}>{entreprise.zone}</p>
+            ) : null}
           </div>
+          ) : null}
         </div>
 
         <div className={s.bas}>

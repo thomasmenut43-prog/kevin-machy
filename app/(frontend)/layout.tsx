@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Header } from '@/components/Header';
 import { lireEntreprise } from '@/lib/entreprise';
 import { lireNavigation } from '@/lib/navigation';
+import { lirePied } from '@/lib/piedDePage';
 import { mediasParIds } from '@/lib/medias';
 import { Footer } from '@/components/Footer';
 import { Mesure } from '@/components/Mesure';
@@ -61,7 +62,7 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // La barre de navigation vient de la base : Kevin la règle depuis l'éditeur.
   const nav = await lireNavigation().catch(() => null);
-  const entreprise = await lireEntreprise();
+  const [entreprise, pied] = await Promise.all([lireEntreprise(), lirePied()]);
   const logo = nav?.logoImage ? (await mediasParIds([nav.logoImage])).get(nav.logoImage) : null;
 
   return (
@@ -74,7 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <Header nav={nav} logo={logo} entreprise={entreprise} />
         <main id="contenu">{children}</main>
-        <Footer entreprise={entreprise} />
+        <Footer entreprise={entreprise} pied={pied} />
         <DonneesStructurees data={schemaEntreprise(entreprise)} />
         <Mesure />
       </body>
