@@ -1,0 +1,908 @@
+/* ==========================================================================
+   BackOffice — thème clair, écrit pour Kevin.
+
+   Le site est une chambre noire ; l'administration ne l'est pas, et c'est
+   délibéré. Ce sont deux métiers différents : le site cherche le souffle et le
+   silence, l'outil cherche la densité, la lisibilité et la rapidité. Un tableau
+   de bord se lit en plein jour, entre deux rendez-vous, souvent sur un
+   téléphone — un fond clair, des repères nets et des cibles larges y servent
+   mieux qu'un fond noir.
+
+   Ce qui relie les deux univers, c'est le cuivre. Il est ici un peu plus
+   soutenu que sur le site : mesuré sur blanc, la teinte d'origine passait pour
+   du gris.
+
+   La feuille est autonome. Elle n'hérite d'aucune couleur du site, seulement de
+   ses deux polices ; l'aperçu, lui, charge les styles du site de son côté.
+   ========================================================================== */
+
+.bo {
+  /* — Surfaces — */
+  --bo-fond: #fbfbfc;
+  --bo-surface: #ffffff;
+  --bo-surface-2: #f5f6f8;
+
+  /* — Traits — */
+  --bo-bord: #e2e5ea;
+  --bo-bord-fort: #cfd4db;
+  --bo-filet: #eef0f3;
+
+  /* — Encres — */
+  --bo-texte: #16181d;
+  --bo-texte-2: #4b525b;
+  --bo-texte-3: #79818c;
+
+  /* — Accent, validé sur fond blanc — */
+  --bo-accent: #a85f33;
+  --bo-accent-fort: #8f4f28;
+  --bo-accent-doux: #fdf4ee;
+  --bo-accent-bord: #f0dccd;
+
+  --bo-danger: #b4372c;
+  --bo-danger-doux: #fdf2f1;
+  --bo-danger-bord: #f0cdc9;
+
+  --bo-police: var(--police-texte), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --bo-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --bo-rayon: 8px;
+  --bo-rayon-s: 6px;
+  --bo-ombre: 0 1px 2px rgb(16 24 40 / 0.06);
+  --bo-ombre-carte: 0 1px 3px rgb(16 24 40 / 0.08), 0 1px 2px rgb(16 24 40 / 0.04);
+  --bo-ombre-flottant: 0 16px 40px rgb(16 24 40 / 0.14), 0 3px 8px rgb(16 24 40 / 0.06);
+  --bo-vitesse: 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  min-height: 100dvh;
+  background: var(--bo-fond);
+  color: var(--bo-texte);
+  font-family: var(--bo-police);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Le site peint un fond noir sur le corps de page. L'administration reprend la
+   main, sinon le fond clair s'arrête au bord du contenu. */
+body:has(.bo) {
+  /* La marge par defaut du navigateur laissait huit pixels de site autour de
+     l'administration : visible des que l'editeur occupe tout l'ecran. */
+  margin: 0;
+  background: var(--bo-fond, #fbfbfc);
+}
+
+.bo *,
+.bo *::before,
+.bo *::after {
+  box-sizing: border-box;
+}
+
+/* Remise à zéro des marges du navigateur.
+   Écrite en `:where()`, donc de poids nul : une carte qui se donne une marge
+   intérieure l'emporte sans avoir à se battre. Sans cela, la regle ci-dessous
+   écrasait le `padding` des figures et des listes — les graphiques du tableau
+   de bord touchaient leur cadre. */
+:where(.bo) :where(h1, h2, h3, p, ul, ol, figure, fieldset, dl, dd, blockquote) {
+  margin: 0;
+  padding: 0;
+}
+
+.bo ul,
+.bo ol {
+  list-style: none;
+}
+
+.bo a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Visible des lecteurs d'écran, invisible à l'œil. Indispensable partout où un
+   bouton ne montre qu'un symbole : sans elle, le bouton n'a pas de nom. */
+.bo .visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.bo :focus-visible {
+  outline: 2px solid var(--bo-accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ————————————————————————— Écrans d'entrée ————————————————————————— */
+
+.bo-accueil {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bo-surface-2);
+}
+
+.bo-carte {
+  width: 100%;
+  max-width: 400px;
+  display: grid;
+  gap: 22px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: 12px;
+  box-shadow: var(--bo-ombre-carte);
+  padding: 30px;
+}
+
+.bo-marque {
+  display: grid;
+  gap: 3px;
+  justify-items: center;
+  text-align: center;
+}
+
+.bo-marque strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.bo-marque span {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+}
+
+/* ————————————————————————————— Formulaires ————————————————————————— */
+
+.bo-champ {
+  display: grid;
+  gap: 6px;
+}
+
+.bo-champ > label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--bo-texte-2);
+}
+
+.bo-champ input,
+.bo-champ textarea,
+.bo-champ select {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 11px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon-s);
+  box-shadow: var(--bo-ombre);
+  color: var(--bo-texte);
+  font: inherit;
+  transition: border-color var(--bo-vitesse), box-shadow var(--bo-vitesse);
+}
+
+.bo-champ textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.bo-champ input::placeholder,
+.bo-champ textarea::placeholder {
+  color: var(--bo-texte-3);
+}
+
+.bo-champ input:hover,
+.bo-champ textarea:hover,
+.bo-champ select:hover {
+  border-color: var(--bo-bord-fort);
+}
+
+.bo-champ input:focus-visible,
+.bo-champ textarea:focus-visible,
+.bo-champ select:focus-visible {
+  outline: none;
+  border-color: var(--bo-accent);
+  box-shadow: 0 0 0 3px var(--bo-accent-doux);
+}
+
+.bo-aide {
+  font-size: 0.78rem;
+  color: var(--bo-texte-3);
+  line-height: 1.5;
+}
+
+.bo-form {
+  display: grid;
+  gap: 16px;
+}
+
+/* ————————————————————————————— Boutons ——————————————————————————— */
+
+.bo-bouton {
+  min-height: 38px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  background: var(--bo-accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: 1px solid var(--bo-accent);
+  border-radius: var(--bo-rayon-s);
+  box-shadow: var(--bo-ombre);
+  cursor: pointer;
+  transition: background-color var(--bo-vitesse), border-color var(--bo-vitesse);
+}
+
+.bo-bouton:hover:not(:disabled) {
+  background: var(--bo-accent-fort);
+  border-color: var(--bo-accent-fort);
+}
+
+.bo-bouton:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.bo-bouton-discret {
+  background: var(--bo-surface);
+  color: var(--bo-texte-2);
+  border-color: var(--bo-bord);
+}
+
+.bo-bouton-discret:hover:not(:disabled) {
+  background: var(--bo-surface-2);
+  border-color: var(--bo-bord-fort);
+  color: var(--bo-texte);
+}
+
+/* ————————————————————————————— Messages —————————————————————————— */
+
+.bo-erreur {
+  background: var(--bo-danger-doux);
+  border: 1px solid var(--bo-danger-bord);
+  border-radius: var(--bo-rayon-s);
+  color: #8c2b22;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+}
+
+/* ————————————————————————————— Ossature —————————————————————————— */
+
+.bo-cadre {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+/* Épinglé, le menu reprend sa place dans la grille et pousse le contenu. */
+.bo-cadre:has(.bo-menu[data-epingle]) {
+  grid-template-columns: 300px minmax(0, 1fr);
+}
+
+.bo-menu {
+  border-right: 1px solid var(--bo-bord);
+  background: var(--bo-surface);
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  width: 62px;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ouvert : trois cents pixels, posés sur le contenu, avec l'ombre qui dit
+   qu'on est au-dessus. */
+.bo-menu[data-ouvert] {
+  width: 300px;
+  box-shadow: var(--bo-ombre-flottant);
+}
+
+.bo-menu[data-epingle] {
+  box-shadow: none;
+}
+
+.bo-entete-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.bo-menu .bo-marque {
+  justify-items: start;
+  text-align: left;
+  /* Le nom s'aligne sur le libellé des onglets, pas sur le bord du menu. */
+  padding-inline: 10px 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bo-menu nav {
+  display: grid;
+  gap: 1px;
+}
+
+.bo-lien {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--bo-rayon-s);
+  color: var(--bo-texte-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.bo-lien:hover {
+  color: var(--bo-texte);
+  background: var(--bo-surface-2);
+}
+
+.bo-lien[aria-current='page'] {
+  color: var(--bo-accent);
+  background: var(--bo-accent-doux);
+}
+
+/* Onglet présent mais inactif : il pose le jalon sans rien promettre. */
+.bo-lien-verrouille {
+  color: #a8aeb7;
+  cursor: not-allowed;
+}
+
+.bo-lien-verrouille:hover {
+  color: #a8aeb7;
+  background: none;
+}
+
+.bo-pied-menu {
+  margin-top: auto;
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--bo-filet);
+  padding-top: 14px;
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+}
+
+.bo-pied-menu > span {
+  padding-inline: 10px;
+  line-height: 1.4;
+}
+
+/* L'éditeur est la seule vue qui refuse la mesure confortable : la limiter
+   laisserait une bande vide à droite de l'aperçu, sur un grand écran. */
+.bo-contenu:has(.editeur-plein) {
+  max-width: none;
+  padding: 0;
+}
+
+.bo-contenu {
+  padding: clamp(20px, 2.4vw, 32px);
+  display: grid;
+  align-content: start;
+  gap: clamp(16px, 2vw, 24px);
+  max-width: 1360px;
+}
+
+.bo-titre {
+  font-size: 1.45rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.bo-sous-titre {
+  color: var(--bo-texte-3);
+  font-size: 0.9rem;
+  margin-top: 4px;
+  max-width: 78ch;
+}
+
+/* ————————————————————————— Listes et encadrés ————————————————————— */
+
+.bo-tableau {
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  box-shadow: var(--bo-ombre-carte);
+  overflow: hidden;
+}
+
+.bo-tableau li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bo-filet);
+}
+
+.bo-tableau li:last-child {
+  border-bottom: 0;
+}
+
+.bo-tableau a {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bo-tableau a strong {
+  font-weight: 500;
+}
+
+.bo-tableau a:hover strong {
+  color: var(--bo-accent);
+}
+
+.bo-chemin {
+  font-family: var(--bo-mono);
+  font-size: 0.78rem;
+  color: var(--bo-texte-3);
+}
+
+.bo-etiquette {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--bo-texte-2);
+  background: var(--bo-surface-2);
+  border: 1px solid var(--bo-bord);
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+
+.bo-etiquette[data-vif] {
+  color: var(--bo-accent);
+  background: var(--bo-accent-doux);
+  border-color: var(--bo-accent-bord);
+}
+
+.bo-encadre {
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  box-shadow: var(--bo-ombre-carte);
+  padding: 20px;
+  max-width: 560px;
+}
+
+.bo-encadre code {
+  font-family: var(--bo-mono);
+  font-size: 0.9em;
+  background: var(--bo-surface-2);
+  border-radius: 4px;
+  padding: 1px 4px;
+  color: var(--bo-accent);
+}
+
+@media (max-width: 860px) {
+  .bo-cadre {
+    grid-template-columns: 1fr;
+  }
+
+  .bo-menu {
+    position: static;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--bo-bord);
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .bo-menu .bo-entete-menu,
+  .bo-pied-menu > span {
+    display: none;
+  }
+
+  .bo-menu nav {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow-x: auto;
+    flex: 1;
+  }
+
+  .bo-lien {
+    white-space: nowrap;
+  }
+
+  .bo-pied-menu {
+    margin: 0;
+    border-top: 0;
+    padding: 0;
+    grid-auto-flow: column;
+  }
+}
+
+
+/* ————————————————————————— Menu réduit —————————————————————————————
+   L'éditeur a besoin de largeur : le menu s'y réduit à une colonne de
+   symboles et rend cent-soixante pixels à l'aperçu. Les libellés quittent
+   l'affichage mais restent dans l'infobulle et dans le nom accessible :
+   rien ne se perd au clavier ni au lecteur d'écran. */
+
+/* Le glissement se joue sur la largeur du menu et sur celle des libellés.
+   Les masquer d'un `display: none` les ferait disparaître d'un coup, ce qui se
+   remarque bien plus qu'un menu qui se replie. */
+.bo-cadre {
+  transition: grid-template-columns 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bo-menu {
+  transition:
+    width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bo-libelle {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition:
+    max-width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 150ms ease-out;
+}
+
+.bo-menu[data-ouvert] .bo-libelle {
+  max-width: 220px;
+  opacity: 1;
+}
+
+/* Le libellé avance d'un cheveu au survol de son onglet. */
+.bo-lien:hover .bo-libelle {
+  transform: translateX(4px);
+}
+
+.bo-menu .bo-marque {
+  transition:
+    opacity 160ms cubic-bezier(0.4, 0, 0.2, 1),
+    max-width 280ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 280ms cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 0;
+  opacity: 0;
+  padding-inline: 0;
+  overflow: hidden;
+}
+
+/* Sur une seule ligne, c'est la largeur qui se replie, pas la hauteur :
+   l'épingle garde sa place et glisse vers le centre. */
+.bo-menu[data-ouvert] .bo-marque {
+  opacity: 1;
+  max-width: 220px;
+  padding-inline: 10px 0;
+}
+
+/* L'épingle sort du cadre quand le menu est fermé : elle n'a pas la place,
+   et le nom qu'elle accompagne n'est pas là non plus. */
+.bo-menu:not([data-ouvert]) .bo-reduire {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bo-reduire {
+  transition: opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bo-reduire span[aria-hidden] {
+  display: block;
+  transition: transform 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bo-menu nav {
+  width: 100%;
+}
+
+/* Fermee ou ouverte, l'icône occupe exactement la même place : c'est le
+   libellé qui apparaît à côté, et rien d'autre ne bouge. */
+.bo-menu .bo-lien,
+.bo-menu .bo-pied-menu .bo-bouton {
+  justify-content: flex-start;
+  padding-inline: 10px;
+  gap: 8px;
+}
+
+.bo-signe {
+  display: none;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+
+/* Les icônes accompagnent le libellé quand le menu est ouvert, et le
+   remplacent quand il est replié : la colonne reste lisible dans les deux
+   états, sans que rien ne saute de place. */
+.bo-signe {
+  display: grid;
+}
+
+.bo-reduire {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-content: center;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--bo-texte-3);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.bo-reduire:hover {
+  color: var(--bo-texte);
+  background: var(--bo-surface-2);
+}
+
+@media (max-width: 860px) {
+  /* Sur un téléphone il n'y a pas de survol : le menu reste ouvert, en
+     bandeau, et les libellés avec lui. */
+  .bo-cadre:has(.bo-menu),
+  .bo-cadre:has(.bo-menu[data-epingle]) {
+    grid-template-columns: 1fr;
+  }
+
+  .bo-menu,
+  .bo-menu[data-ouvert] {
+    width: 100%;
+    box-shadow: none;
+  }
+
+  .bo-menu .bo-libelle {
+    max-width: none;
+    opacity: 1;
+  }
+
+  .bo-reduire {
+    display: none;
+  }
+}
+
+
+/* Mouvement réduit : le menu change d'état sans glisser. */
+@media (prefers-reduced-motion: reduce) {
+  .bo-cadre,
+  .bo-menu,
+  .bo-libelle,
+  .bo-menu .bo-marque,
+  .bo-reduire span[aria-hidden] {
+    transition: none;
+  }
+
+  .bo-lien:hover .bo-libelle {
+    transform: none;
+  }
+}
+
+
+/* ————————————————————————— Fenêtre de réglages —————————————————————————
+   Une fenêtre, pas une page : ce qu'on règle ici s'ajuste et se referme, et
+   l'écran de travail doit rester visible derrière. */
+
+.bo-modale-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 40px);
+  background: rgb(17 19 24 / 0.34);
+  backdrop-filter: blur(2px);
+  animation: bo-apparait 140ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bo-modale {
+  /* Taille fixe, et non ajustee au contenu : une fenetre qui change de
+     dimensions a chaque onglet donne l'impression de sauter. */
+  width: min(980px, 100%);
+  height: min(720px, 92dvh);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgb(17 19 24 / 0.22);
+  overflow: hidden;
+}
+
+.bo-modale-tete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 14px;
+}
+
+.bo-modale-tete h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.bo-modale-tete p {
+  margin-top: 3px;
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+}
+
+.bo-modale-fermer {
+  flex: none;
+  display: grid;
+  place-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  color: var(--bo-texte-3);
+  cursor: pointer;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.bo-modale-fermer:hover {
+  color: var(--bo-texte);
+  background: var(--bo-surface-2);
+}
+
+.bo-modale-onglets {
+  display: flex;
+  gap: 2px;
+  padding-inline: 20px;
+  border-bottom: 1px solid var(--bo-filet);
+}
+
+.bo-modale-onglets button {
+  padding: 9px 12px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--bo-texte-2);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--bo-vitesse), border-color var(--bo-vitesse);
+}
+
+.bo-modale-onglets button:hover {
+  color: var(--bo-texte);
+}
+
+.bo-modale-onglets button[aria-selected='true'] {
+  color: var(--bo-accent);
+  border-bottom-color: var(--bo-accent);
+}
+
+.bo-modale-corps {
+  overflow-y: auto;
+  padding: 20px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  background: var(--bo-surface);
+}
+
+/* La fenetre encadre deja : un second cadre a l'interieur retrecirait le
+   contenu sans rien ajouter. Les formulaires y prennent toute la largeur. */
+.bo-modale-corps .bo-encadre {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.bo-modale-corps .bo-encadre + .bo-encadre {
+  padding-top: 18px;
+  border-top: 1px solid var(--bo-filet);
+}
+
+/* Un bouton qui se comporte en onglet de menu : même dessin que les liens. */
+.bo-lien-bouton {
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+@keyframes bo-apparait {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bo-modale-fond {
+    animation: none;
+  }
+}
+
+
+/* ————————————————————— Integrations —————————————————————
+   Une ligne par service : ce qu'il fait à gauche, le geste à droite. Ce qui
+   n'est pas disponible reste visible, en retrait — cacher une intégration
+   future laisse croire qu'elle n'existera jamais. */
+
+.bo-integrations {
+  display: grid;
+  gap: 10px;
+}
+
+.bo-integration {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 16px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  box-shadow: var(--bo-ombre);
+}
+
+.bo-integration[data-ferme] {
+  opacity: 0.55;
+  box-shadow: none;
+  background: var(--bo-surface-2);
+}
+
+.bo-integration strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.bo-integration p {
+  margin-top: 3px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--bo-texte-3);
+  max-width: 62ch;
+}
+
+.bo-integration-etat {
+  color: var(--bo-accent) !important;
+  font-size: 0.78rem !important;
+}
+
+.bo-integration[data-ferme] .bo-integration-etat {
+  color: var(--bo-texte-3) !important;
+}
+
+.bo-integration button {
+  flex: none;
+}
+
+.bo-integration-form {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  background: var(--bo-surface-2);
+}

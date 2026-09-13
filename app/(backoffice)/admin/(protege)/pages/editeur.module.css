@@ -1,0 +1,1076 @@
+/* L'éditeur de site. Deux colonnes : les réglages à gauche, le site à droite. */
+
+.cadre {
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr);
+  height: 100dvh;
+}
+
+.panneau {
+  display: grid;
+  /* En-tête, onglets, corps défilant, pied. Le pied disparaît hors du volet
+     des sections : une ligne de grille vide ne gêne pas. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  border-right: 1px solid var(--bo-filet);
+  background: var(--bo-surface-2);
+  min-height: 0;
+}
+
+.panneauTete {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--bo-filet);
+  display: grid;
+  gap: 8px;
+}
+
+.fil {
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+}
+
+.fil a {
+  color: var(--bo-texte-2);
+  border-bottom: 1px solid var(--bo-bord);
+}
+
+.fil a:hover {
+  color: var(--bo-accent);
+}
+
+.choixPage {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.choixPage select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.choixPage select:hover {
+  border-color: var(--bo-texte-3);
+}
+
+.adresse {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  color: var(--bo-accent);
+}
+
+.etat {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+}
+
+.etat[data-alerte] {
+  color: var(--bo-danger);
+}
+
+.panneauCorps {
+  overflow-y: auto;
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.panneauPied {
+  border-top: 1px solid var(--bo-filet);
+  padding: 16px 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.panneauPied .bo-bouton,
+.panneauPied > button {
+  width: 100%;
+}
+
+/* —————————————————————————— Liste des sections —————————————————————— */
+
+.sections {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+/* Des cartes, comme partout ailleurs dans le BackOffice : même rayon, même
+   ombre portée, même réaction au survol. Le rail était le seul endroit à
+   angles vifs. */
+.sectionItem {
+  display: grid;
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  background: var(--bo-surface);
+  box-shadow: var(--bo-ombre);
+  padding: 9px 11px;
+  cursor: grab;
+  transition:
+    border-color var(--bo-vitesse),
+    box-shadow var(--bo-vitesse);
+}
+
+.sectionItem:hover {
+  box-shadow: var(--bo-ombre-carte);
+}
+
+.sectionItem[data-ouvert] {
+  box-shadow: var(--bo-ombre-carte);
+}
+
+.sectionTete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Une section ouverte se distingue de la pile : c'est celle que l'on modifie,
+   et l'aperçu est positionné dessus. */
+.sectionItem[data-ouvert] {
+  border-color: var(--bo-accent);
+  cursor: default;
+}
+
+.deroule {
+  padding: 14px 2px 6px;
+  margin-top: 10px;
+  border-top: 1px solid var(--bo-filet);
+}
+
+.sectionItem:hover {
+  border-color: var(--bo-texte-3);
+}
+
+.sectionItem[data-masquee] {
+  opacity: 0.45;
+}
+
+/* Repère de dépôt : sans lui, on glisse sans savoir où l'on lâche. */
+.sectionItem[data-cible] {
+  border-color: var(--bo-accent);
+  box-shadow: inset 0 2px 0 var(--bo-accent);
+}
+
+.poignee {
+  display: grid;
+  place-content: center;
+  width: 22px;
+  height: 28px;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--bo-texte-3);
+  cursor: grab;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.poignee:hover {
+  color: var(--bo-texte);
+  background: var(--bo-surface-2);
+}
+
+.poignee:active {
+  cursor: grabbing;
+}
+
+.sectionNom {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.sectionNom strong {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.sectionNom span {
+  font-size: 0.78rem;
+  color: var(--bo-texte-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectionBoutons,
+.itemBoutons {
+  display: flex;
+  gap: 2px;
+}
+
+.sectionBoutons button,
+.itemBoutons button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-content: center;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: var(--bo-texte-3);
+  cursor: pointer;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.sectionBoutons button:hover:not(:disabled),
+.itemBoutons button:hover:not(:disabled) {
+  color: var(--bo-texte);
+  background: var(--bo-surface-2);
+}
+
+/* Le rouge est réservé à ce qui efface : on ne le croise nulle part ailleurs. */
+.boutonDanger:hover:not(:disabled) {
+  color: var(--bo-danger) !important;
+  background: var(--bo-danger-doux) !important;
+}
+
+.sectionBoutons button:disabled,
+.itemBoutons button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.vide {
+  color: var(--bo-texte-3);
+  font-size: 0.875rem;
+  padding: 20px 0;
+}
+
+.retour {
+  justify-self: start;
+  background: none;
+  border: 0;
+  color: var(--bo-texte-3);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.retour:hover {
+  color: var(--bo-accent);
+}
+
+.titreSection {
+  font-family: var(--bo-police);
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+
+/* ————————————————————————————— Aperçu ——————————————————————————————— */
+
+.apercu {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: var(--bo-fond);
+  min-height: 0;
+}
+
+.barreApercu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--bo-filet);
+  background: var(--bo-surface-2);
+}
+
+.formats {
+  display: flex;
+  gap: 2px;
+}
+
+.formats {
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon-s);
+  padding: 2px;
+  gap: 2px;
+}
+
+.formats button {
+  width: 30px;
+  height: 26px;
+  display: grid;
+  place-content: center;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--bo-texte-3);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.formats button:hover {
+  color: var(--bo-texte);
+}
+
+.formats button[aria-pressed='true'] {
+  color: var(--bo-accent);
+  background: var(--bo-accent-doux);
+}
+
+.voirEnLigne {
+  font-size: 0.75rem;
+  color: var(--bo-texte-3);
+  border-bottom: 1px solid var(--bo-bord);
+  padding-bottom: 2px;
+}
+
+.voirEnLigne:hover {
+  color: var(--bo-accent);
+  border-bottom-color: var(--bo-accent);
+}
+
+/* La scène porte le cadre ; l'iframe garde sa largeur logique pour que le site
+   se croie vraiment sur un téléphone et applique ses propres points de rupture. */
+.scene {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+}
+
+.scene iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--bo-fond);
+}
+
+.scene[data-format='mobile'] {
+  place-items: start center;
+  padding: 22px 0;
+  background: var(--bo-surface-2);
+}
+
+.scene[data-format='mobile'] iframe {
+  width: 390px;
+  height: 780px;
+  max-height: calc(100dvh - 120px);
+  border: 1px solid var(--bo-filet);
+  flex: none;
+}
+
+/* ————————————————————————————— Champs ——————————————————————————————— */
+
+.champs {
+  display: grid;
+  gap: 14px;
+}
+
+.ligne {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.aide {
+  font-size: 0.78rem;
+  color: var(--bo-texte-3);
+  line-height: 1.45;
+}
+
+.groupe {
+  border: 1px solid var(--bo-bord);
+  padding: 12px;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.groupe legend {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+  padding-inline: 6px;
+}
+
+.repli {
+  border: 1px solid var(--bo-bord);
+}
+
+.repli summary {
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+}
+
+.repli summary:hover {
+  color: var(--bo-texte);
+}
+
+.repli[open] summary {
+  border-bottom: 1px solid var(--bo-bord);
+}
+
+.repli > .champs,
+.repli > div {
+  padding: 12px;
+}
+
+.bascule {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.bascule input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--bo-accent);
+}
+
+.bascule label {
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+/* ————————————————————————————— Listes ——————————————————————————————— */
+
+.liste {
+  display: grid;
+  gap: 10px;
+}
+
+.listeTete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+}
+
+.compte {
+  font-variant-numeric: tabular-nums;
+}
+
+.item {
+  border: 1px solid var(--bo-bord);
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+}
+
+.itemTete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--bo-texte-3);
+}
+
+/* ————————————————————————————— Images ——————————————————————————————— */
+
+.choixImage {
+  display: grid;
+  gap: 8px;
+}
+
+.apercuImage {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.apercuImage img {
+  width: 100%;
+  max-height: 160px;
+  object-fit: cover;
+}
+
+.apercuImage figcaption {
+  font-size: 0.75rem;
+  color: var(--bo-texte-3);
+}
+
+/* ——————————————————————————— Texte riche ———————————————————————————— */
+
+.texteRiche {
+  display: grid;
+  gap: 8px;
+}
+
+.blocTexte {
+  border: 1px solid var(--bo-bord);
+  display: grid;
+}
+
+.blocBarre {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--bo-bord);
+}
+
+.blocBarre select {
+  background: none;
+  border: 0;
+  color: var(--bo-texte-3);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.blocBarre button {
+  min-width: 28px;
+  height: 26px;
+  background: none;
+  border: 0;
+  color: var(--bo-texte-3);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.blocBarre button[aria-pressed='true'] {
+  color: var(--bo-accent);
+}
+
+.blocBarre button:hover {
+  color: var(--bo-texte);
+}
+
+.espaceur {
+  flex: 1;
+}
+
+.blocTexte textarea,
+.blocTexte input {
+  background: none;
+  border: 0;
+  color: var(--bo-texte);
+  font: inherit;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.blocTexte input {
+  border-top: 1px solid var(--bo-bord);
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.ajoutsTexte {
+  display: flex;
+  gap: 6px;
+}
+
+.ajoutsTexte button {
+  min-height: 36px;
+  font-size: 0.7rem;
+}
+
+/* ———————————————————————— Catalogue de sections —————————————————————— */
+
+.voile {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgb(16 24 40 / 0.45);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.modale {
+  width: min(980px, 100%);
+  max-height: 88dvh;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-filet);
+  display: grid;
+  /* En-tête, recherche, filtres, grille : la rangée des filtres s'est ajoutee
+     entre la recherche et les images, et la grille garde tout le reste. */
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.modaleTete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--bo-filet);
+}
+
+.modaleTete h2 {
+  font-family: var(--bo-police);
+  font-size: 1.35rem;
+  font-weight: 400;
+}
+
+.modaleTete button {
+  background: none;
+  border: 0;
+  color: var(--bo-texte-3);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.recherche {
+  margin: 14px 20px 0;
+  padding: 11px 14px;
+  background: var(--bo-fond);
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte);
+  font: inherit;
+}
+
+.modaleCorps {
+  overflow-y: auto;
+  padding: 18px 20px 24px;
+  display: grid;
+  gap: 22px;
+}
+
+.modaleCorps h3 {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+  margin-bottom: 10px;
+}
+
+.grille {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 10px;
+}
+
+.carte {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bo-fond);
+  border: 1px solid var(--bo-bord);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--bo-vitesse);
+}
+
+.carte:hover {
+  border-color: var(--bo-accent);
+}
+
+.carte strong {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.carte span {
+  font-size: 0.75rem;
+  color: var(--bo-texte-3);
+  line-height: 1.4;
+}
+
+.vignette {
+  width: 100%;
+  height: auto;
+  background: var(--bo-surface-2);
+  border: 1px solid var(--bo-bord);
+}
+
+@media (max-width: 1100px) {
+  .cadre {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) 40dvh;
+    height: auto;
+  }
+
+  .panneau {
+    border-right: 0;
+    border-bottom: 1px solid var(--bo-filet);
+  }
+}
+
+.choixBoutons {
+  display: flex;
+  gap: 6px;
+}
+
+.choixBoutons button {
+  flex: 1;
+  min-height: 40px;
+  font-size: 0.68rem;
+}
+
+.grilleImages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.carteImage {
+  display: grid;
+  gap: 5px;
+  padding: 0;
+  background: none;
+  border: 1px solid transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--bo-vitesse);
+}
+
+.carteImage:hover {
+  border-color: var(--bo-texte-3);
+}
+
+.carteImage[data-choisie] {
+  border-color: var(--bo-accent);
+}
+
+.carteImage img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--bo-surface-2);
+  display: block;
+}
+
+.carteImage span {
+  font-size: 0.72rem;
+  color: var(--bo-texte-3);
+  padding: 0 3px 5px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ———————————————————————— Volets de l'éditeur ————————————————————————— */
+
+.onglets {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.onglets button {
+  flex: 1;
+  padding: 7px 4px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--bo-texte-3);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color var(--bo-vitesse);
+}
+
+.onglets button:hover {
+  color: var(--bo-texte);
+}
+
+.onglets button[aria-current='page'] {
+  color: var(--bo-texte);
+  border-bottom-color: var(--bo-accent);
+}
+
+.reglages {
+  display: grid;
+  gap: 24px;
+}
+
+.zoneRisque {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--bo-filet);
+  padding-top: 18px;
+}
+
+.zoneRisque h3 {
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+}
+
+.zoneRisque code {
+  font-family: ui-monospace, monospace;
+  color: var(--bo-accent);
+}
+
+.danger {
+  min-height: 44px;
+  background: none;
+  border: 1px solid var(--bo-danger);
+  color: var(--bo-danger);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--bo-danger-doux);
+}
+
+/* ————————————————————————————— Versions ——————————————————————————————— */
+
+.versions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--bo-filet);
+  border: 1px solid var(--bo-filet);
+}
+
+.versions li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bo-surface);
+  padding: 11px 12px;
+}
+
+.versions li div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.versions strong {
+  font-weight: 500;
+  font-size: 0.82rem;
+}
+
+.versions span {
+  font-size: 0.72rem;
+  color: var(--bo-texte-3);
+}
+
+.versions button {
+  flex: none;
+  background: none;
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte-2);
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: border-color var(--bo-vitesse), color var(--bo-vitesse);
+}
+
+.versions button:hover:not(:disabled) {
+  border-color: var(--bo-accent);
+  color: var(--bo-accent);
+}
+
+
+.modaleEtroite {
+  width: min(520px, 100%);
+  max-height: 88dvh;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-filet);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+
+/* Confirmation passagère de l'enregistrement. Le vert ne sert qu'ici, et
+   seulement deux secondes : c'est un accusé de réception, pas un état. */
+/* `:global` est obligatoire : dans un module, `.bo-bouton` serait renommé et
+   ne toucherait jamais la classe globale du bouton. */
+.panneauPied :global(.bo-bouton[data-fait]) {
+  background: #2f7d55;
+  border-color: #2f7d55;
+}
+
+
+/* ————————————————————— Suppression d'une page —————————————————————
+   Un geste rare et sans retour : discret au repos, explicite une fois
+   engagé, et jamais a un clic de distance. */
+
+.supprimerPage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 3px 6px;
+  margin-left: -6px;
+  background: none;
+  border: 0;
+  border-radius: 5px;
+  color: var(--bo-texte-3);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.supprimerPage:hover {
+  color: var(--bo-danger);
+  background: var(--bo-danger-doux);
+}
+
+.confirmer {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--bo-danger);
+  border-radius: var(--bo-rayon-s);
+  background: var(--bo-danger-doux);
+}
+
+.confirmer p {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--bo-texte);
+}
+
+.confirmer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.confirmer button {
+  padding: 7px 11px;
+  border-radius: var(--bo-rayon-s);
+  border: 1px solid var(--bo-bord);
+  background: var(--bo-surface);
+  color: var(--bo-texte-2);
+  font: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.confirmerDanger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bo-danger);
+  border-color: var(--bo-danger);
+  color: #fff;
+}
+
+.supprimee {
+  padding: 7px 10px;
+  border-radius: var(--bo-rayon-s);
+  background: rgb(47 125 85 / 0.1);
+  color: rgb(38 102 69);
+  font-size: 0.8125rem;
+}
+
+
+/* ————————————————————— Barre de navigation —————————————————————
+   Épinglée au-dessus des sections, et distincte d'elles : elle ne se
+   déplace pas, ne se supprime pas, et vaut pour toutes les pages. */
+
+.epingleeBloc {
+  margin-bottom: 14px;
+  box-shadow: var(--bo-ombre);
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-left: 2px solid var(--bo-accent);
+  border-radius: var(--bo-rayon-s);
+  padding: 0 12px;
+  transition: border-color var(--bo-vitesse);
+}
+
+.epingleeBloc[data-ouvert] {
+  border-color: var(--bo-accent);
+}
+
+.epinglee {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.epingleeBloc:hover {
+  border-color: var(--bo-accent);
+}
+
+.epingleeBloc .deroule {
+  padding-bottom: 14px;
+}
+
+.epinglee strong {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bo-texte);
+}
+
+.epinglee span {
+  font-size: 0.75rem;
+  color: var(--bo-texte-3);
+}
+
+
+/* Filtres par dossier, dans la fenêtre de choix d'une image. */
+.filtresDossiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 20px 4px;
+}
+
+.filtresDossiers button {
+  padding: 5px 10px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  border-radius: 999px;
+  color: var(--bo-texte-2);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color var(--bo-vitesse), border-color var(--bo-vitesse), background-color var(--bo-vitesse);
+}
+
+.filtresDossiers button:hover {
+  color: var(--bo-texte);
+  border-color: var(--bo-texte-3);
+}
+
+.filtresDossiers button[data-actif] {
+  color: var(--bo-accent);
+  border-color: var(--bo-accent);
+  background: var(--bo-accent-doux);
+}

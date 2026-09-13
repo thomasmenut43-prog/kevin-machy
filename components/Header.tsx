@@ -4,9 +4,33 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { LIENS, NAV, SITE } from '@/lib/site';
+import { urlMedia, type Media, type Navigation } from '@/lib/modeles';
 import s from './Header.module.css';
 
-export function Header() {
+/**
+ * La barre de navigation, telle que Kevin l'a réglée.
+ *
+ * Sans configuration — le temps que la base réponde, ou si elle n'a jamais été
+ * touchée — l'en-tête retombe sur le menu écrit dans le code. Le site n'est
+ * donc jamais sans navigation, quoi qu'il arrive à la base.
+ */
+const REPLI: Navigation = {
+  logoActif: true,
+  logoImage: null,
+  menu: NAV.map((n) => ({ chemin: n.href.replace(/^\/|\/$/g, ''), libelle: n.label })),
+  telephoneActif: true,
+  telephone: SITE.telephone,
+  accesActif: true,
+  accesLibelle: 'Accès clients',
+  accesLien: LIENS.accesClients,
+};
+
+export function Header({ nav, logo }: { nav?: Navigation | null; logo?: Media | null }) {
+  const reglages = nav ?? REPLI;
+  const liens = reglages.menu.map((l) => ({
+    href: l.chemin ? `/${l.chemin}/` : '/',
+    label: l.libelle ?? l.chemin,
+  }));
   const chemin = usePathname();
   const [pose, setPose] = useState(false);
   const [ouvert, setOuvert] = useState(false);
@@ -47,12 +71,20 @@ export function Header() {
     <>
       <header className={s.entete} data-pose={pose || ouvert}>
         <div className={`wrap ${s.barre}`}>
-          <Link href="/" className={s.logo} aria-label={`${SITE.nom} — retour à l’accueil`}>
-            <img src="/assets/logo-clair.svg" alt="" width={1774} height={547} />
-          </Link>
+          {reglages.logoActif ? (
+            <Link href="/" className={s.logo} aria-label={`${SITE.nom} — retour à l’accueil`}>
+              {logo ? (
+                <img src={urlMedia(logo.fichier)} alt="" width={logo.largeur ?? 1774} height={logo.hauteur ?? 547} />
+              ) : (
+                <img src="/assets/logo-clair.svg" alt="" width={1774} height={547} />
+              )}
+            </Link>
+          ) : (
+            <span />
+          )}
 
           <nav className={s.nav} aria-label="Navigation principale">
-            {NAV.map((item) => (
+            {liens.map((item) => (
               <Link key={item.href} href={item.href} className={s.lienNav} data-actif={actif(item.href)}>
                 {item.label}
               </Link>
@@ -60,13 +92,24 @@ export function Header() {
           </nav>
 
           <div className={s.appoints}>
-            <a className={s.lienNav} href={SITE.telephoneUri}>
-              {SITE.telephone}
-            </a>
-            <span className={s.separateur} aria-hidden="true" />
-            <a className={s.lienNav} href={LIENS.accesClients} target="_blank" rel="noopener noreferrer">
-              Accès clients
-            </a>
+            {reglages.telephoneActif ? (
+              <a className={s.lienNav} href={`tel:${reglages.telephone.replace(/[^+0-9]/g, '')}`}>
+                {reglages.telephone}
+              </a>
+            ) : null}
+            {reglages.telephoneActif && reglages.accesActif ? (
+              <span className={s.separateur} aria-hidden="true" />
+            ) : null}
+            {reglages.accesActif ? (
+              <a
+                className={s.lienNav}
+                href={reglages.accesLien}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {reglages.accesLibelle}
+              </a>
+            ) : null}
           </div>
 
           <button
@@ -89,22 +132,31 @@ export function Header() {
       {ouvert ? (
         <div className={s.panneau} id="menu-principal">
           <nav className={`wrap ${s.panneauNav}`} aria-label="Navigation principale, plein écran">
-            {NAV.map((item) => (
+            {liens.map((item) => (
               <Link key={item.href} href={item.href} className={s.lienPanneau} data-actif={actif(item.href)}>
                 {item.label}
               </Link>
             ))}
           </nav>
           <div className={`wrap ${s.panneauPied}`}>
-            <a className={s.panneauLien} href={SITE.telephoneUri}>
-              {SITE.telephone}
-            </a>
+            {reglages.telephoneActif ? (
+              <a className={s.panneauLien} href={`tel:${reglages.telephone.replace(/[^+0-9]/g, '')}`}>
+                {reglages.telephone}
+              </a>
+            ) : null}
             <a className={s.panneauLien} href={`mailto:${SITE.email}`}>
               {SITE.email}
             </a>
-            <a className={s.panneauLien} href={LIENS.accesClients} target="_blank" rel="noopener noreferrer">
-              Accès clients ↗
-            </a>
+            {reglages.accesActif ? (
+              <a
+                className={s.panneauLien}
+                href={reglages.accesLien}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {reglages.accesLibelle} ↗
+              </a>
+            ) : null}
           </div>
         </div>
       ) : null}

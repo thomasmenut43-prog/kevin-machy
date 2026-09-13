@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Header } from '@/components/Header';
+import { lireNavigation } from '@/lib/navigation';
+import { mediasParIds } from '@/lib/medias';
 import { Footer } from '@/components/Footer';
+import { Mesure } from '@/components/Mesure';
 import { bodoni, switzer } from '@/lib/fonts';
 import { DonneesStructurees, schemaEntreprise } from '@/lib/schema';
 import { SITE } from '@/lib/site';
@@ -43,7 +46,11 @@ export const viewport: Viewport = {
   colorScheme: 'dark',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // La barre de navigation vient de la base : Kevin la règle depuis l'éditeur.
+  const nav = await lireNavigation().catch(() => null);
+  const logo = nav?.logoImage ? (await mediasParIds([nav.logoImage])).get(nav.logoImage) : null;
+
   return (
     <html lang="fr" className={`${bodoni.variable} ${switzer.variable}`} suppressHydrationWarning>
       <body>
@@ -52,10 +59,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="saut-contenu" href="#contenu">
           Aller au contenu
         </a>
-        <Header />
+        <Header nav={nav} logo={logo} />
         <main id="contenu">{children}</main>
         <Footer />
         <DonneesStructurees data={schemaEntreprise} />
+        <Mesure />
       </body>
     </html>
   );

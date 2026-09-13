@@ -1,0 +1,179 @@
+/* Comptes du BackOffice. Peu de lignes, beaucoup de conséquences :
+   chaque action sensible est confirmée ou expliquée. */
+
+.titre {
+  font-family: var(--bo-police);
+  font-size: 1.1rem;
+  font-weight: 400;
+  border-bottom: 1px solid var(--bo-filet);
+  padding-bottom: 8px;
+}
+
+.succes {
+  border-left: 2px solid var(--bo-accent);
+  background: var(--bo-accent-doux);
+  padding: 11px 14px;
+  font-size: 0.875rem;
+}
+
+.aide {
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+  line-height: 1.5;
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--bo-filet);
+  border: 1px solid var(--bo-filet);
+}
+
+.item {
+  background: var(--bo-surface-2);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.identite {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.identite strong {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vous {
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bo-accent);
+  border: 1px solid var(--bo-accent);
+  padding: 2px 6px;
+  font-weight: 400;
+}
+
+.identite > span {
+  font-size: 0.8125rem;
+  color: var(--bo-texte-2);
+}
+
+.detail {
+  color: var(--bo-texte-3) !important;
+  font-size: 0.78rem !important;
+}
+
+.reglages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 8px;
+  justify-content: end;
+}
+
+.role select {
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.etiquette {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+  border: 1px solid var(--bo-bord);
+  padding: 6px 10px;
+}
+
+.reglages .bo-bouton,
+.reglages button {
+  min-height: 40px;
+  font-size: 0.68rem;
+  padding: 0 1em;
+}
+
+.repli {
+  border: 1px solid var(--bo-bord);
+}
+
+.repli summary {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--bo-texte-3);
+  white-space: nowrap;
+}
+
+.repli summary:hover {
+  color: var(--bo-texte);
+}
+
+.repliCorps {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--bo-bord);
+  min-width: 260px;
+}
+
+.repliCorps input {
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--bo-surface);
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte);
+  font: inherit;
+}
+
+.danger {
+  min-height: 40px;
+  padding: 0 1em;
+  background: none;
+  border: 1px solid var(--bo-danger);
+  color: var(--bo-danger);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--bo-danger-doux);
+}
+
+.sessions {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--bo-filet);
+  padding-top: 16px;
+}
+
+@media (max-width: 720px) {
+  .item {
+    grid-template-columns: 1fr;
+  }
+
+  .reglages {
+    justify-content: start;
+  }
+}
