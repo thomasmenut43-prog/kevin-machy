@@ -34,9 +34,12 @@ function initialesDe(u: { prenom: string; nom: string }) {
 
 export function MenuBackOffice({
   utilisateur,
+  nomEntreprise,
   deconnexion,
 }: {
   utilisateur: Utilisateur;
+  /** Le nom réglé dans Paramètres → Mon entreprise, en tête de menu. */
+  nomEntreprise: string;
   deconnexion: () => Promise<void>;
 }) {
   const chemin = usePathname();
@@ -44,9 +47,9 @@ export function MenuBackOffice({
   /**
    * Le menu vit réduit, en colonne d'icônes, et s'ouvre quand la souris entre.
    *
-   * Il s'ouvre **par-dessus** l'écran plutôt qu'en le poussant : l'aperçu de
-   * l'éditeur et les graphiques du tableau de bord se remettraient en page à
-   * chaque passage de souris, ce qui se voit beaucoup plus qu'un menu ouvert.
+   * En s'ouvrant, il **pousse** le contenu au lieu de le recouvrir : recouvert,
+   * le début de chaque écran — titre, premiers chiffres, première colonne —
+   * devenait illisible tant que la souris traînait sur le rail.
    *
    * L'épingle reste, pour qui préfère le garder ouvert — et c'est aussi le
    * seul chemin au clavier, où il n'y a pas de survol.
@@ -74,7 +77,7 @@ export function MenuBackOffice({
           pour deux éléments courts écartaient les onglets pour rien. */}
       <div className="bo-entete-menu">
         <div className="bo-marque">
-          <strong>Kevin Machy</strong>
+          <strong>{nomEntreprise}</strong>
         </div>
 
         <button
