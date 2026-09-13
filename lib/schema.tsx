@@ -1,37 +1,47 @@
-import { HORAIRES, LIENS, SITE } from './site';
+import { telephoneInternational, type Entreprise } from './modeles';
 
 /**
- * Données structurées LocalBusiness. Uniquement des faits relevés sur le
- * site actuel : aucune horaire, aucune note, aucun avis agrégé inventé.
+ * Données structurées LocalBusiness, bâties sur ce que Kevin a saisi dans
+ * Paramètres → Mon entreprise.
+ *
+ * Rien n'y est inventé : pas d'horaire supposé, pas de note, pas d'avis
+ * agrégé. Un champ vide disparaît de la déclaration plutôt que d'y entrer
+ * faux — déclarer à Google une position ou un téléphone erronés est pire que
+ * de n'en déclarer aucun.
  */
-export const schemaEntreprise = {
+export function schemaEntreprise(e: Entreprise) {
+  return {
   '@context': 'https://schema.org',
   '@type': 'ProfessionalService',
-  '@id': `${SITE.url}/#entreprise`,
-  name: SITE.nom,
-  alternateName: 'Kevin Machy Photographe',
-  description:
-    'Photographe professionnel et Artisan d’Art au Puy-en-Velay. Mariage, portrait, photographie d’entreprise et Studio de l’Iris, en Haute-Loire et dans la Loire.',
-  url: SITE.url,
-  telephone: '+33781743284',
-  email: SITE.email,
-  image: `${SITE.url}/img/og-default.jpg`,
-  logo: `${SITE.url}/assets/logo-clair.svg`,
+  '@id': `${e.url}/#entreprise`,
+  name: e.nom,
+  description: e.description,
+  url: e.url,
+  ...(e.telephone ? { telephone: telephoneInternational(e.telephone) } : {}),
+  ...(e.email ? { email: e.email } : {}),
+  image: `${e.url}/img/og-default.jpg`,
+  logo: `${e.url}/assets/logo-clair.svg`,
   priceRange: '€€',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: SITE.adresse,
-    addressLocality: SITE.ville,
-    postalCode: SITE.codePostal,
-    addressRegion: SITE.region,
+    streetAddress: e.adresse,
+    addressLocality: e.ville,
+    postalCode: e.codePostal,
+    addressRegion: e.region,
     addressCountry: 'FR',
   },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: SITE.geo.lat,
-    longitude: SITE.geo.lon,
-  },
-  openingHoursSpecification: HORAIRES.filter((h) => h.ouverture).map((h) => {
+  ...(e.latitude && e.longitude
+    ? {
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: Number(e.latitude),
+          longitude: Number(e.longitude),
+        },
+      }
+    : {}),
+  openingHoursSpecification: e.horaires
+    .filter((h) => h.ouverture)
+    .map((h) => {
     const jours: Record<string, string> = {
       Lundi: 'Monday',
       Mardi: 'Tuesday',
@@ -41,9 +51,12 @@ export const schemaEntreprise = {
       Samedi: 'Saturday',
       Dimanche: 'Sunday',
     };
-    const [opens, closes] = h.ouverture!.split(' – ');
-    return { '@type': 'OpeningHoursSpecification', dayOfWeek: jours[h.jour], opens, closes };
-  }),
+      const [opens, closes] = h.ouverture!.split(' – ');
+      return { '@type': 'OpeningHoursSpecification', dayOfWeek: jours[h.jour], opens, closes };
+    })
+    // Un horaire mal écrit ne déclare rien : Google refuse une plage sans
+    // heure de fin, et la déclaration entière s'en trouverait invalide.
+    .filter((h) => h.opens && h.closes),
   areaServed: [
     { '@type': 'AdministrativeArea', name: 'Haute-Loire' },
     { '@type': 'AdministrativeArea', name: 'Loire' },
@@ -55,10 +68,11 @@ export const schemaEntreprise = {
     'Photographie d’entreprise',
     'Macrophotographie d’iris',
   ],
-  sameAs: [LIENS.instagram, LIENS.facebook, LIENS.linkedin, LIENS.youtube],
-} as const;
+  sameAs: [e.liens.instagram, e.liens.facebook, e.liens.linkedin, e.liens.youtube].filter(Boolean),
+  } as const;
+}
 
-export function schemaFilAriane(elements: { nom: string; chemin: string }[]) {
+export function schemaFilAriane(elements: { nom: string; chemin: string }[], urlSite: string) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -66,7 +80,7 @@ export function schemaFilAriane(elements: { nom: string; chemin: string }[]) {
       '@type': 'ListItem',
       position: i + 1,
       name: e.nom,
-      item: `${SITE.url}${e.chemin}`,
+      item: `${urlSite}${e.chemin}`,
     })),
   };
 }

@@ -69,6 +69,8 @@ export type Horaire = { jour: string; ouverture: string | null };
 export type Entreprise = {
   nom: string;
   role: string;
+  /** La phrase qui présente l'entreprise à Google et aux réseaux sociaux. */
+  description: string;
   raisonSociale: string;
   siret: string;
   url: string;
@@ -79,6 +81,9 @@ export type Entreprise = {
   zone: string;
   telephone: string;
   email: string;
+  /** Le point sur la carte, en degrés décimaux. Vide : aucune position n'est déclarée. */
+  latitude: string;
+  longitude: string;
   liens: {
     accesClients: string;
     reservation: string;
@@ -100,6 +105,10 @@ export type Entreprise = {
  * Calculé, jamais saisi : demander deux fois le même numéro sous deux formes
  * garantit qu'un jour les deux diffèrent, et c'est l'appel qui échoue.
  */
+export function telephoneInternational(telephone: string) {
+  return telephoneUri(telephone).replace('tel:', '');
+}
+
 export function telephoneUri(telephone: string) {
   const chiffres = telephone.replace(/[^\d+]/g, '');
   if (chiffres.startsWith('+')) return `tel:${chiffres}`;

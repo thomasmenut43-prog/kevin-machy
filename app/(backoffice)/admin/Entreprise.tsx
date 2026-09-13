@@ -83,6 +83,21 @@ export function Entreprise() {
       </div>
 
       <div className="bo-champ">
+        <label htmlFor="e-description">Phrase de présentation</label>
+        <textarea
+          id="e-description"
+          name="description"
+          rows={3}
+          defaultValue={infos.description}
+          maxLength={300}
+        />
+        <p className="bo-aide">
+          C’est elle que Google affiche sous votre nom, et qu’on voit quand un lien vers le site
+          est partagé. Deux ou trois lignes, sans jargon.
+        </p>
+      </div>
+
+      <div className="bo-champ">
         <label htmlFor="e-raison">Dénomination légale</label>
         <input
           id="e-raison"
@@ -142,6 +157,22 @@ export function Entreprise() {
         <label htmlFor="e-region">Département ou région</label>
         <input id="e-region" name="region" type="text" defaultValue={infos.region} />
       </div>
+
+      <div className={r.paire}>
+        <div className="bo-champ">
+          <label htmlFor="e-lat">Latitude</label>
+          <input id="e-lat" name="latitude" type="text" defaultValue={infos.latitude} />
+        </div>
+        <div className="bo-champ">
+          <label htmlFor="e-lon">Longitude</label>
+          <input id="e-lon" name="longitude" type="text" defaultValue={infos.longitude} />
+        </div>
+      </div>
+      <p className="bo-aide">
+        Le point exact du studio sur la carte. Sur Google Maps, clic droit sur le lieu : les deux
+        nombres s’affichent en haut du menu. Laissez les deux vides si vous préférez ne pas
+        déclarer de position — mieux vaut aucune qu’une fausse.
+      </p>
 
       <div className="bo-champ">
         <label htmlFor="e-zone">Zone d’intervention</label>

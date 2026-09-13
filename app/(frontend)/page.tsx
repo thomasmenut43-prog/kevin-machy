@@ -4,7 +4,7 @@ import { RenduSections } from '@/components/sections/RenduSections';
 import { mediasParIds } from '@/lib/medias';
 import { idsImages, pagePublieeParChemin } from '@/lib/pages';
 import { enTexteNu } from '@/lib/texteRiche';
-import { SITE } from '@/lib/site';
+import { lireEntreprise } from '@/lib/entreprise';
 
 /**
  * La page d'accueil, servie depuis la base.
@@ -22,6 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const description = page.metaDescription ?? premierChapo(page) ?? undefined;
 
+  const entreprise = await lireEntreprise();
+
   return {
     title: page.metaTitre ?? page.titre,
     description,
@@ -30,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: page.metaTitre ?? page.titre,
       description,
-      url: SITE.url,
+      url: entreprise.url,
       images: [
         {
           url: page.metaImage ?? '/img/og-accueil.jpg',
@@ -47,8 +49,11 @@ export default async function Accueil() {
   const page = await pagePublieeParChemin('');
   if (!page) notFound();
 
-  const medias = await mediasParIds(idsImages(page.sections));
-  return <RenduSections sections={page.sections} medias={medias} />;
+  const [medias, entreprise] = await Promise.all([
+    mediasParIds(idsImages(page.sections)),
+    lireEntreprise(),
+  ]);
+  return <RenduSections sections={page.sections} medias={medias} entreprise={entreprise} />;
 }
 
 function premierChapo(page: { sections: { valeurs: Record<string, unknown> }[] }) {

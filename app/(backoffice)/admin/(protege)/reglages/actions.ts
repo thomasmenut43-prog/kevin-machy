@@ -247,9 +247,26 @@ export async function actionEnregistrerEntreprise(
     ouverture: String(donnees.get(`horaire_${i}`) ?? '').trim() || null,
   }));
 
+  // Une position à moitié saisie vaut mieux vide que fausse : Google place le
+  // studio là où ces deux nombres le disent, pas là où l'adresse le dit.
+  const latitude = texte('latitude');
+  const longitude = texte('longitude');
+  if ((latitude && !longitude) || (longitude && !latitude)) {
+    return { erreur: 'Latitude et longitude vont ensemble : indiquez les deux, ou aucune.' };
+  }
+  if (latitude && !/^-?\d{1,3}(\.\d+)?$/.test(latitude)) {
+    return { erreur: 'La latitude doit être un nombre, par exemple 45.0435.' };
+  }
+  if (longitude && !/^-?\d{1,3}(\.\d+)?$/.test(longitude)) {
+    return { erreur: 'La longitude doit être un nombre, par exemple 3.8853.' };
+  }
+
   await majEntreprise({
     nom,
     role: texte('role'),
+    description: texte('description'),
+    latitude,
+    longitude,
     raisonSociale: texte('raisonSociale'),
     siret: texte('siret'),
     url: site.valeur ?? '',
@@ -264,7 +281,10 @@ export async function actionEnregistrerEntreprise(
     horaires,
   });
 
-  // Le pied de page et les coordonnées vivent sur toutes les pages du site.
+  // Le pied de page et les coordonnées vivent sur toutes les pages ; le plan du
+  // site et le fichier robots portent le domaine, et sont calculés une fois.
   revalidatePath('/', 'layout');
+  revalidatePath('/sitemap.xml');
+  revalidatePath('/robots.txt');
   return { succes: 'Informations enregistrées.' };
 }

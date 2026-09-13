@@ -3,10 +3,16 @@
 import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { actionContact, type EtatContact } from '@/app/(frontend)/contact/envoyer';
-import { PROJETS, SITE } from '@/lib/site';
+import { PROJETS } from '@/lib/site';
 import s from './ContactForm.module.css';
 
 const VIDE: EtatContact = {};
+
+/**
+ * Les coordonnées sont données, pas lues ici : elles viennent de Paramètres →
+ * Mon entreprise, et ce composant tourne dans le navigateur.
+ */
+type ContactProps = { email: string; telephone: string };
 
 /**
  * Formulaire court : cinq champs, pas un de plus.
@@ -15,7 +21,7 @@ const VIDE: EtatContact = {};
  * par e-mail. La demande est écrite en base **avant** l'envoi : une panne du
  * serveur d'e-mails ne fait donc perdre aucun client.
  */
-export function ContactForm() {
+export function ContactForm({ email, telephone }: ContactProps) {
   const [etat, action] = useActionState(actionContact, VIDE);
   const [projet, setProjet] = useState<string>('mariage');
   const form = useRef<HTMLFormElement>(null);
@@ -152,7 +158,7 @@ export function ContactForm() {
         <BoutonEnvoi />
         {etat.erreur ? (
           <p className={s.etat} data-ton="erreur" role="status" aria-live="polite">
-            {etat.erreur} Sinon, écrivez-moi à {SITE.email} ou appelez le {SITE.telephone}.
+            {etat.erreur} Sinon, écrivez-moi à {email} ou appelez le {telephone}.
           </p>
         ) : null}
       </div>

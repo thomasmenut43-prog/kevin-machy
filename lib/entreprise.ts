@@ -4,7 +4,7 @@ import type { Entreprise } from './modeles';
 import { HORAIRES, LIENS, SITE, ZONE } from './site';
 
 export type { Entreprise, Horaire } from './modeles';
-export { telephoneUri } from './modeles';
+export { telephoneInternational, telephoneUri } from './modeles';
 
 /**
  * L'entreprise : ce que Kevin est, où il est, comment on le joint.
@@ -25,6 +25,8 @@ const CLE = 'entreprise';
 export const ENTREPRISE_DEFAUT: Entreprise = {
   nom: SITE.nom,
   role: SITE.role,
+  description:
+    'Photographe professionnel et Artisan d’Art au Puy-en-Velay. Mariages, portraits et Studio de l’Iris en Haute-Loire et dans la Loire. Des images où vous vous reconnaissez.',
   raisonSociale: '',
   siret: '',
   url: SITE.url,
@@ -35,6 +37,8 @@ export const ENTREPRISE_DEFAUT: Entreprise = {
   zone: ZONE,
   telephone: SITE.telephone,
   email: SITE.email,
+  latitude: String(SITE.geo.lat),
+  longitude: String(SITE.geo.lon),
   liens: {
     accesClients: LIENS.accesClients,
     reservation: LIENS.reservation,

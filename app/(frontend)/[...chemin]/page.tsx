@@ -4,7 +4,7 @@ import { RenduSections } from '@/components/sections/RenduSections';
 import { mediasParIds } from '@/lib/medias';
 import { cheminsPublies, idsImages, pagePublieeParChemin, type Section } from '@/lib/pages';
 import { enTexteNu } from '@/lib/texteRiche';
-import { SITE } from '@/lib/site';
+import { lireEntreprise } from '@/lib/entreprise';
 import { DonneesStructurees, schemaFaq, schemaFilAriane } from '@/lib/schema';
 
 /**
@@ -33,6 +33,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const description =
     page.metaDescription ?? premierChapo(page.sections) ?? undefined;
 
+  const entreprise = await lireEntreprise();
+
   return {
     title: page.metaTitre ?? page.titre,
     description,
@@ -41,7 +43,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     openGraph: {
       title: page.metaTitre ?? page.titre,
       description,
-      url: `${SITE.url}/${page.chemin}/`,
+      url: `${entreprise.url}/${page.chemin}/`,
       images: page.metaImage
         ? [{ url: page.metaImage, width: 1200, height: 630, alt: page.titre }]
         : undefined,
@@ -55,7 +57,10 @@ export default async function PageEditee({ params }: Params) {
   if (!page) notFound();
 
   // Toutes les images de la page en une seule requête, plutôt qu'une par image.
-  const medias = await mediasParIds(idsImages(page.sections));
+  const [medias, entreprise] = await Promise.all([
+    mediasParIds(idsImages(page.sections)),
+    lireEntreprise(),
+  ]);
 
   // Une page qui pose des questions fréquentes les déclare aussi à Google,
   // qui les affiche dépliées sous le résultat de recherche.
@@ -64,13 +69,16 @@ export default async function PageEditee({ params }: Params) {
   return (
     <>
       <DonneesStructurees
-        data={schemaFilAriane([
-          { nom: 'Accueil', chemin: '/' },
-          { nom: page.titre, chemin: `/${page.chemin}/` },
-        ])}
+        data={schemaFilAriane(
+          [
+            { nom: 'Accueil', chemin: '/' },
+            { nom: page.titre, chemin: `/${page.chemin}/` },
+          ],
+          entreprise.url,
+        )}
       />
       {questions.length ? <DonneesStructurees data={schemaFaq(questions)} /> : null}
-      <RenduSections sections={page.sections} medias={medias} />
+      <RenduSections sections={page.sections} medias={medias} entreprise={entreprise} />
     </>
   );
 }

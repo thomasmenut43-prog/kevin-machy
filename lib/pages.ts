@@ -77,9 +77,11 @@ export async function pagePublieeParChemin(chemin: string) {
   return l ? versPage(l) : null;
 }
 
-export async function cheminsPublies() {
+export async function cheminsPublies(options?: { indexablesSeulement?: boolean }) {
   const lignes = await requete<{ chemin: string }>(
-    `SELECT chemin FROM pages WHERE statut = 'publie' ORDER BY chemin`,
+    `SELECT chemin FROM pages
+      WHERE statut = 'publie' ${options?.indexablesSeulement ? 'AND hors_indexation = false' : ''}
+      ORDER BY chemin`,
   );
   return lignes.map((l) => l.chemin);
 }

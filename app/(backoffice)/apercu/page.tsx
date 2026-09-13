@@ -11,5 +11,6 @@ export const dynamic = 'force-dynamic';
 /** L'aperçu montre des brouillons : il se protège comme le reste du BackOffice. */
 export default async function PageApercu() {
   if (!(await utilisateurConnecte())) redirect('/admin/connexion/');
-  return <Apercu pied={<Footer entreprise={await lireEntreprise()} />} />;
+  const entreprise = await lireEntreprise();
+  return <Apercu pied={<Footer entreprise={entreprise} />} entreprise={entreprise} />;
 }

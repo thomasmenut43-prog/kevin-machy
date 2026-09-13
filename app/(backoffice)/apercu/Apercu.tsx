@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Header } from '@/components/Header';
 import { RenduSections } from '@/components/sections/RenduSections';
 import { Surligneur } from './Surligneur';
-import type { Media, Navigation, Section } from '@/lib/modeles';
+import type { Entreprise, Media, Navigation, Section } from '@/lib/modeles';
 
 /**
  * L'aperçu du site, dans l'iframe de l'éditeur.
@@ -23,7 +23,7 @@ import type { Media, Navigation, Section } from '@/lib/modeles';
  * le pilote PostgreSQL dans le paquet envoyé au visiteur — Turbopack le refuse,
  * et il a raison.
  */
-export function Apercu({ pied }: { pied: ReactNode }) {
+export function Apercu({ pied, entreprise }: { pied: ReactNode; entreprise: Entreprise }) {
   const [sections, setSections] = useState<Section[]>([]);
   const [medias, setMedias] = useState<Media[]>([]);
   const [nav, setNav] = useState<Navigation | null>(null);
@@ -64,10 +64,14 @@ export function Apercu({ pied }: { pied: ReactNode }) {
 
   return (
     <>
-      <Header nav={nav} logo={nav?.logoImage ? (parId.get(nav.logoImage) ?? null) : null} />
+      <Header
+        nav={nav}
+        logo={nav?.logoImage ? (parId.get(nav.logoImage) ?? null) : null}
+        entreprise={entreprise}
+      />
       <main id="contenu">
         {sections.length ? (
-          <RenduSections sections={sections} medias={parId} />
+          <RenduSections sections={sections} medias={parId} entreprise={entreprise} />
         ) : (
           <section className="wrap section">
             <p className="corps" style={{ color: 'var(--encre-3)' }}>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { LIENS, NAV, SITE } from '@/lib/site';
-import { urlMedia, type Media, type Navigation } from '@/lib/modeles';
+import { telephoneUri, urlMedia, type Entreprise, type Media, type Navigation } from '@/lib/modeles';
 import s from './Header.module.css';
 
 /**
@@ -25,7 +25,16 @@ const REPLI: Navigation = {
   accesLien: LIENS.accesClients,
 };
 
-export function Header({ nav, logo }: { nav?: Navigation | null; logo?: Media | null }) {
+export function Header({
+  nav,
+  logo,
+  entreprise,
+}: {
+  nav?: Navigation | null;
+  logo?: Media | null;
+  /** Nom et adresse publique, réglés dans Paramètres → Mon entreprise. */
+  entreprise: Entreprise;
+}) {
   const reglages = nav ?? REPLI;
   const liens = reglages.menu.map((l) => ({
     href: l.chemin ? `/${l.chemin}/` : '/',
@@ -72,7 +81,7 @@ export function Header({ nav, logo }: { nav?: Navigation | null; logo?: Media | 
       <header className={s.entete} data-pose={pose || ouvert}>
         <div className={`wrap ${s.barre}`}>
           {reglages.logoActif ? (
-            <Link href="/" className={s.logo} aria-label={`${SITE.nom} — retour à l’accueil`}>
+            <Link href="/" className={s.logo} aria-label={`${entreprise.nom} — retour à l’accueil`}>
               {logo ? (
                 <img src={urlMedia(logo.fichier)} alt="" width={logo.largeur ?? 1774} height={logo.hauteur ?? 547} />
               ) : (
@@ -93,7 +102,7 @@ export function Header({ nav, logo }: { nav?: Navigation | null; logo?: Media | 
 
           <div className={s.appoints}>
             {reglages.telephoneActif ? (
-              <a className={s.lienNav} href={`tel:${reglages.telephone.replace(/[^+0-9]/g, '')}`}>
+              <a className={s.lienNav} href={telephoneUri(reglages.telephone)}>
                 {reglages.telephone}
               </a>
             ) : null}
@@ -140,13 +149,15 @@ export function Header({ nav, logo }: { nav?: Navigation | null; logo?: Media | 
           </nav>
           <div className={`wrap ${s.panneauPied}`}>
             {reglages.telephoneActif ? (
-              <a className={s.panneauLien} href={`tel:${reglages.telephone.replace(/[^+0-9]/g, '')}`}>
+              <a className={s.panneauLien} href={telephoneUri(reglages.telephone)}>
                 {reglages.telephone}
               </a>
             ) : null}
-            <a className={s.panneauLien} href={`mailto:${SITE.email}`}>
-              {SITE.email}
-            </a>
+            {entreprise.email ? (
+              <a className={s.panneauLien} href={`mailto:${entreprise.email}`}>
+                {entreprise.email}
+              </a>
+            ) : null}
             {reglages.accesActif ? (
               <a
                 className={s.panneauLien}

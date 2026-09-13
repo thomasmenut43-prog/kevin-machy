@@ -414,19 +414,19 @@ body:has(.bo) {
   display: block;
 }
 
-/* L'éditeur est la seule vue qui refuse la mesure confortable : la limiter
-   laisserait une bande vide à droite de l'aperçu, sur un grand écran. */
 .bo-contenu:has(.editeur-plein) {
-  max-width: none;
   padding: 0;
 }
 
+/* Pas de largeur maximale : sur un écran de 1900 px, une mesure plafonnée
+   laissait cinq cents pixels morts à droite de chaque écran. Ce sont des
+   tableaux et des grilles, pas des colonnes de texte — ce qui doit rester
+   lisible porte sa propre mesure, en `ch`, là où le texte est écrit. */
 .bo-contenu {
   padding: clamp(20px, 2.4vw, 32px);
   display: grid;
   align-content: start;
   gap: clamp(16px, 2vw, 24px);
-  max-width: 1360px;
 }
 
 .bo-titre {

@@ -1,11 +1,12 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/lib/site';
+import { lireEntreprise } from '@/lib/entreprise';
 
 export const dynamic = 'force-static';
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const { url } = await lireEntreprise();
   return {
     rules: [{ userAgent: '*', allow: '/' }],
-    sitemap: `${SITE.url}/sitemap.xml`,
+    sitemap: `${url}/sitemap.xml`,
   };
 }

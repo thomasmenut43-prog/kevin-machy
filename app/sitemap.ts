@@ -1,23 +1,30 @@
 import type { MetadataRoute } from 'next';
-import { SITE } from '@/lib/site';
+import { lireEntreprise } from '@/lib/entreprise';
+import { cheminsPublies } from '@/lib/pages';
 
 export const dynamic = 'force-static';
 
-const PAGES: { chemin: string; priorite: number }[] = [
-  { chemin: '/', priorite: 1 },
-  { chemin: '/mariage/', priorite: 0.9 },
-  { chemin: '/portrait/', priorite: 0.9 },
-  { chemin: '/studio-de-l-iris/', priorite: 0.8 },
-  { chemin: '/a-propos/', priorite: 0.6 },
-  { chemin: '/contact/', priorite: 0.7 },
-];
-
-export default function sitemap(): MetadataRoute.Sitemap {
+/**
+ * Le plan du site, bâti sur les pages réellement publiées.
+ *
+ * La liste était écrite à la main : une page créée dans l'éditeur n'y entrait
+ * pas, et une page dépubliée continuait d'y figurer. Le domaine, lui, vient
+ * des informations de l'entreprise.
+ *
+ * Une page que son auteur a mise hors indexation n'y figure pas : l'annoncer
+ * à Google tout en lui demandant de l'ignorer est contradictoire.
+ *
+ * L'accueil passe devant, les autres suivent : une page ajoutée par Kevin ne
+ * vaut pas moins qu'une autre, d'où la même priorité pour toutes.
+ */
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [{ url }, chemins] = await Promise.all([lireEntreprise(), cheminsPublies({ indexablesSeulement: true })]);
   const date = new Date();
-  return PAGES.map((p) => ({
-    url: `${SITE.url}${p.chemin}`,
+
+  return chemins.map((chemin) => ({
+    url: chemin ? `${url}/${chemin}/` : `${url}/`,
     lastModified: date,
     changeFrequency: 'monthly',
-    priority: p.priorite,
+    priority: chemin ? 0.8 : 1,
   }));
 }

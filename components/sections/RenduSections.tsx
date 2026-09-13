@@ -6,9 +6,8 @@ import { Hero } from '@/components/Hero';
 import { Reveal } from '@/components/Reveal';
 import { SimulateurIris } from '@/components/SimulateurIris';
 import { BarreIris } from '@/components/BarreIris';
-import { LIENS } from '@/lib/site';
 import { styleApparence, styleSection, type Apparence, type ReglagesSection } from '@/lib/apparence';
-import type { Media, Section } from '@/lib/modeles';
+import type { Entreprise, Media, Section } from '@/lib/modeles';
 import { Boutons } from './Boutons';
 import { Image, ImagePleinEcran } from './Image';
 import { TexteRiche } from './TexteRiche';
@@ -23,14 +22,17 @@ import p from '@/styles/pages.module.css';
  */
 
 type Valeurs = Record<string, any>;
-type Contexte = { medias: Map<number, Media>; premiere: boolean };
+type Contexte = { medias: Map<number, Media>; premiere: boolean; entreprise: Entreprise };
 
 export function RenduSections({
   sections,
   medias,
+  entreprise,
 }: {
   sections: Section[];
   medias: Map<number, Media>;
+  /** Les coordonnées et les liens réglés dans Paramètres → Mon entreprise. */
+  entreprise: Entreprise;
 }) {
   const reglagesDe = (section: Section) =>
     (section.valeurs?.reglages ?? undefined) as ReglagesSection | undefined;
@@ -54,12 +56,12 @@ export function RenduSections({
           type={section.type}
           reglages={reglagesDe(section)}
         >
-          <Contenu section={section} ctx={{ medias, premiere: i === 0 }} />
+          <Contenu section={section} ctx={{ medias, premiere: i === 0, entreprise }} />
         </Enveloppe>
       ))}
 
       {simulateur?.valeurs?.barreDeRappel !== false && simulateur ? (
-        <BarreIris hrefReservation={LIENS.reservation} hrefDevis="/contact/?projet=iris" />
+        <BarreIris hrefReservation={entreprise.liens.reservation} hrefDevis="/contact/?projet=iris" />
       ) : null}
     </>
   );
@@ -641,7 +643,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
           <div className={p.contact}>
             {v.formulaire !== false ? (
               <Reveal>
-                <ContactForm />
+                <ContactForm email={ctx.entreprise.email} telephone={ctx.entreprise.telephone} />
               </Reveal>
             ) : null}
 

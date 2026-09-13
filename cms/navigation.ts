@@ -49,6 +49,7 @@ export const CHAMPS_NAVIGATION: Champ[] = [
     type: 'texte',
     nom: 'telephone',
     libelle: 'Numéro affiché',
+    aide: 'Vide : celui des Paramètres → Mon entreprise.',
     siValeur: { champ: 'telephoneActif', vaut: true },
   },
   {
@@ -69,7 +70,7 @@ export const CHAMPS_NAVIGATION: Champ[] = [
     nom: 'accesLien',
     libelle: 'Destination',
     moitie: true,
-    aide: 'L’adresse complète de la galerie client, en https://',
+    aide: 'L’adresse complète de la galerie client, en https:// — vide : celle des Paramètres → Mon entreprise.',
     siValeur: { champ: 'accesActif', vaut: true },
   },
 ];
