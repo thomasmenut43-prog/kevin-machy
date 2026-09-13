@@ -16,9 +16,17 @@ export const dynamic = 'force-static';
  *
  * L'accueil passe devant, les autres suivent : une page ajoutée par Kevin ne
  * vaut pas moins qu'une autre, d'où la même priorité pour toutes.
+ *
+ * Base injoignable — une construction lancée sans elle, par exemple — le plan
+ * se réduit à l'accueil au lieu de faire échouer la construction entière. Un
+ * plan du site incomplet se rattrape à la reconstruction suivante ; un
+ * déploiement qui ne part pas, non.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [{ url }, chemins] = await Promise.all([lireEntreprise(), cheminsPublies({ indexablesSeulement: true })]);
+  const [{ url }, chemins] = await Promise.all([
+    lireEntreprise(),
+    cheminsPublies({ indexablesSeulement: true }).catch(() => ['']),
+  ]);
   const date = new Date();
 
   return chemins.map((chemin) => ({
