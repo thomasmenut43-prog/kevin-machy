@@ -75,7 +75,6 @@ export function MenuBackOffice({
       <div className="bo-entete-menu">
         <div className="bo-marque">
           <strong>Kevin Machy</strong>
-          <span>BackOffice</span>
         </div>
 
         <button
