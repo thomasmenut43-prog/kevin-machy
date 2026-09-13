@@ -144,10 +144,33 @@ export function Editeur({
         setChoisie(ev.data.selection.cle);
         setChampVise(ev.data.selection.champ ?? null);
       }
+
+      // Kevin a suivi un lien du menu ou du pied dans l'aperçu : l'éditeur
+      // ouvre cette page-là. Sans ce relais, l'aperçu montrerait une page et
+      // le panneau les sections d'une autre.
+      if (typeof ev.data.chemin === 'string') {
+        const vise = ev.data.chemin.replace(/^\/|\/$/g, '');
+        const cible = pages.find((p) => p.chemin === vise);
+        if (!cible || cible.id === page.id) return;
+
+        // Les sections s'enregistrent seules au repos ; l'en-tête et le pied,
+        // eux, n'existent qu'à la publication. Les perdre en changeant de page
+        // sans rien demander serait une mauvaise surprise.
+        if (
+          (navModifiee || piedModifie) &&
+          !window.confirm(
+            'Vos réglages d’en-tête ou de pied de page ne sont pas encore en ligne. Changer de page les perdra. Continuer ?',
+          )
+        ) {
+          return;
+        }
+
+        window.location.href = `/admin/pages/${cible.id}/`;
+      }
     };
     window.addEventListener('message', ecouter);
     return () => window.removeEventListener('message', ecouter);
-  }, [envoyerApercu]);
+  }, [envoyerApercu, pages, page.id, navModifiee, piedModifie]);
 
   // ———————————————— Le brouillon se sauvegarde au repos ————————————————
   useEffect(() => {

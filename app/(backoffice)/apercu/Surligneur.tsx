@@ -76,6 +76,27 @@ export function Surligneur() {
 
       const trouve = designer(cible);
       const cle = trouve && cleDe(trouve.el);
+
+      // Un lien de l'en-tête ou du pied de page ne désigne aucune section :
+      // c'est une autre page du site. L'aperçu ne l'affiche pas tout seul —
+      // il montrerait la page en ligne pendant que l'éditeur en modifie une
+      // autre — il demande à l'éditeur de changer de page, panneau compris.
+      const lien = cible.closest('a[href]') as HTMLAnchorElement | null;
+      if (!cle && lien) {
+        const url = new URL(lien.href, window.location.origin);
+        // Un lien extérieur — réservation, galerie client, réseaux — s'ouvre
+        // comme il le ferait sur le site.
+        if (url.origin !== window.location.origin) return;
+
+        ev.preventDefault();
+        ev.stopPropagation();
+        window.parent?.postMessage(
+          { source: 'apercu-km', chemin: url.pathname },
+          window.location.origin,
+        );
+        return;
+      }
+
       if (!cle) return;
 
       // Un lien de l'aperçu ne doit pas emmener ailleurs : on désigne, on ne
