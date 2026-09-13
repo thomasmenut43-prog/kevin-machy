@@ -146,6 +146,63 @@ export async function enregistrerMedia(
   return { ok: true, media: versMedia(cree) };
 }
 
+export type ResultatAvatar = { ok: true; nom: string } | { ok: false; message: string };
+
+/**
+ * La photo de profil d'un compte.
+ *
+ * Elle n'entre pas dans la médiathèque : celle-ci tient les photographies du
+ * site, et une tête dans une galerie de mariages n'a pas de sens. Elle vit
+ * dans le même dossier et passe par la même route — deux carrés, 256 et 128 —
+ * mais n'est référencée que par la ligne du compte.
+ */
+export async function enregistrerAvatar(fichier: File): Promise<ResultatAvatar> {
+  if (!TYPES.includes(fichier.type)) {
+    return { ok: false, message: 'Format non accepté. JPEG, PNG, WebP, AVIF ou TIFF.' };
+  }
+  if (fichier.size > OCTETS_MAX) {
+    return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
+  }
+
+  const octets = Buffer.from(await fichier.arrayBuffer());
+
+  let image: Sharp;
+  try {
+    image = sharp(octets, { failOn: 'error' });
+    const meta = await image.metadata();
+    if (!meta.width || !meta.height) throw new Error('illisible');
+  } catch {
+    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  }
+
+  await mkdir(DOSSIER, { recursive: true });
+
+  // Même longueur de nom que la médiathèque : la route qui sert les fichiers
+  // n'accepte que cette forme, et une photo de profil doit y passer aussi.
+  const base = randomBytes(12).toString('hex');
+  for (const largeur of [256, 128] as const) {
+    await writeFile(
+      path.join(DOSSIER, `${base}-${largeur}.webp`),
+      await image
+        .clone()
+        .rotate()
+        .resize({ width: largeur, height: largeur, fit: 'cover', position: 'attention' })
+        .webp({ quality: 82 })
+        .toBuffer(),
+    );
+  }
+
+  return { ok: true, nom: base };
+}
+
+/** Efface les fichiers d'une photo de profil remplacée ou retirée. */
+export async function effacerAvatar(avatar: string | null) {
+  if (!avatar || !/^[a-f0-9]{24}$/.test(avatar)) return;
+  for (const largeur of [256, 128] as const) {
+    await rm(path.join(DOSSIER, `${avatar}-${largeur}.webp`), { force: true });
+  }
+}
+
 export async function majMedia(id: number, d: { alt: string; legende: string }) {
   await requete('UPDATE medias SET alt = $2, legende = NULLIF($3, $4) WHERE id = $1', [
     id,

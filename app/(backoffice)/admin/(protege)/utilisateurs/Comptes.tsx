@@ -17,7 +17,9 @@ const VIDE: EtatCompte = {};
 
 type Compte = {
   id: number;
+  prenom: string;
   nom: string;
+  avatar: string | null;
   email: string;
   role: 'administrateur' | 'editeur';
   creeLe: string;
@@ -111,7 +113,7 @@ function Ligne({
     <li className={u.item}>
       <div className={u.identite}>
         <strong>
-          {compte.nom}
+          {[compte.prenom, compte.nom].filter(Boolean).join(' ')}
           {moi ? <span className={u.vous}>vous</span> : null}
         </strong>
         <span>{compte.email}</span>
@@ -126,7 +128,7 @@ function Ligne({
       <div className={u.reglages}>
         {administrateur ? (
           <label className={u.role}>
-            <span className="visuellement-cache">Rôle de {compte.nom}</span>
+            <span className="visuellement-cache">Rôle de {compte.prenom}</span>
             <select
               value={compte.role}
               disabled={enCours}

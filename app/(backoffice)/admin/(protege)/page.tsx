@@ -41,7 +41,7 @@ export default async function TableauDeBord({
   return (
     <>
       <div>
-        <h1 className="bo-titre">Bonjour {utilisateur?.nom.split(' ')[0]}</h1>
+        <h1 className="bo-titre">Bonjour {utilisateur?.prenom}</h1>
         <p className="bo-sous-titre">
           {nonLus > 0 ? (
             <>

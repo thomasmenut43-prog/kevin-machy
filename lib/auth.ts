@@ -31,10 +31,24 @@ const DUREE_BLOCAGE = 1000 * 60 * 10;
 
 export type Utilisateur = {
   id: number;
+  prenom: string;
   nom: string;
   email: string;
+  /** Le fichier de la photo dans `medias/`, ou `null` : alors les initiales. */
+  avatar: string | null;
   role: 'administrateur' | 'editeur';
 };
+
+/** Prénom et nom réunis, pour les écrans qui présentent quelqu'un à quelqu'un. */
+export function nomComplet(u: { prenom: string; nom: string }) {
+  return [u.prenom, u.nom].filter(Boolean).join(' ');
+}
+
+/** Une ou deux lettres, quand il n'y a pas de photo. */
+export function initiales(u: { prenom: string; nom: string }) {
+  const lettres = [u.prenom[0], u.nom[0]].filter(Boolean).join('');
+  return (lettres || u.prenom[0] || '?').toUpperCase();
+}
 
 type LigneUtilisateur = Utilisateur & {
   empreinte: string;
@@ -104,7 +118,7 @@ export async function utilisateurConnecte(): Promise<Utilisateur | null> {
   if (!jeton) return null;
 
   const trouve = await ligne<Utilisateur & { expire_le: Date }>(
-    `SELECT u.id, u.nom, u.email, u.role, s.expire_le
+    `SELECT u.id, u.prenom, u.nom, u.email, u.avatar, u.role, s.expire_le
        FROM sessions s
        JOIN utilisateurs u ON u.id = s.utilisateur_id
       WHERE s.empreinte_jeton = $1 AND s.expire_le > now()`,
@@ -112,7 +126,14 @@ export async function utilisateurConnecte(): Promise<Utilisateur | null> {
   );
   if (!trouve) return null;
 
-  return { id: trouve.id, nom: trouve.nom, email: trouve.email, role: trouve.role };
+  return {
+    id: trouve.id,
+    prenom: trouve.prenom,
+    nom: trouve.nom,
+    email: trouve.email,
+    avatar: trouve.avatar,
+    role: trouve.role,
+  };
 }
 
 export async function fermerSession() {
@@ -173,7 +194,14 @@ export async function connecter(
 
   return {
     ok: true,
-    utilisateur: { id: compte.id, nom: compte.nom, email: compte.email, role: compte.role },
+    utilisateur: {
+      id: compte.id,
+      prenom: compte.prenom,
+      nom: compte.nom,
+      email: compte.email,
+      avatar: compte.avatar,
+      role: compte.role,
+    },
   };
 }
 
@@ -195,11 +223,18 @@ export async function creerCompte(donnees: {
   // pourrait jamais en créer un second.
   const role = (await aucunCompte()) ? 'administrateur' : (donnees.role ?? 'editeur');
 
+  // Le formulaire de création ne demande qu'un nom : on le coupe au premier
+  // espace, et l'intéressé corrigera lui-même dans Mon compte s'il le faut.
+  const entier = donnees.nom.trim();
+  const espace = entier.indexOf(' ');
+  const prenom = espace > 0 ? entier.slice(0, espace) : entier;
+  const nom = espace > 0 ? entier.slice(espace + 1).trim() : '';
+
   return ligne<Utilisateur>(
-    `INSERT INTO utilisateurs (nom, email, empreinte, sel, role)
-     VALUES ($1, $2, $3, $4, $5)
-     RETURNING id, nom, email, role`,
-    [donnees.nom.trim(), donnees.email.trim().toLowerCase(), empreinte, sel, role],
+    `INSERT INTO utilisateurs (prenom, nom, email, empreinte, sel, role)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING id, prenom, nom, email, avatar, role`,
+    [prenom, nom, donnees.email.trim().toLowerCase(), empreinte, sel, role],
   );
 }
 
@@ -219,26 +254,30 @@ export type UtilisateurListe = Utilisateur & {
 export async function listerUtilisateurs(): Promise<UtilisateurListe[]> {
   const lignes = await requete<{
     id: number;
+    prenom: string;
     nom: string;
     email: string;
+    avatar: string | null;
     role: 'administrateur' | 'editeur';
     cree_le: Date;
     derniere: Date | null;
     sessions: string;
   }>(
-    `SELECT u.id, u.nom, u.email, u.role, u.cree_le,
+    `SELECT u.id, u.prenom, u.nom, u.email, u.avatar, u.role, u.cree_le,
             max(s.vue_le) AS derniere,
             count(s.empreinte_jeton) FILTER (WHERE s.expire_le > now())::text AS sessions
        FROM utilisateurs u
        LEFT JOIN sessions s ON s.utilisateur_id = u.id
       GROUP BY u.id
-      ORDER BY u.role, u.nom`,
+      ORDER BY u.role, u.prenom, u.nom`,
   );
 
   return lignes.map((l) => ({
     id: l.id,
+    prenom: l.prenom,
     nom: l.nom,
     email: l.email,
+    avatar: l.avatar,
     role: l.role,
     creeLe: l.cree_le,
     derniereConnexion: l.derniere,
@@ -331,4 +370,50 @@ export async function fermerAutresSessions(id: number) {
     id,
     empreinteJeton(jeton),
   ]);
+}
+
+// ————————————————————————————— Le profil —————————————————————————————
+
+/**
+ * Prénom et nom.
+ *
+ * Le compte ne les portait que de sa création : il fallait m'écrire pour
+ * corriger une faute sur son propre nom. C'est le genre de dépendance que ce
+ * BackOffice existe pour supprimer.
+ */
+export async function majProfil(id: number, d: { prenom: string; nom: string }) {
+  await requete(
+    'UPDATE utilisateurs SET prenom = $2, nom = $3, modifie_le = now() WHERE id = $1',
+    [id, d.prenom.trim(), d.nom.trim()],
+  );
+}
+
+/**
+ * Change l'adresse de connexion.
+ *
+ * C'est l'identifiant du compte : l'appelant redemande le mot de passe avant,
+ * sans quoi une session laissée ouverte sur un poste partagé suffirait à
+ * s'approprier le compte en remplaçant l'adresse par la sienne.
+ *
+ * L'unicité est tenue par la base, pas ici : deux enregistrements simultanés
+ * passeraient entre les mailles d'une vérification faite en amont.
+ */
+export async function majEmail(id: number, email: string) {
+  await requete('UPDATE utilisateurs SET email = $2, modifie_le = now() WHERE id = $1', [
+    id,
+    email.trim().toLowerCase(),
+  ]);
+}
+
+/** Pose la photo, et rend celle qu'elle remplace pour que l'appelant l'efface. */
+export async function majAvatar(id: number, avatar: string | null) {
+  const avant = await ligne<{ avatar: string | null }>(
+    'SELECT avatar FROM utilisateurs WHERE id = $1',
+    [id],
+  );
+  await requete('UPDATE utilisateurs SET avatar = $2, modifie_le = now() WHERE id = $1', [
+    id,
+    avatar,
+  ]);
+  return avant?.avatar ?? null;
 }

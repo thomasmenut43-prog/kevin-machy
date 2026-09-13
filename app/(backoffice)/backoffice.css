@@ -384,6 +384,36 @@ body:has(.bo) {
   line-height: 1.4;
 }
 
+/* Le compte, en bas du menu. La pastille reste quand le menu se replie et que
+   le nom disparaît : c'est alors le seul rappel de qui est connecté. */
+.bo-profil {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bo-profil-rond {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--bo-surface-2);
+  border: 1px solid var(--bo-bord);
+  color: var(--bo-texte-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.bo-profil-rond img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
 /* L'éditeur est la seule vue qui refuse la mesure confortable : la limiter
    laisserait une bande vide à droite de l'aperçu, sur un grand écran. */
 .bo-contenu:has(.editeur-plein) {

@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { ReglagesEmail } from './(protege)/reglages/ReglagesEmail';
 import { Comptes, MonMotDePasse } from './(protege)/utilisateurs/Comptes';
+import { MonProfil } from './(protege)/utilisateurs/MonProfil';
+import { Entreprise } from './Entreprise';
 import { Integrations } from './Integrations';
 import { actionFermerAutresSessions } from './(protege)/utilisateurs/actions';
 import { actionParametres, type Parametres } from './(protege)/reglages/actions';
@@ -19,10 +21,11 @@ import { actionParametres, type Parametres } from './(protege)/reglages/actions'
  * fermée, elle ne coûte pas une requête.
  */
 
-type Onglet = 'compte' | 'utilisateurs' | 'emails' | 'integrations';
+type Onglet = 'compte' | 'entreprise' | 'utilisateurs' | 'emails' | 'integrations';
 
 const ONGLETS: { id: Onglet; libelle: string }[] = [
   { id: 'compte', libelle: 'Mon compte' },
+  { id: 'entreprise', libelle: 'Mon entreprise' },
   { id: 'utilisateurs', libelle: 'Utilisateurs' },
   { id: 'emails', libelle: 'E-mails' },
   { id: 'integrations', libelle: 'Intégrations' },
@@ -33,6 +36,12 @@ export function ModaleParametres({ onFermer }: { onFermer: () => void }) {
   const [donnees, setDonnees] = useState<Parametres | null>(null);
   const [enCours, demarrer] = useTransition();
   const panneau = useRef<HTMLDivElement>(null);
+
+  // Relire plutôt que deviner : après un enregistrement, la fenêtre redemande
+  // au serveur ce qu'il a retenu, et affiche donc ce qui est réellement en base.
+  const recharger = useCallback(() => {
+    actionParametres().then(setDonnees).catch(() => {});
+  }, []);
 
   useEffect(() => {
     actionParametres().then(setDonnees).catch(() => setDonnees(null));
@@ -111,6 +120,15 @@ export function ModaleParametres({ onFermer }: { onFermer: () => void }) {
               administrateur={donnees.administrateur}
               monCompte={false}
             />
+          ) : onglet === 'entreprise' ? (
+            donnees.administrateur ? (
+              <Entreprise />
+            ) : (
+              <p className="bo-aide">
+                Ces informations s’affichent sur le site et engagent l’entreprise. Seul un
+                administrateur peut les modifier.
+              </p>
+            )
           ) : onglet === 'integrations' ? (
             donnees.administrateur ? (
               <Integrations />
@@ -129,15 +147,18 @@ export function ModaleParametres({ onFermer }: { onFermer: () => void }) {
               </p>
             )
           ) : (
-            <MonMotDePasse
-              sessions={donnees.sessions}
-              enCours={enCours}
-              onFermerAutres={() =>
-                demarrer(async () => {
-                  await actionFermerAutresSessions();
-                })
-              }
-            />
+            <>
+              <MonProfil profil={donnees.moi} onChange={recharger} />
+              <MonMotDePasse
+                sessions={donnees.sessions}
+                enCours={enCours}
+                onFermerAutres={() =>
+                  demarrer(async () => {
+                    await actionFermerAutresSessions();
+                  })
+                }
+              />
+            </>
           )}
         </div>
       </div>

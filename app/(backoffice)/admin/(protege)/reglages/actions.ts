@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { utilisateurConnecte } from '@/lib/auth';
 import { listerUtilisateurs, utilisateurConnecte as qui } from '@/lib/auth';
+import { lireEntreprise, majEntreprise, type Entreprise } from '@/lib/entreprise';
 import {
   choisirPaiement,
   connecterGoogle,
@@ -25,11 +26,20 @@ export type CompteAffichable = Omit<
   'creeLe' | 'derniereConnexion'
 > & { creeLe: string; derniereConnexion: string | null };
 
+/** Ce que chacun peut changer sur lui-même. Jamais le mot de passe : il ne se relit pas. */
+export type MonProfil = {
+  prenom: string;
+  nom: string;
+  email: string;
+  avatar: string | null;
+};
+
 export type Parametres = {
   smtp: Awaited<ReturnType<typeof lireSmtpAffichable>> | null;
   sessions: number;
   administrateur: boolean;
   moiId: number;
+  moi: MonProfil;
   comptes: CompteAffichable[];
 };
 
@@ -53,6 +63,7 @@ export async function actionParametres(): Promise<Parametres> {
     sessions: comptes.find((c) => c.id === moi.id)?.sessions ?? 1,
     administrateur,
     moiId: moi.id,
+    moi: { prenom: moi.prenom, nom: moi.nom, email: moi.email, avatar: moi.avatar },
     // Les dates traversent la frontière serveur/client : en chaîne, sinon
     // elles arrivent en objets que React refuse de sérialiser.
     comptes: comptes.map((c) => ({
@@ -160,4 +171,100 @@ export async function actionChoisirPaiement(paiement: 'stripe' | 'sumup' | null)
   await choisirPaiement(paiement);
   revalidatePath('/admin');
   return {};
+}
+
+// ———————————————————————————— Mon entreprise ————————————————————————————
+
+/**
+ * Les informations de l'entreprise.
+ *
+ * Elles s'affichent sur le site public — pied de page, coordonnées, horaires —
+ * et engagent Kevin : c'est un réglage d'administrateur, pas de rédacteur.
+ */
+export async function actionEntreprise(): Promise<Entreprise> {
+  await exigerAdministrateur();
+  return lireEntreprise();
+}
+
+export async function actionEnregistrerEntreprise(
+  _p: EtatReglages,
+  donnees: FormData,
+): Promise<EtatReglages> {
+  await exigerAdministrateur();
+
+  const texte = (nom: string) => String(donnees.get(nom) ?? '').trim();
+
+  const nom = texte('nom');
+  if (!nom) return { erreur: 'Le nom de l’entreprise est obligatoire.' };
+
+  const email = texte('email');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    return { erreur: 'Cette adresse e-mail ne semble pas valide.' };
+  }
+
+  // Les liens sont vérifiés ici plutôt qu'à l'affichage : une adresse fautive
+  // enregistrée se remarquerait le jour où un visiteur clique dessus.
+  const lien = (cle: string) => {
+    const valeur = texte(cle);
+    if (!valeur) return { valeur: '' };
+    try {
+      const url = new URL(valeur);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('protocole');
+      return { valeur: url.toString() };
+    } catch {
+      return { erreur: `Adresse invalide : ${valeur}` };
+    }
+  };
+
+  const clesLiens = [
+    'accesClients',
+    'reservation',
+    'instagram',
+    'facebook',
+    'linkedin',
+    'youtube',
+    'avis',
+    'mentions',
+    'cgv',
+    'cookies',
+  ] as const;
+
+  const liens = {} as Entreprise['liens'];
+  for (const cle of clesLiens) {
+    const r = lien(`lien_${cle}`);
+    if (r.erreur) return { erreur: r.erreur };
+    liens[cle] = r.valeur ?? '';
+  }
+
+  const site = lien('url');
+  if (site.erreur) return { erreur: site.erreur };
+
+  const jours = donnees.getAll('jour').map(String);
+  const horaires = jours.map((jour, i) => ({
+    jour,
+    // Un jour sans horaire est un jour fermé, pas un jour sans information :
+    // c'est la chaîne vide qui le dit, et le site affiche « Fermé ».
+    ouverture: String(donnees.get(`horaire_${i}`) ?? '').trim() || null,
+  }));
+
+  await majEntreprise({
+    nom,
+    role: texte('role'),
+    raisonSociale: texte('raisonSociale'),
+    siret: texte('siret'),
+    url: site.valeur ?? '',
+    adresse: texte('adresse'),
+    codePostal: texte('codePostal'),
+    ville: texte('ville'),
+    region: texte('region'),
+    zone: texte('zone'),
+    telephone: texte('telephone'),
+    email,
+    liens,
+    horaires,
+  });
+
+  // Le pied de page et les coordonnées vivent sur toutes les pages du site.
+  revalidatePath('/', 'layout');
+  return { succes: 'Informations enregistrées.' };
 }

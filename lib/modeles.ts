@@ -46,6 +46,67 @@ export type Media = {
 export const urlMedia = (fichier: string) =>
   fichier.startsWith('/') ? fichier : `/medias/${fichier}`;
 
+/**
+ * La photo de profil d'un compte, dans la largeur demandée.
+ *
+ * Elle emprunte la même route que la médiathèque sans y figurer : le carré de
+ * 256 pour une fiche, celui de 128 pour la pastille du menu.
+ */
+export const urlAvatar = (avatar: string, largeur: 128 | 256 = 256) =>
+  `/medias/${avatar}-${largeur}.webp`;
+
+// ————————————————————————————— Entreprise —————————————————————————————
+
+export type Horaire = { jour: string; ouverture: string | null };
+
+/**
+ * L'entreprise : ce que le site affirme de Kevin.
+ *
+ * Le type est ici, avec les autres formes partagées, parce que le pied de page
+ * l'affiche depuis le navigateur ; la lecture en base, elle, est dans
+ * `lib/entreprise.ts` et ne quitte jamais le serveur.
+ */
+export type Entreprise = {
+  nom: string;
+  role: string;
+  raisonSociale: string;
+  siret: string;
+  url: string;
+  adresse: string;
+  codePostal: string;
+  ville: string;
+  region: string;
+  zone: string;
+  telephone: string;
+  email: string;
+  liens: {
+    accesClients: string;
+    reservation: string;
+    instagram: string;
+    facebook: string;
+    linkedin: string;
+    youtube: string;
+    avis: string;
+    mentions: string;
+    cgv: string;
+    cookies: string;
+  };
+  horaires: Horaire[];
+};
+
+/**
+ * Le numéro tel qu'un téléphone le compose.
+ *
+ * Calculé, jamais saisi : demander deux fois le même numéro sous deux formes
+ * garantit qu'un jour les deux diffèrent, et c'est l'appel qui échoue.
+ */
+export function telephoneUri(telephone: string) {
+  const chiffres = telephone.replace(/[^\d+]/g, '');
+  if (chiffres.startsWith('+')) return `tel:${chiffres}`;
+  if (chiffres.startsWith('0')) return `tel:+33${chiffres.slice(1)}`;
+  return `tel:${chiffres}`;
+}
+
 // ——————————————————————————————— Pages ———————————————————————————————
 
 /** Une section enregistrée : son type, et les valeurs de ses champs. */

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ModaleParametres } from './ModaleParametres';
 import { Cadenas, Enveloppe, Externe, Images, Pages, Reglage, Sortie, Tableau } from './IconesMenu';
 import type { Utilisateur } from '@/lib/auth';
+import { urlAvatar } from '@/lib/modeles';
 
 type Onglet = {
   href: string;
@@ -25,6 +26,11 @@ const ONGLETS: Onglet[] = [
   { href: '/admin/messages/', libelle: 'Messages', Signe: Enveloppe },
   { href: '/admin/boutique/', libelle: 'Boutique', Signe: Cadenas, verrouille: true },
 ];
+
+/** Une ou deux lettres, faute de photo. */
+function initialesDe(u: { prenom: string; nom: string }) {
+  return ([u.prenom[0], u.nom[0]].filter(Boolean).join('') || '?').toUpperCase();
+}
 
 export function MenuBackOffice({
   utilisateur,
@@ -119,10 +125,21 @@ export function MenuBackOffice({
       </nav>
 
       <div className="bo-pied-menu">
-        <span className="bo-libelle">
-          {utilisateur.nom}
-          <br />
-          {utilisateur.role === 'administrateur' ? 'Administrateur' : 'Éditeur'}
+        {/* La pastille reste visible quand le menu est replié : c'est alors le
+            seul rappel du compte avec lequel on travaille. */}
+        <span className="bo-profil">
+          <span className="bo-profil-rond" aria-hidden="true">
+            {utilisateur.avatar ? (
+              <img src={urlAvatar(utilisateur.avatar, 128)} alt="" />
+            ) : (
+              initialesDe(utilisateur)
+            )}
+          </span>
+          <span className="bo-libelle">
+            {[utilisateur.prenom, utilisateur.nom].filter(Boolean).join(' ')}
+            <br />
+            {utilisateur.role === 'administrateur' ? 'Administrateur' : 'Éditeur'}
+          </span>
         </span>
         <button
           type="button"

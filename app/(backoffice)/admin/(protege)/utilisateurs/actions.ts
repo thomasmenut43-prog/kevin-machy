@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import {
   changerMotDePasse,
+  majAvatar,
+  majEmail,
+  majProfil,
   changerRole,
   creerCompte,
   fermerAutresSessions,
@@ -11,6 +14,7 @@ import {
   supprimerUtilisateur,
   utilisateurConnecte,
 } from '@/lib/auth';
+import { effacerAvatar, enregistrerAvatar } from '@/lib/medias';
 
 async function exigerConnexion() {
   const utilisateur = await utilisateurConnecte();
@@ -123,4 +127,92 @@ export async function actionFermerAutresSessions() {
   const moi = await exigerConnexion();
   await fermerAutresSessions(moi.id);
   revalidatePath('/admin/utilisateurs');
+}
+
+// ————————————————————————————— Mon profil —————————————————————————————
+
+/**
+ * Le menu du BackOffice affiche le nom et la photo : tout ce qui change ici
+ * doit se voir partout, d'où la remise à jour de la mise en page entière.
+ */
+function rafraichirBackOffice() {
+  revalidatePath('/admin', 'layout');
+}
+
+export async function actionMonProfil(_p: EtatCompte, donnees: FormData): Promise<EtatCompte> {
+  const moi = await exigerConnexion();
+
+  const prenom = String(donnees.get('prenom') ?? '').trim();
+  const nom = String(donnees.get('nom') ?? '').trim();
+
+  if (!prenom) return { erreur: 'Indiquez au moins un prénom.', saisi: { prenom, nom } };
+  if (prenom.length > 80 || nom.length > 80) {
+    return { erreur: 'Quatre-vingts caractères au maximum.', saisi: { prenom, nom } };
+  }
+
+  await majProfil(moi.id, { prenom, nom });
+  rafraichirBackOffice();
+  return { succes: 'Profil enregistré.' };
+}
+
+/**
+ * L'adresse de connexion.
+ *
+ * Le mot de passe est redemandé pour la même raison que sur le mot de passe
+ * lui-même : l'adresse est l'identifiant du compte, et la changer depuis un
+ * poste resté ouvert reviendrait à s'en emparer.
+ */
+export async function actionMonEmail(_p: EtatCompte, donnees: FormData): Promise<EtatCompte> {
+  const moi = await exigerConnexion();
+
+  const email = String(donnees.get('email') ?? '').trim();
+  const motDePasse = String(donnees.get('motDePasse') ?? '');
+  const saisi = { email };
+
+  if (!EMAIL.test(email)) return { erreur: 'Cette adresse e-mail ne semble pas valide.', saisi };
+  if (email.toLowerCase() === moi.email.toLowerCase()) {
+    return { erreur: 'C’est déjà votre adresse.', saisi };
+  }
+  if (!(await motDePasseCorrect(moi.id, motDePasse))) {
+    return { erreur: 'Le mot de passe est incorrect.', saisi };
+  }
+
+  try {
+    await majEmail(moi.id, email);
+  } catch (erreur) {
+    if ((erreur as { code?: string }).code === '23505') {
+      return { erreur: 'Un compte utilise déjà cette adresse.', saisi };
+    }
+    throw erreur;
+  }
+
+  rafraichirBackOffice();
+  return { succes: `Vous vous connecterez désormais avec ${email}.` };
+}
+
+export async function actionMaPhoto(_p: EtatCompte, donnees: FormData): Promise<EtatCompte> {
+  const moi = await exigerConnexion();
+
+  const fichier = donnees.get('photo');
+  if (!(fichier instanceof File) || fichier.size === 0) {
+    return { erreur: 'Choisissez une image.' };
+  }
+
+  const resultat = await enregistrerAvatar(fichier);
+  if (!resultat.ok) return { erreur: resultat.message };
+
+  // L'ancienne photo n'est effacée qu'une fois la nouvelle en base : l'ordre
+  // inverse laisserait un compte sans image si l'enregistrement échouait.
+  const ancienne = await majAvatar(moi.id, resultat.nom);
+  await effacerAvatar(ancienne);
+
+  rafraichirBackOffice();
+  return { succes: 'Photo mise à jour.' };
+}
+
+export async function actionRetirerMaPhoto() {
+  const moi = await exigerConnexion();
+  const ancienne = await majAvatar(moi.id, null);
+  await effacerAvatar(ancienne);
+  rafraichirBackOffice();
 }
