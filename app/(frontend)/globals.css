@@ -251,6 +251,18 @@ button {
   margin-top: 1.15em;
 }
 
+/* Deux paragraphes d'un même bloc de texte riche : sans cette règle ils se
+   touchent, ce qui ne se voyait pas tant qu'aucune page n'en enchaînait. */
+.corps p + p,
+.corps ul,
+.corps ol {
+  margin-top: 1.15em;
+}
+
+.corps li + li {
+  margin-top: 0.4em;
+}
+
 .corps strong,
 .corps b {
   color: var(--encre);
