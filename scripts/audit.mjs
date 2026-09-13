@@ -95,6 +95,117 @@ for (const [nom, vp] of [['desktop', {width:1440,height:900}], ['mobile', {width
   await p.close();
 }
 
+// 7) Barre de rappel du tarif iris : apparition, état partagé, repli, mobile
+{
+  const IRIS = 'http://localhost:3000/studio-de-l-iris/';
+  const barre = p => p.locator('aside[aria-label="Rappel du tarif simulé"]');
+  const affichee = p => barre(p).evaluate(n => n.hasAttribute('data-visible'));
+
+  // La page charge beaucoup d'images : un aller-retour stabilise la mise en
+  // page avant toute mesure de position.
+  const preparer = async p => {
+    await p.goto(IRIS, {waitUntil:'networkidle'});
+    await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await p.waitForTimeout(600);
+    await p.evaluate(() => window.scrollTo(0, 0));
+    await p.waitForTimeout(400);
+  };
+  // Les images qui se chargent au-dessus rallongent la page pendant le
+  // défilement : viser une position absolue ne suffit pas, on descend jusqu'à
+  // ce que le simulateur soit réellement sorti par le haut.
+  const depasser = async p => {
+    for (let i = 0; i < 8; i++) {
+      const bas = await p.evaluate(() => document.getElementById('simulateur-iris').getBoundingClientRect().bottom);
+      if (bas < -50) break;
+      await p.evaluate(d => window.scrollBy(0, d), bas + 700);
+      await p.waitForTimeout(400);
+    }
+    await p.waitForTimeout(400);
+  };
+
+  const p = await b.newPage({ viewport: {width:1440,height:900} });
+  await preparer(p);
+  ok('barre iris masquée en haut de page', await affichee(p) === false);
+  ok('barre iris inerte quand masquée', await barre(p).evaluate(n => n.hasAttribute('inert')));
+
+  await p.locator('#simulateur-iris').scrollIntoViewIfNeeded();
+  await p.waitForTimeout(500);
+  ok('barre iris masquée quand le simulateur est à l’écran', await affichee(p) === false);
+
+  await depasser(p);
+  ok('barre iris visible une fois le simulateur dépassé', await affichee(p) === true);
+  ok('barre iris rendue au clavier quand visible', await barre(p).evaluate(n => !n.hasAttribute('inert')));
+  let t = await barre(p).innerText();
+  ok('barre iris annonce 49 € et 30 min', t.includes('49') && t.includes('30 min'), t.replace(/\n/g,' | '));
+
+  await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await p.waitForTimeout(700);
+  ok('barre iris masquée au pied de page', await affichee(p) === false);
+
+  // Le réglage fait dans la page doit se lire tel quel dans la barre.
+  await preparer(p);
+  await p.locator('#simulateur-iris').scrollIntoViewIfNeeded();
+  await p.waitForTimeout(300);
+  await p.getByRole('button', {name:'Ajouter un humain'}).click();
+  await p.getByRole('button', {name:'Ajouter un animal'}).click();
+  await p.waitForTimeout(200);
+  ok('simulateur à 3 iris affiche 99 €', (await p.locator('#simulateur-iris').innerText()).includes('99'));
+  await depasser(p);
+  t = await barre(p).innerText();
+  ok('barre iris reprend le même tarif', t.includes('99') && t.includes('3 iris'), t.replace(/\n/g,' | '));
+
+  // Au-delà du dernier palier, aucun montant n'est deviné.
+  await preparer(p);
+  await p.locator('#simulateur-iris').scrollIntoViewIfNeeded();
+  await p.waitForTimeout(300);
+  for (let i = 0; i < 4; i++) await p.getByRole('button', {name:'Ajouter un humain'}).click();
+  await p.getByRole('button', {name:'Ajouter un animal'}).click();
+  await depasser(p);
+  t = await barre(p).innerText();
+  ok('barre iris passe sur devis au-delà de 5 iris', t.includes('Sur devis'), t.replace(/\n/g,' | '));
+  ok('barre iris bascule vers le contact', await barre(p).getByRole('link',{name:'Écrivez-moi'}).count() === 1);
+
+  // Le repli vaut pour le passage en cours, pas pour la visite entière.
+  await preparer(p);
+  await depasser(p);
+  await barre(p).getByRole('button', {name:/masquer/i}).click();
+  await p.waitForTimeout(300);
+  ok('barre iris se replie', await affichee(p) === false);
+  await p.locator('#simulateur-iris').scrollIntoViewIfNeeded();
+  await p.waitForTimeout(500);
+  await depasser(p);
+  ok('barre iris revient après un passage sur le simulateur', await affichee(p) === true);
+  await p.close();
+
+  const m = await b.newPage({ viewport: {width:390,height:844} });
+  await preparer(m);
+  await depasser(m);
+  ok('barre iris visible en mobile', await affichee(m) === true);
+  const mes = await barre(m).evaluate(n => {
+    const enfants = [...n.firstElementChild.children].map(e => e.getBoundingClientRect());
+    // Une seule ligne : tous les enfants se chevauchent verticalement. Comparer
+    // leurs `top` ne dirait rien, ils sont centrés et de hauteurs différentes.
+    return {
+      hauteur: Math.round(n.getBoundingClientRect().height),
+      surUneLigne: Math.max(...enfants.map(r => r.top)) < Math.min(...enfants.map(r => r.bottom)),
+      deborde: Math.max(...enfants.map(r => r.right)) > window.innerWidth + 1,
+      dureeMasquee: getComputedStyle(n.querySelector('span[class*="duree"]')).display === 'none',
+    };
+  });
+  ok('barre iris tient sur une ligne en mobile', mes.surUneLigne);
+  ok('barre iris ne déborde pas en mobile', !mes.deborde);
+  ok('barre iris masque la durée en mobile', mes.dureeMasquee);
+  ok('barre iris reste sous 80 px de haut', mes.hauteur <= 80, `${mes.hauteur} px`);
+  await m.close();
+
+  const autre = await b.newPage({ viewport: {width:1440,height:900} });
+  for (const c of ['/','/portrait/','/mariage/']) {
+    await autre.goto('http://localhost:3000'+c, {waitUntil:'domcontentloaded'});
+    ok(`aucune barre iris sur ${c}`, await barre(autre).count() === 0);
+  }
+  await autre.close();
+}
+
 await b.close();
 console.log(rapport.join('\n'));
 console.log('\n' + rapport.filter(l=>l.startsWith('KO')).length + ' échec(s) sur ' + rapport.length);

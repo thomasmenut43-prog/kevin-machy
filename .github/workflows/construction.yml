@@ -1,0 +1,71 @@
+# Vérification de la construction à chaque poussée.
+#
+# L'envoi FTP vers Hostinger a été retiré : le site n'est plus un export
+# statique. Depuis l'ajout du BackOffice il lui faut un serveur qui exécute du
+# code, une base PostgreSQL et une authentification — un hébergement mutualisé
+# ne sait rien en faire (PRD § 2).
+#
+# Le déploiement sera rebranché sur le VPS, après la démonstration à Kevin et
+# l'ouverture des accès (PRD § 14). D'ici là, cette CI garantit seulement que
+# la branche `main` construit.
+
+name: Construction
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: construction-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+
+    # Les écrans du BackOffice interrogent la base à la construction : il leur
+    # faut une PostgreSQL, même vide.
+    services:
+      base:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: kevin
+          POSTGRES_PASSWORD: kevin
+          POSTGRES_DB: kevinmachy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kevin -d kevinmachy"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://kevin:kevin@localhost:5432/kevinmachy
+      NEXT_PUBLIC_URL_SITE: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Vérifie aussi que les migrations s'appliquent sur une base vierge :
+      # une migration cassée se voit ici, pas le jour du déploiement.
+      - name: Migrations
+        run: npm run migrer
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      # Les images encodées sont versionnées dans public/img : rien à
+      # régénérer ici. Relancer `npm run images` en local après toute
+      # modification de scripts/build-images.mjs.
+      - name: Construction
+        run: npm run build

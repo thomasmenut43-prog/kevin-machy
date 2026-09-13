@@ -4,7 +4,8 @@ Refonte complète du site de Kevin Machy, photographe et Artisan d'Art au Puy-en
 Direction artistique **« Chambre noire »** : fond quasi noir, une image par écran, hiérarchie
 portée par l'échelle typographique et le vide.
 
-- **Stack** — Next.js 16 (App Router), TypeScript, CSS Modules, export statique.
+- **Stack** — Next.js 16 (App Router), TypeScript, CSS Modules, PostgreSQL. Le BackOffice est
+  écrit ici, de bout en bout : aucun CMS tiers.
 - **Typographies** — Bodoni Moda (Google Fonts) en titres, Switzer (Fontshare) auto-hébergé en texte.
 - **Palette** — fond `#0A0A0B`, encre `#E9E5DE`, accent cuivre `#B9784F` (moins de 5 % de la surface).
 
@@ -14,38 +15,93 @@ portée par l'échelle typographique et le vide.
 
 ```bash
 npm install
-npm run images   # encode les images dans public/img (≈ 2 min)
-npm run dev      # http://localhost:3000
+cp .env.exemple .env   # rien à compléter en local, les valeurs par défaut suffisent
+npm run base           # lance PostgreSQL et la boîte aux lettres de développement
+npm run migrer         # crée les tables
+npm run images         # encode les images dans public/img (≈ 2 min)
+npm run dev            # http://localhost:3000
 ```
 
-`npm run build:full` enchaîne l'encodage des images et la construction du site.
-La sortie statique est écrite dans `out/`.
+Le site public est sur `/`, le BackOffice sur `/admin`. Au premier lancement, `/admin` propose
+de créer un compte : **le tout premier créé est automatiquement administrateur**, sinon
+personne ne pourrait en créer d'autres.
+
+`npm run base:stop` arrête la base sans rien perdre, `npm run base:reinit` efface tout et
+repart à zéro.
+
+**Les e-mails partent dans une boîte locale**, jamais sur Internet : tout ce que le site envoie
+se lit sur [http://localhost:8025](http://localhost:8025). Dans Réglages → E-mails, pointer le
+serveur sur `localhost`, port `1025`, chiffrement « aucun », et n'importe quels identifiants.
 
 ---
 
-## Déploiement — GitHub → Hostinger
+## Architecture
 
-Le site est un export statique : Hostinger n'exécute rien, il sert des fichiers. Son plan
-d'hébergement actuel suffit.
-
-**Attention** : la fonction « Advanced → Git » de hPanel *ne lance aucune étape de build*, elle
-recopie les fichiers du dépôt tels quels. C'est donc GitHub Actions qui construit puis
-téléverse — voir `.github/workflows/deploy.yml`, déclenché à chaque push sur `main`.
-
-Trois secrets à créer dans GitHub (Settings → Secrets and variables → Actions), depuis
-hPanel → Fichiers → Comptes FTP :
+Une seule application sert le site public et le BackOffice, sur le même serveur et la même
+base. Kevin ne se connecte qu'à son domaine, à aucun service tiers.
 
 ```
-HOSTINGER_FTP_SERVER
-HOSTINGER_FTP_USERNAME
-HOSTINGER_FTP_PASSWORD
+app/(frontend)/    le site public, six pages, toujours pré-rendues
+app/(backoffice)/  le BackOffice : connexion, tableau de bord, éditeur
+app/robots.ts      ces deux-là doivent rester à la racine de `app`,
+app/sitemap.ts     Next ne les reconnaît pas ailleurs
+cms/schema.ts      le langage qui décrit une section
+cms/catalogue.ts   les treize sections du catalogue
+lib/apparence.ts   tailles, couleurs, polices autorisées — source unique
+lib/bdd.ts         accès PostgreSQL
+lib/auth.ts        mots de passe, sessions, rôles
+migrations/        le schéma, un fichier SQL par étape
+docker-compose.yml PostgreSQL de développement, même version que le serveur visé
 ```
 
-Le transfert est incrémental : seuls les fichiers modifiés partent, ce qui compte avec 57 Mo
-d'images. `public/.htaccess` est copié dans `out/` au build : il déclare la page 404 et le
-cache long sur les images et les polices.
+**Le site public reste statique à la construction** : les six pages sont pré-rendues, seules
+les routes d'administration sont dynamiques. `npm run build` l'affiche dans son tableau de
+routes, et c'est le contrôle à faire après toute modification de la configuration.
 
-Le nom de domaine est chez OVH : il suffit de pointer ses enregistrements DNS vers Hostinger.
+### Le BackOffice est écrit ici
+
+Aucun CMS tiers. L'authentification, les sessions, le schéma et les écrans sont dans ce dépôt.
+Trois décisions valent d'être connues avant d'y toucher, et elles sont commentées dans
+`lib/auth.ts` :
+
+- le mot de passe n'est jamais stocké, seulement une empreinte scrypt avec un sel par compte ;
+- la session est une ligne en base, pas un jeton autoportant : la révoquer coupe l'accès
+  immédiatement ;
+- le cookie porte le jeton, la base n'en garde que l'empreinte.
+
+### E-mails
+
+Kevin saisit lui-même ses réglages SMTP dans le BackOffice : rien n'est codé en dur, ni
+serveur, ni identifiants, ni adresse. Trois points valent d'être connus.
+
+- **Le mot de passe est chiffré en AES-256-GCM** avant d'entrer en base, avec la clé
+  `CLE_CHIFFREMENT` de l'environnement. Il n'est jamais réaffiché, ni renvoyé au navigateur :
+  il se remplace, il ne se relit pas. Perdre la clé oblige seulement à ressaisir le mot de passe.
+- **La demande de contact est enregistrée avant d'être envoyée.** Une panne du serveur d'envoi
+  ne fait donc perdre aucun client : la demande attend dans l'onglet Messages, et son échec
+  d'acheminement y est signalé.
+- **Le formulaire est la seule porte ouverte du site.** Trois protections le gardent : un champ
+  piège invisible, un délai minimal avant envoi, et une limite par adresse IP. Le compteur vit en
+  mémoire : il faudra le déplacer en base le jour où le site tournera sur plusieurs machines.
+
+### Migrations
+
+Un fichier SQL par étape dans `migrations/`, joué une fois, dans une transaction. Le nom du
+fichier sert de clé : **ne jamais renommer ni modifier une migration déjà appliquée**, en créer
+une nouvelle. `npm run migrer` le vérifie et refuse de continuer sinon.
+
+---
+
+## Déploiement
+
+**Il n'y en a plus pour l'instant, et c'est volontaire.** Le site n'est plus un export statique :
+le BackOffice réclame un serveur qui exécute du code, une base PostgreSQL et une
+authentification. Un hébergement mutualisé ne sait rien en faire, il faut un VPS.
+
+L'ancien envoi FTP vers Hostinger a donc été retiré. `.github/workflows/construction.yml` se
+contente désormais de vérifier que `main` compile, base de test à l'appui.
+
+Le déploiement sera rebranché après la démonstration à Kevin et l'ouverture des accès.
 
 **Les images encodées (`public/img/`) sont versionnées** — la CI ne les régénère pas, car les
 sources vivent dans `.cache/raw/`, ignoré par git. Après toute modification de
