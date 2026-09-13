@@ -1,0 +1,366 @@
+import 'server-only';
+import { randomBytes } from 'node:crypto';
+import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import sharp, { type Metadata as MetaSharp, type Sharp } from 'sharp';
+import { ligne, requete } from './bdd';
+import type { Dossier, Media, Taille } from './modeles';
+
+export type { Dossier, Media, Taille } from './modeles';
+export { urlMedia } from './modeles';
+
+/**
+ * La médiathèque.
+ *
+ * Les fichiers vivent hors de `public/` et sont servis par une route dédiée.
+ * Deux raisons : `public/` est figé à la construction, et une image envoyée
+ * après coup n'y serait pas servie de façon fiable ; et les fichiers
+ * appartiennent au serveur et à ses sauvegardes, pas au dépôt.
+ *
+ * Chaque envoi produit quatre largeurs en WebP, comme le fait déjà le script
+ * d'encodage du site. Le navigateur choisit celle qu'il lui faut.
+ */
+
+export const DOSSIER = path.resolve(process.cwd(), 'medias');
+export const LARGEURS = [480, 1024, 1600, 2400] as const;
+const OCTETS_MAX = 25 * 1024 * 1024;
+const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff'];
+
+type LigneMedia = Omit<Media, 'aRemplacer' | 'dossierId'> & {
+  a_remplacer: boolean;
+  dossier_id: number | null;
+};
+
+const versMedia = (l: LigneMedia): Media => ({
+  id: l.id,
+  fichier: l.fichier,
+  alt: l.alt,
+  legende: l.legende,
+  largeur: l.largeur,
+  hauteur: l.hauteur,
+  tailles: l.tailles ?? [],
+  aRemplacer: l.a_remplacer,
+  dossierId: l.dossier_id,
+});
+
+const CHAMPS = 'id, fichier, alt, legende, largeur, hauteur, tailles, a_remplacer, dossier_id';
+
+export async function listerMedias(limite = 200) {
+  const lignes = await requete<LigneMedia>(
+    `SELECT ${CHAMPS} FROM medias ORDER BY cree_le DESC LIMIT $1`,
+    [limite],
+  );
+  return lignes.map(versMedia);
+}
+
+export async function mediaParId(id: number) {
+  const l = await ligne<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE id = $1`, [id]);
+  return l ? versMedia(l) : null;
+}
+
+/** Charge plusieurs médias d'un coup, pour ne pas interroger la base par image. */
+export async function mediasParIds(ids: number[]) {
+  const utiles = [...new Set(ids.filter((n) => Number.isInteger(n) && n > 0))];
+  if (!utiles.length) return new Map<number, Media>();
+
+  const lignes = await requete<LigneMedia>(
+    `SELECT ${CHAMPS} FROM medias WHERE id = ANY($1::int[])`,
+    [utiles],
+  );
+  return new Map(lignes.map((l) => [l.id, versMedia(l)]));
+}
+
+export type ResultatEnvoi = { ok: true; media: Media } | { ok: false; message: string };
+
+export async function enregistrerMedia(
+  fichier: File,
+  alt: string,
+  options?: { aRemplacer?: boolean },
+): Promise<ResultatEnvoi> {
+  if (!alt.trim()) {
+    return { ok: false, message: 'Le texte alternatif est obligatoire.' };
+  }
+  if (!TYPES.includes(fichier.type)) {
+    return { ok: false, message: 'Format non accepté. JPEG, PNG, WebP, AVIF ou TIFF.' };
+  }
+  if (fichier.size > OCTETS_MAX) {
+    return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
+  }
+
+  const octets = Buffer.from(await fichier.arrayBuffer());
+
+  // Sharp lit l'image pour de vrai : un fichier qui se prétend JPEG sans en
+  // être un échoue ici, avant d'avoir été écrit sur le disque.
+  let image: Sharp;
+  let meta: MetaSharp;
+  try {
+    image = sharp(octets, { failOn: 'error' });
+    meta = await image.metadata();
+  } catch {
+    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  }
+  if (!meta.width || !meta.height) {
+    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  }
+
+  await mkdir(DOSSIER, { recursive: true });
+
+  // Nom tiré au hasard : le nom d'origine peut contenir n'importe quoi, y
+  // compris des séquences qui feraient sortir du dossier.
+  const base = randomBytes(12).toString('hex');
+  const principal = `${base}.webp`;
+
+  await writeFile(
+    path.join(DOSSIER, principal),
+    await image.clone().rotate().webp({ quality: 82 }).toBuffer(),
+  );
+
+  const tailles: Taille[] = [];
+  for (const largeur of LARGEURS) {
+    if (largeur > meta.width) continue;
+    const nom = `${base}-${largeur}.webp`;
+    await writeFile(
+      path.join(DOSSIER, nom),
+      await image.clone().rotate().resize({ width: largeur }).webp({ quality: 80 }).toBuffer(),
+    );
+    tailles.push({ largeur, fichier: nom });
+  }
+
+  const cree = await ligne<LigneMedia>(
+    `INSERT INTO medias (fichier, alt, type_mime, largeur, hauteur, octets, tailles, a_remplacer)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING ${CHAMPS}`,
+    [
+      principal,
+      alt.trim().slice(0, 500),
+      'image/webp',
+      meta.width,
+      meta.height,
+      octets.length,
+      JSON.stringify(tailles),
+      options?.aRemplacer ?? false,
+    ],
+  );
+
+  if (!cree) return { ok: false, message: 'L’enregistrement a échoué.' };
+  return { ok: true, media: versMedia(cree) };
+}
+
+export async function majMedia(id: number, d: { alt: string; legende: string }) {
+  await requete('UPDATE medias SET alt = $2, legende = NULLIF($3, $4) WHERE id = $1', [
+    id,
+    d.alt.trim().slice(0, 500),
+    d.legende.trim().slice(0, 500),
+    '',
+  ]);
+}
+
+/**
+ * Les pages qui se servent d'un média.
+ *
+ * Supprimer une image utilisée laisserait un trou dans une page en ligne, et
+ * personne ne s'en apercevrait avant longtemps. On regarde donc avant.
+ *
+ * Le parcours se fait en mémoire plutôt qu'en SQL : un identifiant d'image peut
+ * se trouver à n'importe quelle profondeur d'une section, et une requête JSONB
+ * capable de le suivre partout serait bien plus difficile à relire que ces
+ * quinze lignes.
+ */
+export async function utilisationsMedia(id: number) {
+  const pages = await requete<{ id: number; titre: string; chemin: string; sections: unknown; brouillon: unknown }>(
+    'SELECT id, titre, chemin, sections, brouillon FROM pages',
+  );
+
+  const contient = (valeur: unknown): boolean => {
+    if (Array.isArray(valeur)) return valeur.some(contient);
+    if (!valeur || typeof valeur !== 'object') return false;
+    return Object.entries(valeur).some(([cle, v]) =>
+      cle === 'image' && typeof v === 'number' ? v === id : contient(v),
+    );
+  };
+
+  return pages
+    .filter((p) => contient(p.sections) || contient(p.brouillon))
+    .map((p) => ({ id: p.id, titre: p.titre, chemin: p.chemin }));
+}
+
+/** Supprime le média, ses largeurs dérivées et ses fichiers. */
+export async function supprimerMedia(id: number) {
+  const media = await mediaParId(id);
+  if (!media) return;
+
+  // La base d'abord : si l'effacement des fichiers échoue, il restera des
+  // octets orphelins, ce qui est sans conséquence. L'inverse laisserait une
+  // ligne pointant vers le vide, que les pages afficheraient comme une image
+  // cassée.
+  await requete('DELETE FROM medias WHERE id = $1', [id]);
+
+  for (const nom of [media.fichier, ...media.tailles.map((t) => t.fichier)]) {
+    await rm(path.join(DOSSIER, nom), { force: true }).catch(() => {});
+  }
+}
+
+
+// ————————————————————————— Dossiers —————————————————————————
+
+/**
+ * Les dossiers de la médiathèque.
+ *
+ * Un seul niveau : ranger des photographies par chantier n'appelle pas une
+ * arborescence, et une arborescence appellerait un explorateur de fichiers.
+ * Le compte d'images voyage avec le dossier — c'est ce qui permet d'afficher
+ * « Mariages (34) » sans une requête par dossier.
+ */
+export async function listerDossiers(): Promise<Dossier[]> {
+  const lignes = await requete<{ id: number; nom: string; images: number; parent_id: number | null }>(
+    `SELECT d.id, d.nom, d.parent_id, count(m.id)::int AS images
+       FROM dossiers_medias d
+       LEFT JOIN medias m ON m.dossier_id = d.id
+      GROUP BY d.id, d.nom, d.parent_id
+      ORDER BY d.nom`,
+  );
+  return lignes.map((l) => ({ id: l.id, nom: l.nom, images: l.images, parentId: l.parent_id }));
+}
+
+export async function creerDossier(nom: string, parentId: number | null = null) {
+  const propre = nom.trim().slice(0, 60);
+  if (!propre) return { erreur: 'Donnez un nom au dossier.' };
+
+  try {
+    await requete('INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2)', [propre, parentId]);
+    return {};
+  } catch (erreur) {
+    // 23505 : deux dossiers du même nom seraient impossibles à distinguer.
+    if ((erreur as { code?: string }).code === '23505') {
+      return { erreur: 'Un dossier porte déjà ce nom.' };
+    }
+    throw erreur;
+  }
+}
+
+export async function renommerDossier(id: number, nom: string) {
+  const propre = nom.trim().slice(0, 60);
+  if (!propre) return { erreur: 'Donnez un nom au dossier.' };
+
+  try {
+    await requete('UPDATE dossiers_medias SET nom = $2 WHERE id = $1', [id, propre]);
+    return {};
+  } catch (erreur) {
+    if ((erreur as { code?: string }).code === '23505') {
+      return { erreur: 'Un dossier porte déjà ce nom.' };
+    }
+    throw erreur;
+  }
+}
+
+/** Le dossier disparaît, ses images non : elles retournent au fonds commun. */
+export async function supprimerDossier(id: number) {
+  await requete('DELETE FROM dossiers_medias WHERE id = $1', [id]);
+}
+
+export async function rangerMedia(id: number, dossierId: number | null) {
+  await requete('UPDATE medias SET dossier_id = $2 WHERE id = $1', [id, dossierId]);
+}
+
+
+/**
+ * Déplace un dossier dans un autre.
+ *
+ * Le garde-fou compte : sans lui, glisser un dossier dans son propre
+ * sous-dossier détacherait la branche entière de l'arbre — elle existerait
+ * encore en base, mais plus aucun chemin n'y mènerait.
+ */
+export async function deplacerDossier(id: number, parentId: number | null) {
+  if (id === parentId) return { erreur: 'Un dossier ne peut pas se contenir lui-même.' };
+
+  if (parentId) {
+    const tous = await requete<{ id: number; parent_id: number | null }>(
+      'SELECT id, parent_id FROM dossiers_medias',
+    );
+    const parents = new Map(tous.map((d) => [d.id, d.parent_id]));
+    for (let n: number | null = parentId; n; n = parents.get(n) ?? null) {
+      if (n === id) return { erreur: 'Ce dossier est déjà à l’intérieur de celui-là.' };
+    }
+  }
+
+  await requete('UPDATE dossiers_medias SET parent_id = $2 WHERE id = $1', [id, parentId]);
+  return {};
+}
+
+/**
+ * Duplique un dossier, ses sous-dossiers et ses photographies.
+ *
+ * Une copie véritable : les fichiers sont réécrits sur le disque, et les
+ * images obtenues sont indépendantes. C'est ce que fait un explorateur de
+ * fichiers — et c'est pourquoi l'écran prévient du nombre d'images avant de
+ * lancer l'opération : deux cents photographies dupliquées, ce sont deux cents
+ * fichiers de plus à sauvegarder.
+ */
+export async function dupliquerDossier(id: number, parentId?: number | null): Promise<number> {
+  const source = await ligne<{ nom: string; parent_id: number | null }>(
+    'SELECT nom, parent_id FROM dossiers_medias WHERE id = $1',
+    [id],
+  );
+  if (!source) return 0;
+
+  const cible = parentId === undefined ? source.parent_id : parentId;
+  const nom = parentId === undefined ? `${source.nom} (copie)`.slice(0, 60) : source.nom;
+
+  const copie = await ligne<{ id: number }>(
+    'INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2) RETURNING id',
+    [nom, cible],
+  );
+  if (!copie) return 0;
+
+  const images = await requete<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE dossier_id = $1`, [id]);
+  let copiees = 0;
+
+  for (const l of images) {
+    const media = versMedia(l);
+    const base = randomBytes(12).toString('hex');
+
+    // Le fichier principal, puis chaque largeur : les noms changent, les
+    // octets non.
+    const principal = `${base}${path.extname(media.fichier)}`;
+    await copyFile(path.join(DOSSIER, media.fichier), path.join(DOSSIER, principal)).catch(() => {});
+
+    const tailles: Taille[] = [];
+    for (const t of media.tailles) {
+      const nomTaille = `${base}-${t.largeur}${path.extname(t.fichier)}`;
+      await copyFile(path.join(DOSSIER, t.fichier), path.join(DOSSIER, nomTaille)).catch(() => {});
+      tailles.push({ largeur: t.largeur, fichier: nomTaille });
+    }
+
+    await requete(
+      `INSERT INTO medias (fichier, alt, legende, largeur, hauteur, tailles, a_remplacer,
+                           dossier_id, type_mime, octets)
+       SELECT $2, alt, legende, largeur, hauteur, $3::jsonb, a_remplacer, $4, type_mime, octets
+         FROM medias WHERE id = $1`,
+      [media.id, principal, JSON.stringify(tailles), copie.id],
+    );
+    copiees++;
+  }
+
+  // Les sous-dossiers suivent, avec leur contenu.
+  const enfants = await requete<{ id: number }>(
+    'SELECT id FROM dossiers_medias WHERE parent_id = $1',
+    [id],
+  );
+  for (const enfant of enfants) copiees += await dupliquerDossier(enfant.id, copie.id);
+
+  return copiees;
+}
+
+/** Le nombre d'images d'un dossier et de tout ce qu'il contient. */
+export async function compterRecursif(id: number) {
+  const l = await ligne<{ n: number }>(
+    `WITH RECURSIVE branche AS (
+       SELECT id FROM dossiers_medias WHERE id = $1
+       UNION ALL
+       SELECT d.id FROM dossiers_medias d JOIN branche b ON d.parent_id = b.id
+     )
+     SELECT count(m.id)::int AS n FROM medias m WHERE m.dossier_id IN (SELECT id FROM branche)`,
+    [id],
+  );
+  return l?.n ?? 0;
+}
