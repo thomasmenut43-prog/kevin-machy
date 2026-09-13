@@ -5,6 +5,7 @@ import { utilisateurConnecte } from '@/lib/auth';
 import {
   compterRecursif,
   creerDossier,
+  creerDossierNomLibre,
   deplacerDossier,
   dupliquerDossier,
   enregistrerMedia,
@@ -92,6 +93,14 @@ export async function actionSupprimerMedia(id: number) {
 export async function actionCreerDossier(nom: string, parentId: number | null = null) {
   await exigerConnexion();
   const r = await creerDossier(nom, parentId);
+  revalidatePath('/admin/medias');
+  return r;
+}
+
+/** Le bouton « Nouveau dossier » : on crée d'abord, on nomme ensuite. */
+export async function actionCreerDossierNomLibre(parentId: number | null = null) {
+  await exigerConnexion();
+  const r = await creerDossierNomLibre(parentId);
   revalidatePath('/admin/medias');
   return r;
 }

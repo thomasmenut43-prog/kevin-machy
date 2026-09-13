@@ -6,7 +6,7 @@ import { useFormStatus } from 'react-dom';
 import { urlMedia, type Dossier, type Media } from '@/lib/modeles';
 import {
   actionCompterDossier,
-  actionCreerDossier,
+  actionCreerDossierNomLibre,
   actionDeplacerDossier,
   actionDupliquerDossier,
   actionEnvoyer,
@@ -298,8 +298,6 @@ function Dossiers({
   apercus: Map<number | null, Media[]>;
   onDeposer: (dossierId: number | null) => void;
 }) {
-  const [nouveau, setNouveau] = useState(false);
-  const [nom, setNom] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
   const [menu, setMenu] = useState<{ id: number; x: number; y: number } | null>(null);
@@ -334,13 +332,20 @@ function Dossiers({
     return () => document.removeEventListener('click', fermerMenu);
   }, [menu]);
 
+  /**
+   * Crée le dossier sur-le-champ, puis ouvre son nom en écriture.
+   *
+   * Comme dans un explorateur de fichiers : le dossier existe d'abord, avec un
+   * nom d'attente tout sélectionné, et on le remplace en tapant. Demander le
+   * nom avant de créer oblige à décider avant de voir, et fait perdre le geste
+   * à qui voulait juste un dossier de plus.
+   */
   const creer = () =>
     demarrer(async () => {
-      const r = await actionCreerDossier(nom, parent);
-      if (r.erreur) return setErreur(r.erreur);
-      setNom('');
-      setNouveau(false);
       setErreur(null);
+      const r = await actionCreerDossierNomLibre(parent);
+      if (r.erreur) return setErreur(r.erreur);
+      if (r.id) setRenomme(r.id);
     });
 
   const renommer = (id: number, valeur: string) =>
@@ -433,6 +438,9 @@ function Dossiers({
                     defaultValue={d.nom}
                     maxLength={60}
                     autoFocus
+                    // Le nom arrive sélectionné : taper le remplace, comme
+                    // partout ailleurs quand on renomme un dossier.
+                    onFocus={(ev) => ev.target.select()}
                     onClick={(ev) => ev.stopPropagation()}
                     onBlur={(ev) => renommer(d.id, ev.target.value)}
                     onKeyDown={(ev) => {
@@ -490,7 +498,12 @@ function Dossiers({
           ) : null}
 
           <li>
-            <button type="button" className={m.dossierNouveau} onClick={() => setNouveau((v) => !v)}>
+            <button
+              type="button"
+              className={m.dossierNouveau}
+              disabled={enCours}
+              onClick={creer}
+            >
               <IconeDossierPlus />
               <strong>Nouveau dossier</strong>
               <span>
@@ -501,33 +514,6 @@ function Dossiers({
             </button>
           </li>
         </ul>
-      ) : null}
-
-      {nouveau ? (
-        <div className={m.dossierForm}>
-          <input
-            type="text"
-            value={nom}
-            placeholder="Mariages 2026"
-            maxLength={60}
-            autoFocus
-            onChange={(ev) => setNom(ev.target.value)}
-            onKeyDown={(ev) => {
-              if (ev.key === 'Enter') creer();
-              if (ev.key === 'Escape') setNouveau(false);
-            }}
-          />
-          <button type="button" className="bo-bouton" disabled={enCours} onClick={creer}>
-            Créer
-          </button>
-          <button
-            type="button"
-            className="bo-bouton bo-bouton-discret"
-            onClick={() => setNouveau(false)}
-          >
-            Annuler
-          </button>
-        </div>
       ) : null}
 
       {erreur ? (

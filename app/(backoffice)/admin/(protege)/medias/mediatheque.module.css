@@ -278,16 +278,22 @@
   position: relative;
 }
 
-/* `auto-fit` et non `auto-fill` : avec trois dossiers sur un large écran,
-   `auto-fill` garde les colonnes vides qu'il aurait pu créer et laisse une
-   bande morte à droite. `auto-fit` les replie, et les dossiers occupent
-   toute la largeur. */
+/* Quatre dossiers par rangée au plus, et jamais de colonne vide.
+
+   Chaque colonne vaut au moins un quart de la rangée, gouttières déduites :
+   une cinquième ne peut donc pas entrer, si large que soit l'écran — au-delà
+   de quatre, les dossiers deviendraient une planche de vignettes. Et au moins
+   248 px, ce qui en met moins de quatre sur un écran étroit plutôt que de les
+   écraser.
+
+   `auto-fit` et non `auto-fill` : avec trois dossiers, `auto-fill` garderait
+   la quatrième colonne vide et laisserait une bande morte à droite. */
 .dossiersGrille {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(248px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(max(248px, (100% - 3 * 12px) / 4), 1fr));
   gap: 12px;
 }
 

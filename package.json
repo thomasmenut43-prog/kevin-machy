@@ -17,7 +17,8 @@
     "base:reinit": "docker compose down -v && docker compose up -d",
     "migrer": "node scripts/migrer.mjs",
     "importer-images": "node scripts/relever-alt.mjs && node scripts/importer-images.mjs",
-    "convertir": "node scripts/convertir-pages.mjs"
+    "convertir": "node scripts/convertir-pages.mjs",
+    "predev": "docker compose up -d"
   },
   "dependencies": {
     "next": "^16.3.4",

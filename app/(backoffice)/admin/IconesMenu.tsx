@@ -83,7 +83,10 @@ export function Cadenas({ className }: Props) {
 export function Reglage({ className }: Props) {
   return (
     <svg {...commun} className={className}>
-      <path d="M12 2.6l1.7 2.1 2.6-.7.6 2.6 2.6.6-.7 2.6 2.1 1.7-2.1 1.7.7 2.6-2.6.6-.6 2.6-2.6-.7L12 21.4l-1.7-2.1-2.6.7-.6-2.6-2.6-.6.7-2.6L3.1 12.5l2.1-1.7-.7-2.6 2.6-.6.6-2.6 2.6.7z" />
+      {/* `settings` de lucide, la bibliothèque d'icônes de shadcn (ISC). La
+          roue dentée dessinée à la main tirait ses dents en pointes droites,
+          qui accrochaient l'œil à cette taille. */}
+      <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" />
       <circle cx="12" cy="12" r="3" />
     </svg>
   );

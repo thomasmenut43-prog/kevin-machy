@@ -279,13 +279,21 @@ export async function listerDossiers(): Promise<Dossier[]> {
   return lignes.map((l) => ({ id: l.id, nom: l.nom, images: l.images, parentId: l.parent_id }));
 }
 
-export async function creerDossier(nom: string, parentId: number | null = null) {
+export async function creerDossier(
+  nom: string,
+  parentId: number | null = null,
+): Promise<{ id?: number; erreur?: string }> {
   const propre = nom.trim().slice(0, 60);
   if (!propre) return { erreur: 'Donnez un nom au dossier.' };
 
   try {
-    await requete('INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2)', [propre, parentId]);
-    return {};
+    // L'identifiant revient avec la création : l'écran ouvre aussitôt le champ
+    // de renommage sur le dossier tout neuf, et il faut savoir lequel.
+    const cree = await ligne<{ id: number }>(
+      'INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2) RETURNING id',
+      [propre, parentId],
+    );
+    return { id: cree?.id };
   } catch (erreur) {
     // 23505 : deux dossiers du même nom seraient impossibles à distinguer.
     if ((erreur as { code?: string }).code === '23505') {
@@ -293,6 +301,22 @@ export async function creerDossier(nom: string, parentId: number | null = null) 
     }
     throw erreur;
   }
+}
+
+/**
+ * Crée un dossier sans nom choisi, et rend son identifiant.
+ *
+ * Le nom d'attente se décide ici, au plus près de la base : calculé dans
+ * l'écran, deux clics rapprochés viseraient le même et le second échouerait
+ * sur une erreur que personne n'a demandée. La seule erreur possible de
+ * `creerDossier` sur un nom non vide est la collision : on passe au suivant.
+ */
+export async function creerDossierNomLibre(parentId: number | null = null) {
+  for (let n = 1; n <= 50; n++) {
+    const resultat = await creerDossier(n === 1 ? 'Nouveau dossier' : `Nouveau dossier ${n}`, parentId);
+    if (!resultat.erreur) return resultat;
+  }
+  return { erreur: 'Trop de dossiers sans nom. Renommez-en un avant d’en créer un autre.' };
 }
 
 export async function renommerDossier(id: number, nom: string) {
