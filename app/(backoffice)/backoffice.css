@@ -291,7 +291,6 @@ body:has(.bo) {
 }
 
 .bo-menu {
-  border-right: 1px solid var(--bo-bord);
   /* Sans fond propre : le menu repose sur celui de la page. Il ne passe plus
      au-dessus du contenu — il occupe sa colonne — et n'a donc plus besoin
      d'une surface opaque pour le cacher. Le filet suffit à le séparer. */
@@ -393,16 +392,23 @@ body:has(.bo) {
 
 /* Le compte, en bas du menu. La pastille reste quand le menu se replie et que
    le nom disparaît : c'est alors le seul rappel de qui est connecté. */
+/* Le compte s'aligne sur les onglets : même colonne de dix-sept pixels pour
+   la pastille, même écart de huit avant le nom, même hauteur de ligne. La
+   pastille déborde de sa colonne des deux côtés — c'est un visage, il lui
+   faut plus de place qu'un trait d'icône — mais son centre est celui des
+   icônes, et c'est le centre que l'œil suit dans une colonne. */
 .bo-profil {
-  display: flex;
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-height: 38px;
 }
 
 .bo-profil-rond {
-  width: 30px;
-  height: 30px;
-  flex: none;
+  width: 26px;
+  height: 26px;
+  justify-self: center;
   border-radius: 50%;
   overflow: hidden;
   display: grid;
@@ -547,7 +553,8 @@ body:has(.bo) {
   .bo-menu {
     position: static;
     height: auto;
-    border-right: 0;
+    /* En bandeau, le menu est au-dessus du contenu et non à côté : c'est le
+       seul cas où un trait les sépare encore. */
     border-bottom: 1px solid var(--bo-bord);
     flex-direction: row;
     align-items: center;
