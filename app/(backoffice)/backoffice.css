@@ -292,7 +292,10 @@ body:has(.bo) {
 
 .bo-menu {
   border-right: 1px solid var(--bo-bord);
-  background: var(--bo-surface);
+  /* Sans fond propre : le menu repose sur celui de la page. Il ne passe plus
+     au-dessus du contenu — il occupe sa colonne — et n'a donc plus besoin
+     d'une surface opaque pour le cacher. Le filet suffit à le séparer. */
+  background: none;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;
