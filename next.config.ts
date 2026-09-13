@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   // par page, il ne redevient pas dynamique pour autant.
   trailingSlash: true,
   // Les images du site sont pré-encodées en AVIF/WebP/JPEG par
-  // scripts/build-images.mjs. Celles de la médiathèque passent par Payload.
+  // scripts/build-images.mjs. Celles de la médiathèque sont encodées à l'envoi
+  // et servies par app/medias/[fichier].
   images: { unoptimized: true },
   reactStrictMode: true,
 

@@ -519,12 +519,9 @@ function Dossiers({
           ) : null}
 
           <li>
-            <button
-              type="button"
-              className={m.dossierNouveau}
-              disabled={enCours}
-              onClick={creer}
-            >
+            {/* Pas de classe propre : la tuile emprunte celle des dossiers,
+                elle est faite du même bois. */}
+            <button type="button" disabled={enCours} onClick={creer}>
               {/* Le « + » occupe la bande d'une chemise : sans elle, son
                   libellé flottait trente pixels plus haut que les noms de
                   dossier, et la rangée paraissait bancale. */}

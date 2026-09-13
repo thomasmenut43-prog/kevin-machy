@@ -151,8 +151,11 @@ function Ligne({
             <details className={u.repli}>
               <summary>Réinitialiser</summary>
               <div className={u.repliCorps}>
+                {/* Un texte d'invite n'est pas une étiquette : il disparaît à
+                    la saisie et n'est pas annoncé par tous les lecteurs. */}
                 <input
                   type="password"
+                  aria-label={`Nouveau mot de passe pour ${compte.prenom || compte.nom}`}
                   placeholder="Nouveau mot de passe"
                   autoComplete="new-password"
                   value={reinit}

@@ -258,6 +258,11 @@ export function Editeur({
 
   return (
     <div className={`${e.cadre} editeur-plein`}>
+      {/* Le seul écran du BackOffice sans titre visible : son sujet est le
+          sélecteur de page, juste dessous. Le titre existe quand même, pour
+          les lecteurs d'écran qui parcourent un document par ses niveaux. */}
+      <h1 className="visuellement-cache">Éditeur de site — {page.titre}</h1>
+
       {/* ————————————————————————— Colonne de gauche ————————————————————— */}
       <div className={e.panneau}>
         <div className={e.panneauTete}>

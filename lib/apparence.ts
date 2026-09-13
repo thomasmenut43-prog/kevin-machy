@@ -85,7 +85,7 @@ export type Apparence = {
   alignement?: Alignement | null;
 };
 
-/** Les listes de choix, au format attendu par les champs `select` de Payload. */
+/** Les listes de choix, au format attendu par les champs `choix` du catalogue. */
 export const choix = <T extends Record<string, { label: string }>>(table: T) =>
   Object.entries(table).map(([value, { label }]) => ({ label, value }));
 
