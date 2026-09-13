@@ -263,7 +263,9 @@ export function Editeur({
             {/* Supprimer se fait d'ici, à côté du nom de la page : c'est là
                 qu'on la cherche, pas au fond d'un panneau de réglages.
                 L'accueil n'a pas ce bouton — le site s'y ouvre. */}
-            {administrateur && page.chemin ? (
+            {/* Une page légale ne se supprime pas : le pied de page y renvoie,
+                et la loi l'exige. */}
+            {administrateur && page.chemin && !page.systeme ? (
               aSupprimer ? (
                 <div className={e.confirmer} role="alertdialog" aria-label="Confirmer la suppression">
                   <p>

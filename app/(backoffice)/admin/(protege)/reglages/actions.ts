@@ -207,6 +207,10 @@ export async function actionEnregistrerEntreprise(
   const lien = (cle: string) => {
     const valeur = texte(cle);
     if (!valeur) return { valeur: '' };
+    // Une page du site s'écrit « /mentions-legales/ » : les mentions légales et
+    // les CGV vivent ici depuis qu'elles ont quitté l'ancien domaine, et exiger
+    // une adresse complète obligerait à y écrire le nom de domaine du jour.
+    if (valeur.startsWith('/')) return { valeur };
     try {
       const url = new URL(valeur);
       if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('protocole');
@@ -267,6 +271,12 @@ export async function actionEnregistrerEntreprise(
     description: texte('description'),
     latitude,
     longitude,
+    directeurPublication: texte('directeurPublication'),
+    hebergeurNom: texte('hebergeurNom'),
+    hebergeurAdresse: texte('hebergeurAdresse'),
+    hebergeurSite: texte('hebergeurSite'),
+    mediateurNom: texte('mediateurNom'),
+    mediateurSite: texte('mediateurSite'),
     raisonSociale: texte('raisonSociale'),
     siret: texte('siret'),
     url: site.valeur ?? '',

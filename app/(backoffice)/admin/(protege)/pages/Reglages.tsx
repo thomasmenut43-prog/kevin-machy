@@ -74,11 +74,13 @@ export function Reglages({ page, administrateur }: { page: Page; administrateur:
             name="chemin"
             type="text"
             defaultValue={etat.saisi?.chemin ?? page.chemin}
+            readOnly={page.systeme}
             required
           />
           <p className={e.aide}>
-            La changer casse les liens qui pointaient vers l’ancienne, et Google met des semaines à
-            suivre. À ne faire qu’avant la mise en ligne, ou en sachant pourquoi.
+            {page.systeme
+              ? 'Cette page est une page légale : son adresse est fixe, parce que le pied de page et les redirections pointent dessus. Son contenu, lui, se modifie librement.'
+              : 'La changer casse les liens qui pointaient vers l’ancienne, et Google met des semaines à suivre. À ne faire qu’avant la mise en ligne, ou en sachant pourquoi.'}
           </p>
         </div>
 

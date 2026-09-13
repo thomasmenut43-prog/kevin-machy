@@ -130,21 +130,34 @@ export function Footer({ entreprise, pied }: { entreprise: Entreprise; pied: Pie
               [
                 ['mentions', 'Mentions légales'],
                 ['cgv', 'CGV'],
-                ['cookies', 'Cookies'],
+                // Le lien s'appelait « Cookies » quand il menait à une
+                // politique de cookies. Le site n'en dépose aucun : il mène
+                // maintenant à la page qui explique ce qu'il enregistre.
+                ['cookies', 'Confidentialité'],
               ] as const
             )
               .filter(([cle]) => entreprise.liens[cle])
-              .map(([cle, libelle]) => (
-                <a
-                  key={cle}
-                  className={s.lien}
-                  href={entreprise.liens[cle]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {libelle}
-                </a>
-              ))}
+              .map(([cle, libelle]) => {
+                // Les pages légales vivent sur le site : un lien interne ne
+                // s'ouvre pas dans un nouvel onglet, et n'a pas à se protéger
+                // d'un site tiers.
+                const href = entreprise.liens[cle];
+                return href.startsWith('/') ? (
+                  <Link key={cle} className={s.lien} href={href}>
+                    {libelle}
+                  </Link>
+                ) : (
+                  <a
+                    key={cle}
+                    className={s.lien}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {libelle}
+                  </a>
+                );
+              })}
           </div>
         </div>
       </div>

@@ -153,3 +153,39 @@
 .entete {
   margin-bottom: clamp(28px, 3.6vw, 56px);
 }
+
+/* ——————————————————— Identité de l'entreprise ———————————————————
+   Une liste de définitions, pas un tableau : ce sont des faits nommés, et le
+   lecteur d'écran les annonce par paires. */
+.identiteLegale {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  max-width: 62ch;
+}
+
+.identiteLegale > div {
+  display: grid;
+  grid-template-columns: minmax(0, 16ch) minmax(0, 1fr);
+  gap: 4px 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid color-mix(in oklab, var(--encre) 12%, transparent);
+}
+
+.identiteLegale dt {
+  color: var(--encre-3);
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.identiteLegale dd {
+  margin: 0;
+  color: var(--encre-2);
+}
+
+@media (max-width: 600px) {
+  .identiteLegale > div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

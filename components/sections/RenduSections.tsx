@@ -469,6 +469,44 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
       );
 
     // ————————————————————————————— Contenu ——————————————————————————
+    // ——————————————————— Identité de l'entreprise ———————————————————
+    // Aucun champ à saisir : tout vient de Paramètres → Mon entreprise. Ce qui
+    // est vide ne s'affiche pas — une mention légale incomplète vaut mieux
+    // qu'une ligne « Hébergeur : » suivie de rien.
+    case 'identiteEntreprise': {
+      const e = ctx.entreprise;
+      const adresse = [e.adresse, [e.codePostal, e.ville].filter(Boolean).join(' ')]
+        .filter(Boolean)
+        .join(', ');
+      const hebergeur = [e.hebergeurNom, e.hebergeurAdresse].filter(Boolean).join(', ');
+
+      const lignes: { terme: string; valeur: string }[] = [
+        { terme: 'Éditeur du site', valeur: e.raisonSociale || e.nom },
+        { terme: 'SIRET', valeur: e.siret },
+        { terme: 'Adresse', valeur: adresse },
+        { terme: 'Téléphone', valeur: e.telephone },
+        { terme: 'Adresse e-mail', valeur: e.email },
+        { terme: 'Directeur de la publication', valeur: e.directeurPublication },
+        { terme: 'Hébergeur', valeur: hebergeur },
+      ].filter((l) => l.valeur);
+
+      return (
+        <div className="wrap">
+          <Entete champ={v.entete} />
+          <Reveal>
+            <dl className={p.identiteLegale}>
+              {lignes.map((l) => (
+                <div key={l.terme}>
+                  <dt>{l.terme}</dt>
+                  <dd>{l.valeur}</dd>
+                </div>
+              ))}
+            </dl>
+          </Reveal>
+        </div>
+      );
+    }
+
     case 'texteLibre': {
       const largeur = v.largeur === 'mesureCourte' ? s.mesureCourte : v.largeur === 'pleine' ? '' : s.mesure;
       // Le titre seul a précédé l'en-tête complet : une page enregistrée avant

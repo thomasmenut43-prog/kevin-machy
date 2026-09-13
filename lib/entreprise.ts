@@ -39,6 +39,12 @@ export const ENTREPRISE_DEFAUT: Entreprise = {
   email: SITE.email,
   latitude: String(SITE.geo.lat),
   longitude: String(SITE.geo.lon),
+  directeurPublication: SITE.nom,
+  hebergeurNom: '',
+  hebergeurAdresse: '',
+  hebergeurSite: '',
+  mediateurNom: '',
+  mediateurSite: '',
   liens: {
     accesClients: LIENS.accesClients,
     reservation: LIENS.reservation,
@@ -47,9 +53,11 @@ export const ENTREPRISE_DEFAUT: Entreprise = {
     linkedin: LIENS.linkedin,
     youtube: LIENS.youtube,
     avis: LIENS.avis,
-    mentions: LIENS.mentions,
-    cgv: LIENS.cgv,
-    cookies: LIENS.cookies,
+    // Les pages légales vivent désormais sur le site : ces liens pointent chez
+    // lui, et non plus vers l'ancien domaine qui s'éteindra.
+    mentions: '/mentions-legales/',
+    cgv: '/conditions-generales-de-vente/',
+    cookies: '/politique-de-confidentialite/',
   },
   horaires: HORAIRES.map((h) => ({ jour: h.jour, ouverture: h.ouverture })),
 };

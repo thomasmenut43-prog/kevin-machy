@@ -84,6 +84,13 @@ export type Entreprise = {
   /** Le point sur la carte, en degrés décimaux. Vide : aucune position n'est déclarée. */
   latitude: string;
   longitude: string;
+  /* Ce que la loi exige des mentions légales, et rien de plus. */
+  directeurPublication: string;
+  hebergeurNom: string;
+  hebergeurAdresse: string;
+  hebergeurSite: string;
+  mediateurNom: string;
+  mediateurSite: string;
   liens: {
     accesClients: string;
     reservation: string;
@@ -137,6 +144,8 @@ export type Page = {
   metaDescription: string | null;
   metaImage: string | null;
   horsIndexation: boolean;
+  /** Une page que la loi ou le pied de page exigent : ni supprimable, ni renommable. */
+  systeme: boolean;
   modifieLe: Date;
   publieLe: Date | null;
 };

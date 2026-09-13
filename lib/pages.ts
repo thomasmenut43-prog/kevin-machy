@@ -19,6 +19,7 @@ type LignePage = {
   meta_description: string | null;
   meta_image: string | null;
   hors_indexation: boolean;
+  systeme: boolean;
   modifie_le: Date;
   publie_le: Date | null;
 };
@@ -34,12 +35,14 @@ const versPage = (l: LignePage): Page => ({
   metaDescription: l.meta_description,
   metaImage: l.meta_image,
   horsIndexation: l.hors_indexation,
+  systeme: l.systeme,
   modifieLe: l.modifie_le,
   publieLe: l.publie_le,
 });
 
 const CHAMPS = `id, chemin, titre, statut, sections, brouillon,
-                meta_titre, meta_description, meta_image, hors_indexation, modifie_le, publie_le`;
+                meta_titre, meta_description, meta_image, hors_indexation, systeme,
+                modifie_le, publie_le`;
 
 // ————————————————————————————— Lecture —————————————————————————————
 
@@ -194,9 +197,14 @@ export async function majReglages(
     horsIndexation: boolean;
   },
 ) {
+  // Une page système garde son adresse : le pied de page et les redirections
+  // pointent dessus, et la renommer les casserait sans rien dire. Le reste —
+  // titre, description, indexation — se modifie comme partout ailleurs.
   await requete(
     `UPDATE pages
-        SET titre = $2, chemin = $3, meta_titre = NULLIF($4, ''),
+        SET titre = $2,
+            chemin = CASE WHEN systeme THEN chemin ELSE $3 END,
+            meta_titre = NULLIF($4, ''),
             meta_description = NULLIF($5, ''), meta_image = NULLIF($6, ''),
             hors_indexation = $7, modifie_le = now()
       WHERE id = $1`,
@@ -212,13 +220,20 @@ export async function majReglages(
   );
 }
 
+/**
+ * Supprime une page, sauf si elle est de celles que le site ne peut pas perdre.
+ *
+ * Le refus est ici, au plus près de la base, et non dans l'écran qui cache le
+ * bouton : un écran se contourne, une requête non.
+ */
 export async function supprimerPage(id: number) {
-  await requete('DELETE FROM pages WHERE id = $1', [id]);
+  const r = await requete('DELETE FROM pages WHERE id = $1 AND systeme = false', [id]);
+  return r;
 }
 
 export async function listerVersions(pageId: number) {
   return requete<{ id: number; titre: string; cree_le: Date; auteur: string | null }>(
-    `SELECT v.id, v.titre, v.cree_le, u.nom AS auteur
+    `SELECT v.id, v.titre, v.cree_le, NULLIF(concat_ws(' ', u.prenom, u.nom), '') AS auteur
        FROM versions v
        LEFT JOIN utilisateurs u ON u.id = v.auteur_id
       WHERE v.page_id = $1

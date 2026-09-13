@@ -317,6 +317,13 @@ export const CATALOGUE: Bloc[] = [
     ],
   },
   {
+    type: 'identiteEntreprise',
+    libelle: 'Identité de l’entreprise',
+    famille: 'Contenu',
+    resume: 'Les mentions obligatoires, reprises des Paramètres.',
+    champs: [entete(), reglagesSection],
+  },
+  {
     type: 'etapes',
     libelle: 'Étapes numérotées',
     famille: 'Contenu',

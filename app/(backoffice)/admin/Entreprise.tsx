@@ -189,6 +189,69 @@ export function Entreprise() {
         </p>
       </div>
 
+      <h2 className={r.titre}>Mentions obligatoires</h2>
+      <p className="bo-aide">
+        Ces informations n’apparaissent que sur vos pages légales, qui les reprennent
+        automatiquement : les corriger ici les corrige là-bas.
+      </p>
+
+      <div className="bo-champ">
+        <label htmlFor="e-directeur">Directeur de la publication</label>
+        <input
+          id="e-directeur"
+          name="directeurPublication"
+          type="text"
+          defaultValue={infos.directeurPublication}
+        />
+        <p className="bo-aide">La personne responsable de ce qui est publié. En général, vous.</p>
+      </div>
+
+      <div className="bo-champ">
+        <label htmlFor="e-heb-nom">Hébergeur du site</label>
+        <input
+          id="e-heb-nom"
+          name="hebergeurNom"
+          type="text"
+          defaultValue={infos.hebergeurNom}
+          placeholder="Par exemple Hostinger International Ltd"
+        />
+        <p className="bo-aide">
+          L’entreprise chez qui le site est installé. Son nom et son adresse sont obligatoires
+          dans les mentions légales.
+        </p>
+      </div>
+
+      <div className="bo-champ">
+        <label htmlFor="e-heb-adresse">Adresse de l’hébergeur</label>
+        <input
+          id="e-heb-adresse"
+          name="hebergeurAdresse"
+          type="text"
+          defaultValue={infos.hebergeurAdresse}
+        />
+      </div>
+
+      <div className="bo-champ">
+        <label htmlFor="e-heb-site">Site de l’hébergeur</label>
+        <input id="e-heb-site" name="hebergeurSite" type="url" defaultValue={infos.hebergeurSite} />
+      </div>
+
+      <div className={r.paire}>
+        <div className="bo-champ">
+          <label htmlFor="e-med-nom">Médiateur de la consommation</label>
+          <input id="e-med-nom" name="mediateurNom" type="text" defaultValue={infos.mediateurNom} />
+        </div>
+        <div className="bo-champ">
+          <label htmlFor="e-med-site">Son site</label>
+          <input id="e-med-site" name="mediateurSite" type="url" defaultValue={infos.mediateurSite} />
+        </div>
+      </div>
+      <p className="bo-aide">
+        Obligatoire dès qu’on vend à des particuliers : le client doit pouvoir saisir un médiateur
+        gratuitement. Il se déclare auprès d’un organisme agréé, puis se recopie ici et dans les
+        conditions de vente.
+      </p>
+
       <h2 className={r.titre}>Horaires du studio</h2>
       <p className="bo-aide">
         Laissez vide un jour de fermeture. Exemple d’horaire : <code>09:45 – 20:30</code>.
