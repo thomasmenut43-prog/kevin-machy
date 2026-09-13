@@ -428,12 +428,23 @@ body:has(.bo) {
 /* Pas de largeur maximale : sur un écran de 1900 px, une mesure plafonnée
    laissait cinq cents pixels morts à droite de chaque écran. Ce sont des
    tableaux et des grilles, pas des colonnes de texte — ce qui doit rester
-   lisible porte sa propre mesure, en `ch`, là où le texte est écrit. */
+   lisible porte sa propre mesure, en `ch`, là où le texte est écrit.
+
+   Le contenu est une feuille posée sur le fond : deux coins arrondis en
+   diagonale, en haut à gauche et en bas à droite, les deux autres carrés. */
 .bo-contenu {
   padding: clamp(20px, 2.4vw, 32px);
   display: grid;
   align-content: start;
   gap: clamp(16px, 2vw, 24px);
+  background: var(--bo-surface);
+  border-radius: 16px 0 16px 0;
+}
+
+/* L'éditeur en pleine page n'est pas une feuille : il va d'un bord à l'autre. */
+.bo-contenu:has(.editeur-plein) {
+  background: none;
+  border-radius: 0;
 }
 
 .bo-titre {
