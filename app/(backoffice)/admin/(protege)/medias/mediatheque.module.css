@@ -291,6 +291,9 @@
   gap: 12px;
 }
 
+/* Sans fond ni cadre : c'est le dossier dessiné qui tient la tuile, et
+   l'encadrer une seconde fois dans un rectangle blanc ne disait rien de plus.
+   Le rayon reste : le halo de survol l'hérite. */
 .dossiersGrille button {
   position: relative;
   display: grid;
@@ -300,15 +303,12 @@
   width: 100%;
   min-height: 300px;
   padding: 24px 16px 28px;
-  background: var(--bo-surface);
-  border: 1px solid var(--bo-bord);
+  background: none;
+  border: 0;
   border-radius: 16px;
   color: var(--bo-texte);
   font: inherit;
   cursor: pointer;
-  transition:
-    box-shadow 500ms ease-out,
-    border-color 500ms ease-out;
 }
 
 /* Les photographies sortent du cadre de la tuile : c'est le geste même du
@@ -327,12 +327,6 @@
   background: radial-gradient(circle at 50% 70%, var(--bo-accent) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 500ms ease-out;
-}
-
-.dossiersGrille button:hover,
-.dossiersGrille button:focus-visible {
-  border-color: color-mix(in oklab, var(--bo-accent) 30%, transparent);
-  box-shadow: 0 25px 50px -12px color-mix(in oklab, var(--bo-accent) 10%, transparent);
 }
 
 .dossiersGrille button:hover::before,
