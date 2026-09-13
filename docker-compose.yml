@@ -35,7 +35,7 @@ services:
   # mettre au point les réglages SMTP sans spammer personne.
   #
   #   SMTP     localhost:1025
-  #   Lecture  http://localhost:8025
+  #   Lecture  http://localhost:8525
   #
   # Elle accepte n'importe quel identifiant : elle sert à voir, pas à filtrer.
   courrier:
@@ -47,7 +47,10 @@ services:
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
     ports:
       - '1025:1025'
-      - '8025:8025'
+      # 8525 côté machine, pas 8025 : Windows réserve la plage 7934-8433 pour
+      # Hyper-V, et Docker ne peut pas y lier un port. Mailpit écoute bien sur
+      # 8025 dans le conteneur.
+      - '8525:8025'
 
 volumes:
   donnees:

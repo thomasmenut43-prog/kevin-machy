@@ -30,7 +30,7 @@ personne ne pourrait en créer d'autres.
 repart à zéro.
 
 **Les e-mails partent dans une boîte locale**, jamais sur Internet : tout ce que le site envoie
-se lit sur [http://localhost:8025](http://localhost:8025). Dans Réglages → E-mails, pointer le
+se lit sur [http://localhost:8525](http://localhost:8525). Dans Réglages → E-mails, pointer le
 serveur sur `localhost`, port `1025`, chiffrement « aucun », et n'importe quels identifiants.
 
 ---
