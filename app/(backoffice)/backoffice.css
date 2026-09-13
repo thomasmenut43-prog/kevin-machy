@@ -328,6 +328,11 @@ body:has(.bo) {
   padding-inline: 10px 0;
   flex: 1 1 auto;
   min-width: 0;
+  /* Menu replié, la marque est ramenée à zéro de large : sans cette ligne,
+     « Kevin Machy » se coupe en deux lignes derrière le masque, l'en-tête
+     grandit de vingt-six pixels et tous les onglets descendent d'autant. Le
+     repli ne doit rien déplacer de ce qui reste visible. */
+  white-space: nowrap;
 }
 
 .bo-menu nav {
