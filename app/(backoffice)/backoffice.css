@@ -283,8 +283,10 @@ body:has(.bo) {
   min-height: 100dvh;
 }
 
-/* Épinglé, le menu reprend sa place dans la grille et pousse le contenu. */
-.bo-cadre:has(.bo-menu[data-epingle]) {
+/* Ouvert — au survol comme épinglé — le menu garde sa place dans la grille et
+   pousse le contenu au lieu de passer par-dessus. Le contenu se réajuste au
+   même rythme que lui : même durée, même courbe, les deux glissent ensemble. */
+.bo-cadre:has(.bo-menu[data-ouvert]) {
   grid-template-columns: 300px minmax(0, 1fr);
 }
 
@@ -306,13 +308,10 @@ body:has(.bo) {
 
 /* Ouvert : trois cents pixels, posés sur le contenu, avec l'ombre qui dit
    qu'on est au-dessus. */
+/* Pas d'ombre portée : elle disait « je flotte au-dessus », ce qui n'est plus
+   vrai — le menu occupe sa colonne et le contenu commence après lui. */
 .bo-menu[data-ouvert] {
   width: 300px;
-  box-shadow: var(--bo-ombre-flottant);
-}
-
-.bo-menu[data-epingle] {
-  box-shadow: none;
 }
 
 .bo-entete-menu {
@@ -690,6 +689,7 @@ body:has(.bo) {
   /* Sur un téléphone il n'y a pas de survol : le menu reste ouvert, en
      bandeau, et les libellés avec lui. */
   .bo-cadre:has(.bo-menu),
+  .bo-cadre:has(.bo-menu[data-ouvert]),
   .bo-cadre:has(.bo-menu[data-epingle]) {
     grid-template-columns: 1fr;
   }
