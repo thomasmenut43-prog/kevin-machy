@@ -595,6 +595,12 @@ function ListeSections({
                 <Poignee />
               </button>
 
+              {/* La même vignette qu'au catalogue : la pile se relit à la
+                  forme des sections, sans avoir à lire chaque libellé. */}
+              <span className={e.sectionVignette} aria-hidden="true">
+                <Vignette type={section.type} />
+              </span>
+
               <button
                 type="button"
                 className={e.sectionNom}

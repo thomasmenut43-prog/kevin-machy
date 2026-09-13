@@ -132,9 +132,23 @@
 
 .sectionTete {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Poignée, vignette, nom, boutons. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
+}
+
+/* La vignette de la pile est celle du catalogue, en plus petit : de quoi
+   reconnaître une forme d'un coup d'œil sans prendre la place d'une image. */
+.sectionVignette {
+  display: block;
+  width: 54px;
+  flex: none;
+  line-height: 0;
+}
+
+.sectionVignette svg {
+  border-radius: 3px;
 }
 
 /* Une section ouverte se distingue de la pile : c'est celle que l'on modifie,
