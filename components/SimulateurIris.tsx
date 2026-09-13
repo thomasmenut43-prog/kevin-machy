@@ -1,8 +1,9 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import Link from 'next/link';
 import { IRIS_GRILLE, grilleIrisRenseignee, tarifIris } from '@/lib/site';
+import { ANCRE_SIMULATEUR, reglerIris, useEtatIris } from './irisEtat';
 import s from './SimulateurIris.module.css';
 
 type Props = {
@@ -14,7 +15,7 @@ type Props = {
 };
 
 /** Espace fine insécable entre les milliers, comme en typographie française. */
-function euros(montant: number) {
+export function euros(montant: number) {
   return `${String(montant).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} €`;
 }
 
@@ -82,8 +83,11 @@ function Compteur({
  * et ne simule rien : rien n'est interpolé ni deviné.
  */
 export function SimulateurIris({ repli, repliNote, hrefDevis }: Props) {
-  const [humains, setHumains] = useState(1);
-  const [animaux, setAnimaux] = useState(0);
+  // L'état vit hors du composant : la barre de rappel du bas d'écran lit le
+  // même réglage, et le visiteur ne voit jamais deux montants différents.
+  const { humains, animaux } = useEtatIris();
+  const setHumains = (v: number) => reglerIris({ humains: v, animaux });
+  const setAnimaux = (v: number) => reglerIris({ humains, animaux: v });
 
   if (!grilleIrisRenseignee) {
     return (
@@ -117,7 +121,7 @@ export function SimulateurIris({ repli, repliNote, hrefDevis }: Props) {
     .join(' · ');
 
   return (
-    <div className={s.simulateur}>
+    <div className={s.simulateur} id={ANCRE_SIMULATEUR}>
       <div className={s.compteurs}>
         <Compteur
           etiquette="Nombre d’humains"

@@ -2,6 +2,8 @@
   display: grid;
   gap: clamp(20px, 2.4vw, 28px);
   margin-top: clamp(16px, 2vw, 22px);
+  /* Le retour depuis la barre du bas ne doit pas passer sous l'en-tête fixe. */
+  scroll-margin-top: clamp(96px, 14vh, 160px);
 }
 
 .compteurs {

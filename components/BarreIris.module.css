@@ -1,0 +1,120 @@
+/* Rappel de tarif fixé en bas d'écran. Reste sous le menu (z-index 99) pour ne
+   jamais recouvrir la navigation ouverte, et sous la visionneuse (200). */
+.barre {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 90;
+  background: var(--noir-eleve);
+  border-top: 1px solid var(--filet);
+  transform: translateY(101%);
+  visibility: hidden;
+  transition: transform 400ms var(--ease), visibility 0s linear 400ms;
+}
+
+.barre[data-visible] {
+  transform: translateY(0);
+  visibility: visible;
+  transition: transform 400ms var(--ease), visibility 0s;
+}
+
+.contenu {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.4vw, 32px);
+  max-width: var(--largeur-max);
+  margin-inline: auto;
+  padding: 12px var(--marge-page);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Le bloc de gauche ramène au simulateur : le réglage n'a qu'un seul endroit. */
+.rappel {
+  display: flex;
+  align-items: baseline;
+  flex: 1;
+  min-width: 0;
+  gap: clamp(10px, 1.4vw, 20px);
+  border-bottom: 1px solid transparent;
+  padding-block: 0.3em;
+  transition: border-color 300ms var(--ease);
+}
+
+.rappel:hover {
+  border-bottom-color: var(--cuivre);
+}
+
+.compte {
+  font-size: var(--t-petit);
+  letter-spacing: 0.04em;
+  color: var(--encre-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.montant {
+  font-family: var(--pile-titre);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-variant-numeric: tabular-nums;
+  color: var(--encre);
+  white-space: nowrap;
+}
+
+.devis {
+  font-family: var(--pile-titre);
+  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+  font-style: italic;
+  color: var(--encre-2);
+  white-space: nowrap;
+}
+
+/* Bouton resserré : la barre doit tenir sur une ligne, y compris au doigt. */
+.action {
+  min-height: 44px;
+  padding-inline: clamp(1em, 2vw, 1.9em);
+  flex: none;
+}
+
+.replier {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-content: center;
+  font-size: 0.85rem;
+  color: var(--encre-3);
+  transition: color 200ms var(--ease);
+}
+
+.replier:hover {
+  color: var(--encre);
+}
+
+/* Une seule ligne sur téléphone : la durée disparaît avant le montant. */
+@media (max-width: 560px) {
+  .contenu {
+    gap: 12px;
+    padding-inline: 16px;
+  }
+
+  .duree {
+    display: none;
+  }
+
+  .rappel {
+    gap: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barre {
+    transform: none;
+    opacity: 0;
+    transition: opacity 300ms linear, visibility 0s linear 300ms;
+  }
+
+  .barre[data-visible] {
+    opacity: 1;
+    transition: opacity 300ms linear, visibility 0s;
+  }
+}
