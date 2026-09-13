@@ -1,0 +1,63 @@
+/* Réglages d'envoi. Un formulaire long, découpé en trois moments :
+   le serveur, l'expéditeur, la réponse automatique. */
+
+.titre {
+  font-family: var(--bo-police);
+  font-size: 1.1rem;
+  font-weight: 400;
+  border-bottom: 1px solid var(--bo-filet);
+  padding-bottom: 8px;
+}
+
+.titre:not(:first-of-type) {
+  margin-top: 14px;
+}
+
+.paire {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.succes {
+  border-left: 2px solid var(--bo-accent);
+  background: var(--bo-accent-doux);
+  padding: 11px 14px;
+  font-size: 0.875rem;
+}
+
+.bascule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.bascule input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--bo-accent);
+}
+
+.lienDiscret {
+  justify-self: start;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--bo-texte-3);
+  font: inherit;
+  font-size: 0.78rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.lienDiscret:hover:not(:disabled) {
+  color: var(--bo-danger);
+}
+
+@media (max-width: 640px) {
+  .paire {
+    grid-template-columns: 1fr;
+  }
+}

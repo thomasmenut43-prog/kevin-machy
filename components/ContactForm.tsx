@@ -1,24 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { actionContact, type EtatContact } from '@/app/(frontend)/contact/envoyer';
 import { PROJETS, SITE } from '@/lib/site';
 import s from './ContactForm.module.css';
 
-type Etat = { ton: 'repos' | 'envoi' | 'succes' | 'erreur'; message: string };
+const VIDE: EtatContact = {};
 
 /**
  * Formulaire court : cinq champs, pas un de plus.
  *
- * Le site étant exporté en statique, il n'y a pas de serveur pour recevoir
- * l'envoi. Deux chemins :
- *   1. NEXT_PUBLIC_CONTACT_ENDPOINT défini → envoi JSON vers ce point de collecte ;
- *   2. sinon → ouverture du client de messagerie avec le message prérempli.
- * Voir README.md pour brancher le point de collecte définitif.
+ * L'envoi part vers le serveur, qui enregistre la demande puis prévient Kevin
+ * par e-mail. La demande est écrite en base **avant** l'envoi : une panne du
+ * serveur d'e-mails ne fait donc perdre aucun client.
  */
 export function ContactForm() {
-  const [etat, setEtat] = useState<Etat>({ ton: 'repos', message: '' });
+  const [etat, action] = useActionState(actionContact, VIDE);
   const [projet, setProjet] = useState<string>('mariage');
   const form = useRef<HTMLFormElement>(null);
+  // Horodatage d'ouverture : un formulaire renvoyé en moins de trois secondes
+  // n'a pas été rempli par un humain.
+  const [ouvertA] = useState(() => Date.now());
 
   // Permet aux liens du site de préremplir le type de projet (?projet=iris).
   useEffect(() => {
@@ -26,66 +29,55 @@ export function ContactForm() {
     if (demande && PROJETS.some((p) => p.value === demande)) setProjet(demande);
   }, []);
 
-  async function envoyer(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const donnees = new FormData(e.currentTarget);
-    const valeurs = Object.fromEntries(donnees.entries()) as Record<string, string>;
-    const point = process.env.NEXT_PUBLIC_CONTACT_ENDPOINT;
+  useEffect(() => {
+    if (etat.ok) form.current?.reset();
+  }, [etat.ok]);
 
-    if (!point) {
-      const corps = [
-        `Projet : ${PROJETS.find((p) => p.value === valeurs.projet)?.label ?? valeurs.projet}`,
-        valeurs.date ? `Date envisagée : ${valeurs.date}` : null,
-        `Téléphone : ${valeurs.telephone || 'non communiqué'}`,
-        '',
-        valeurs.message,
-        '',
-        `— ${valeurs.nom} (${valeurs.email})`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-      window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(
-        `Demande ${valeurs.projet} — ${valeurs.nom}`,
-      )}&body=${encodeURIComponent(corps)}`;
-      setEtat({
-        ton: 'succes',
-        message: 'Votre messagerie s’ouvre avec le message prérempli. Il ne reste qu’à l’envoyer.',
-      });
-      return;
-    }
-
-    setEtat({ ton: 'envoi', message: 'Envoi en cours…' });
-    try {
-      const reponse = await fetch(point, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(valeurs),
-      });
-      if (!reponse.ok) throw new Error(String(reponse.status));
-      form.current?.reset();
-      setEtat({ ton: 'succes', message: 'Message reçu. Je vous réponds rapidement.' });
-    } catch {
-      setEtat({
-        ton: 'erreur',
-        message: `L’envoi n’a pas abouti. Écrivez-moi directement à ${SITE.email} ou appelez le ${SITE.telephone}.`,
-      });
-    }
+  if (etat.ok) {
+    return (
+      <p className={s.etat} data-ton="succes" role="status">
+        Message reçu. Je vous réponds rapidement.
+      </p>
+    );
   }
 
   return (
-    <form className={s.formulaire} onSubmit={envoyer} ref={form} noValidate={false}>
+    <form className={s.formulaire} action={action} ref={form} noValidate={false}>
+      <input type="hidden" name="ouvertA" value={ouvertA} />
+      {/* Champ piège : hors de l'écran et hors du parcours clavier. Un visiteur
+          ne le voit jamais, un robot le remplit. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}>
+        <label htmlFor="site">Ne pas remplir</label>
+        <input id="site" name="site" type="text" tabIndex={-1} autoComplete="off" />
+      </div>
       <div className={s.paire}>
         <p className={s.champ}>
           <label className={s.etiquette} htmlFor="nom">
             Votre nom
           </label>
-          <input className={s.saisie} id="nom" name="nom" type="text" autoComplete="name" required />
+          <input
+            className={s.saisie}
+            id="nom"
+            name="nom"
+            type="text"
+            autoComplete="name"
+            defaultValue={etat.saisi?.nom ?? ''}
+            required
+          />
         </p>
         <p className={s.champ}>
           <label className={s.etiquette} htmlFor="email">
             E-mail
           </label>
-          <input className={s.saisie} id="email" name="email" type="email" autoComplete="email" required />
+          <input
+            className={s.saisie}
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            defaultValue={etat.saisi?.email ?? ''}
+            required
+          />
         </p>
       </div>
 
@@ -127,7 +119,14 @@ export function ContactForm() {
         <label className={s.etiquette} htmlFor="telephone">
           Téléphone <span className={s.facultatif}>— facultatif</span>
         </label>
-        <input className={s.saisie} id="telephone" name="telephone" type="tel" autoComplete="tel" />
+        <input
+          className={s.saisie}
+          id="telephone"
+          name="telephone"
+          type="tel"
+          autoComplete="tel"
+          defaultValue={etat.saisi?.telephone ?? ''}
+        />
       </p>
 
       <p className={s.champ}>
@@ -139,6 +138,7 @@ export function ContactForm() {
           id="message"
           name="message"
           required
+          defaultValue={etat.saisi?.message ?? ''}
           placeholder="Quelques lignes suffisent : ce que vous préparez, où, et quand si vous le savez déjà."
         />
       </p>
@@ -149,13 +149,23 @@ export function ContactForm() {
       </label>
 
       <div className={s.pied}>
-        <button type="submit" className="bouton" disabled={etat.ton === 'envoi'}>
-          {etat.ton === 'envoi' ? 'Envoi…' : 'Envoyer ma demande'}
-        </button>
-        <p className={s.etat} data-ton={etat.ton} role="status" aria-live="polite">
-          {etat.message}
-        </p>
+        <BoutonEnvoi />
+        {etat.erreur ? (
+          <p className={s.etat} data-ton="erreur" role="status" aria-live="polite">
+            {etat.erreur} Sinon, écrivez-moi à {SITE.email} ou appelez le {SITE.telephone}.
+          </p>
+        ) : null}
       </div>
     </form>
+  );
+}
+
+/** Se verrouille pendant l'envoi : pas de double soumission. */
+function BoutonEnvoi() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className="bouton" disabled={pending}>
+      {pending ? 'Envoi…' : 'Envoyer ma demande'}
+    </button>
   );
 }

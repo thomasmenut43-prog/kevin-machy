@@ -1,0 +1,161 @@
+/* Boîte de réception. Les demandes non lues se distinguent d'un coup d'œil. */
+
+.compteur {
+  font-size: 0.875rem;
+  color: var(--bo-texte-3);
+}
+
+.alerte {
+  border-left: 2px solid var(--bo-danger);
+  background: var(--bo-danger-doux);
+  padding: 11px 14px;
+  font-size: 0.875rem;
+}
+
+.liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1px;
+  background: var(--bo-filet);
+  border: 1px solid var(--bo-filet);
+}
+
+.item {
+  background: var(--bo-surface-2);
+}
+
+.item[data-nonlu] {
+  border-left: 2px solid var(--bo-accent);
+}
+
+.tete {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tete:hover {
+  background: var(--bo-surface-2);
+}
+
+.identite {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.identite strong {
+  font-weight: 500;
+}
+
+.item[data-nonlu] .identite strong {
+  color: var(--bo-texte);
+}
+
+.identite span {
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  font-size: 0.78rem;
+  color: var(--bo-texte-3);
+}
+
+.etiquette {
+  border: 1px solid var(--bo-bord);
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.echec {
+  color: var(--bo-danger);
+  border: 1px solid var(--bo-danger);
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.corps {
+  padding: 0 16px 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.infos {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.infos div {
+  display: flex;
+  gap: 10px;
+}
+
+.infos dt {
+  color: var(--bo-texte-3);
+  min-width: 130px;
+}
+
+.infos dd {
+  margin: 0;
+}
+
+.infos a {
+  color: var(--bo-accent);
+}
+
+.texte {
+  white-space: pre-wrap;
+  border-left: 1px solid var(--bo-filet);
+  padding-left: 14px;
+  color: var(--bo-texte-2);
+  line-height: 1.65;
+  max-width: 68ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.danger {
+  min-height: 48px;
+  padding: 0 1.4em;
+  background: none;
+  border: 1px solid var(--bo-danger);
+  color: var(--bo-danger);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--bo-danger-doux);
+}
