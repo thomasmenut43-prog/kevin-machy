@@ -1,0 +1,53 @@
+# Base de données de développement.
+#
+# Même moteur et même version que le serveur visé, pour que le passage du local
+# au VPS ne réserve aucune surprise — c'est la parade au risque nommé dans le
+# PRD (§ 12). Une seule commande suffit :
+#
+#   docker compose up -d
+#
+# Les données vivent dans un volume Docker : `docker compose down` arrête la
+# base sans rien perdre, `docker compose down -v` efface tout.
+
+services:
+  base:
+    image: postgres:17-alpine
+    container_name: kevin-machy-base
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kevin
+      POSTGRES_PASSWORD: kevin
+      POSTGRES_DB: kevinmachy
+    ports:
+      - '5432:5432'
+    volumes:
+      - donnees:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kevin -d kevinmachy']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Boîte aux lettres de développement.
+  #
+  # Elle capte tout ce que le site envoie : on voit l'e-mail partir et son
+  # rendu, sans qu'aucun message ne quitte la machine. Indispensable pour
+  # mettre au point les réglages SMTP sans spammer personne.
+  #
+  #   SMTP     localhost:1025
+  #   Lecture  http://localhost:8025
+  #
+  # Elle accepte n'importe quel identifiant : elle sert à voir, pas à filtrer.
+  courrier:
+    image: axllent/mailpit:latest
+    container_name: kevin-machy-courrier
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  donnees:

@@ -5,6 +5,17 @@ out/
 next-env.d.ts
 *.tsbuildinfo
 
-# Document commercial interne : chiffrage, marges, tarif de lancement.
-# Le dépôt est public — ce fichier reste hors de git tant que c'est le cas.
+# Documents commerciaux internes : chiffrage, marges, tarif de lancement,
+# cadrage client. Le dépôt est public — ils restent hors de git tant qu'il l'est.
 PROPOSITION-PHASE-2.md
+PRD-v2.md
+
+# Secrets : identifiants de base, clé de signature des sessions, SMTP.
+# Rien de tout cela ne doit partir sur un dépôt public.
+.env
+.env.*
+!.env.exemple
+
+# Fichiers envoyés depuis la médiathèque du BackOffice. Ils vivent sur le
+# serveur et dans ses sauvegardes, pas dans le dépôt.
+medias/
