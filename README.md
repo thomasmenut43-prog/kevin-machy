@@ -4,7 +4,7 @@ Refonte complète du site de Kevin Machy, photographe et Artisan d'Art au Puy-en
 Direction artistique **« Chambre noire »** : fond quasi noir, une image par écran, hiérarchie
 portée par l'échelle typographique et le vide.
 
-- **Stack** — Next.js 16 (App Router), TypeScript, CSS Modules, PostgreSQL. Le BackOffice est
+- **Stack** — Next.js 16 (App Router), TypeScript, CSS Modules, MySQL. Le BackOffice est
   écrit ici, de bout en bout : aucun CMS tiers.
 - **Typographies** — Bodoni Moda (Google Fonts) en titres, Switzer (Fontshare) auto-hébergé en texte.
 - **Palette** — fond `#0A0A0B`, encre `#E9E5DE`, accent cuivre `#B9784F` (moins de 5 % de la surface).
@@ -16,7 +16,7 @@ portée par l'échelle typographique et le vide.
 ```bash
 npm install
 cp .env.exemple .env   # rien à compléter en local, les valeurs par défaut suffisent
-npm run base           # lance PostgreSQL et la boîte aux lettres de développement
+npm run base           # lance MySQL et la boîte aux lettres de développement
 npm run migrer         # crée les tables
 npm run images         # encode les images dans public/img (≈ 2 min)
 npm run dev            # http://localhost:3000
@@ -48,10 +48,10 @@ app/sitemap.ts     Next ne les reconnaît pas ailleurs
 cms/schema.ts      le langage qui décrit une section
 cms/catalogue.ts   les treize sections du catalogue
 lib/apparence.ts   tailles, couleurs, polices autorisées — source unique
-lib/bdd.ts         accès PostgreSQL
+lib/bdd.ts         accès MySQL — voir docs/mysql.md
 lib/auth.ts        mots de passe, sessions, rôles
 migrations/        le schéma, un fichier SQL par étape
-docker-compose.yml PostgreSQL de développement, même version que le serveur visé
+docker-compose.yml MySQL de développement, le moteur de l'hébergeur visé
 ```
 
 **Le site public reste statique à la construction** : les six pages sont pré-rendues, seules
@@ -95,7 +95,7 @@ une nouvelle. `npm run migrer` le vérifie et refuse de continuer sinon.
 ## Déploiement
 
 **Il n'y en a plus pour l'instant, et c'est volontaire.** Le site n'est plus un export statique :
-le BackOffice réclame un serveur qui exécute du code, une base PostgreSQL et une
+le BackOffice réclame un serveur qui exécute du code, une base MySQL et une
 authentification. Un hébergement mutualisé ne sait rien en faire, il faut un VPS.
 
 L'ancien envoi FTP vers Hostinger a donc été retiré. `.github/workflows/construction.yml` se

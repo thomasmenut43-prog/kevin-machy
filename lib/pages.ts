@@ -1,7 +1,7 @@
 import 'server-only';
 import { PAR_TYPE } from '@/cms/catalogue';
 import type { Champ } from '@/cms/schema';
-import { ligne, requete, transaction } from './bdd';
+import { ecrire, ligne, requete, transaction } from './bdd';
 import { nouvelleCle, type Page, type Section } from './modeles';
 
 export type { Page, Section } from './modeles';
@@ -18,8 +18,8 @@ type LignePage = {
   meta_titre: string | null;
   meta_description: string | null;
   meta_image: string | null;
-  hors_indexation: boolean;
-  systeme: boolean;
+  hors_indexation: number | boolean;
+  systeme: number | boolean;
   modifie_le: Date;
   publie_le: Date | null;
 };
@@ -34,8 +34,8 @@ const versPage = (l: LignePage): Page => ({
   metaTitre: l.meta_titre,
   metaDescription: l.meta_description,
   metaImage: l.meta_image,
-  horsIndexation: l.hors_indexation,
-  systeme: l.systeme,
+  horsIndexation: Boolean(l.hors_indexation),
+  systeme: Boolean(l.systeme),
   modifieLe: l.modifie_le,
   publieLe: l.publie_le,
 });
@@ -67,14 +67,14 @@ export async function pageDEntree() {
 }
 
 export async function pageParId(id: number) {
-  const l = await ligne<LignePage>(`SELECT ${CHAMPS} FROM pages WHERE id = $1`, [id]);
+  const l = await ligne<LignePage>(`SELECT ${CHAMPS} FROM pages WHERE id = ?`, [id]);
   return l ? versPage(l) : null;
 }
 
 /** La version publiée. C'est elle, et elle seule, que voient les visiteurs. */
 export async function pagePublieeParChemin(chemin: string) {
   const l = await ligne<LignePage>(
-    `SELECT ${CHAMPS} FROM pages WHERE chemin = $1 AND statut = 'publie'`,
+    `SELECT ${CHAMPS} FROM pages WHERE chemin = ? AND statut = 'publie'`,
     [chemin],
   );
   return l ? versPage(l) : null;
@@ -83,7 +83,7 @@ export async function pagePublieeParChemin(chemin: string) {
 export async function cheminsPublies(options?: { indexablesSeulement?: boolean }) {
   const lignes = await requete<{ chemin: string }>(
     `SELECT chemin FROM pages
-      WHERE statut = 'publie' ${options?.indexablesSeulement ? 'AND hors_indexation = false' : ''}
+      WHERE statut = 'publie' ${options?.indexablesSeulement ? 'AND hors_indexation = 0' : ''}
       ORDER BY chemin`,
   );
   return lignes.map((l) => l.chemin);
@@ -128,10 +128,16 @@ export function normaliserChemin(valeur: string) {
 }
 
 export async function creerPage(donnees: { titre: string; chemin: string }) {
-  return ligne<LignePage>(
-    `INSERT INTO pages (titre, chemin) VALUES ($1, $2) RETURNING ${CHAMPS}`,
+  // Pas de RETURNING en MySQL : on insère, puis on relit la ligne créée.
+  // `sections` est posé explicitement — la colonne n'a pas de valeur par
+  // défaut, MySQL ne sachant pas en donner une à un JSON sur tous ses moteurs.
+  const { insertId } = await ecrire(
+    `INSERT INTO pages (titre, chemin, sections) VALUES (?, ?, '[]')`,
     [donnees.titre.trim(), normaliserChemin(donnees.chemin)],
-  ).then((l) => (l ? versPage(l) : null));
+  );
+
+  const creee = await ligne<LignePage>(`SELECT ${CHAMPS} FROM pages WHERE id = ?`, [insertId]);
+  return creee ? versPage(creee) : null;
 }
 
 /**
@@ -140,8 +146,8 @@ export async function creerPage(donnees: { titre: string; chemin: string }) {
  */
 export async function enregistrerBrouillon(id: number, sections: Section[]) {
   await requete(
-    'UPDATE pages SET brouillon = $2, modifie_le = now() WHERE id = $1',
-    [id, JSON.stringify(nettoyerSections(sections))],
+    'UPDATE pages SET brouillon = ?, modifie_le = now() WHERE id = ?',
+    [JSON.stringify(nettoyerSections(sections)), id],
   );
 }
 
@@ -151,13 +157,13 @@ export async function enregistrerBrouillon(id: number, sections: Section[]) {
  */
 export async function publier(id: number, auteurId: number) {
   return transaction(async (q) => {
-    const [avant] = await q<LignePage>('SELECT sections, titre FROM pages WHERE id = $1', [id]);
+    const [avant] = await q<LignePage>('SELECT sections, titre FROM pages WHERE id = ?', [id]);
     if (!avant) throw new Error('Page introuvable.');
 
     // On archive l'état qui part, pas celui qui arrive : revenir en arrière
     // doit ramener ce qui était en ligne avant cette publication.
     await q(
-      'INSERT INTO versions (page_id, titre, sections, auteur_id) VALUES ($1, $2, $3, $4)',
+      'INSERT INTO versions (page_id, titre, sections, auteur_id) VALUES (?, ?, ?, ?)',
       [id, avant.titre, JSON.stringify(avant.sections ?? []), auteurId],
     );
 
@@ -168,22 +174,30 @@ export async function publier(id: number, auteurId: number) {
               statut = 'publie',
               publie_le = now(),
               modifie_le = now()
-        WHERE id = $1`,
+        WHERE id = ?`,
       [id],
     );
 
     // On garde les cinquante dernières : au-delà, plus personne ne remonte.
+    //
+    // La sous-requête est enveloppée dans une table dérivée : MySQL refuse de
+    // lire la table qu'il est en train d'effacer, et refuse aussi un `LIMIT`
+    // dans un `IN`. Cette enveloppe lève les deux objections d'un coup.
     await q(
       `DELETE FROM versions
-        WHERE page_id = $1
-          AND id NOT IN (SELECT id FROM versions WHERE page_id = $1 ORDER BY cree_le DESC LIMIT 50)`,
-      [id],
+        WHERE page_id = ?
+          AND id NOT IN (
+            SELECT id FROM (
+              SELECT id FROM versions WHERE page_id = ? ORDER BY cree_le DESC LIMIT 50
+            ) AS recentes
+          )`,
+      [id, id],
     );
   });
 }
 
 export async function depublier(id: number) {
-  await requete(`UPDATE pages SET statut = 'brouillon', modifie_le = now() WHERE id = $1`, [id]);
+  await requete(`UPDATE pages SET statut = 'brouillon', modifie_le = now() WHERE id = ?`, [id]);
 }
 
 export async function majReglages(
@@ -202,20 +216,20 @@ export async function majReglages(
   // titre, description, indexation — se modifie comme partout ailleurs.
   await requete(
     `UPDATE pages
-        SET titre = $2,
-            chemin = CASE WHEN systeme THEN chemin ELSE $3 END,
-            meta_titre = NULLIF($4, ''),
-            meta_description = NULLIF($5, ''), meta_image = NULLIF($6, ''),
-            hors_indexation = $7, modifie_le = now()
-      WHERE id = $1`,
+        SET titre = ?,
+            chemin = CASE WHEN systeme THEN chemin ELSE ? END,
+            meta_titre = NULLIF(?, ''),
+            meta_description = NULLIF(?, ''), meta_image = NULLIF(?, ''),
+            hors_indexation = ?, modifie_le = now()
+      WHERE id = ?`,
     [
-      id,
       d.titre.trim(),
       normaliserChemin(d.chemin),
       d.metaTitre,
       d.metaDescription,
       d.metaImage.trim(),
-      d.horsIndexation,
+      d.horsIndexation ? 1 : 0,
+      id,
     ],
   );
 }
@@ -227,8 +241,7 @@ export async function majReglages(
  * bouton : un écran se contourne, une requête non.
  */
 export async function supprimerPage(id: number) {
-  const r = await requete('DELETE FROM pages WHERE id = $1 AND systeme = false', [id]);
-  return r;
+  await ecrire('DELETE FROM pages WHERE id = ? AND systeme = 0', [id]);
 }
 
 export async function listerVersions(pageId: number) {
@@ -236,7 +249,7 @@ export async function listerVersions(pageId: number) {
     `SELECT v.id, v.titre, v.cree_le, NULLIF(concat_ws(' ', u.prenom, u.nom), '') AS auteur
        FROM versions v
        LEFT JOIN utilisateurs u ON u.id = v.auteur_id
-      WHERE v.page_id = $1
+      WHERE v.page_id = ?
       ORDER BY v.cree_le DESC`,
     [pageId],
   );
@@ -245,7 +258,7 @@ export async function listerVersions(pageId: number) {
 /** Remet une version d'avant dans le brouillon, sans rien publier. */
 export async function restaurerVersion(pageId: number, versionId: number) {
   const v = await ligne<{ sections: Section[] }>(
-    'SELECT sections FROM versions WHERE id = $1 AND page_id = $2',
+    'SELECT sections FROM versions WHERE id = ? AND page_id = ?',
     [versionId, pageId],
   );
   if (!v) throw new Error('Version introuvable.');

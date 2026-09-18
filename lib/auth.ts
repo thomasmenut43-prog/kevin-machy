@@ -2,7 +2,7 @@ import 'server-only';
 import { randomBytes, scrypt, timingSafeEqual, createHash } from 'node:crypto';
 import { promisify } from 'node:util';
 import { cookies } from 'next/headers';
-import { ligne, requete } from './bdd';
+import { ecrire, ligne, requete } from './bdd';
 
 const scryptAsync = promisify(scrypt);
 
@@ -96,7 +96,7 @@ async function ouvrirSession(utilisateurId: number, agent?: string) {
   const expire = new Date(Date.now() + DUREE_SESSION);
 
   await requete(
-    'INSERT INTO sessions (empreinte_jeton, utilisateur_id, expire_le, agent) VALUES ($1, $2, $3, $4)',
+    'INSERT INTO sessions (empreinte_jeton, utilisateur_id, expire_le, agent) VALUES (?, ?, ?, ?)',
     [empreinteJeton(jeton), utilisateurId, expire, agent?.slice(0, 300) ?? null],
   );
 
@@ -121,7 +121,7 @@ export async function utilisateurConnecte(): Promise<Utilisateur | null> {
     `SELECT u.id, u.prenom, u.nom, u.email, u.avatar, u.role, s.expire_le
        FROM sessions s
        JOIN utilisateurs u ON u.id = s.utilisateur_id
-      WHERE s.empreinte_jeton = $1 AND s.expire_le > now()`,
+      WHERE s.empreinte_jeton = ? AND s.expire_le > now()`,
     [empreinteJeton(jeton)],
   );
   if (!trouve) return null;
@@ -140,7 +140,7 @@ export async function fermerSession() {
   const boite = await cookies();
   const jeton = boite.get(COOKIE)?.value;
   if (jeton) {
-    await requete('DELETE FROM sessions WHERE empreinte_jeton = $1', [empreinteJeton(jeton)]);
+    await requete('DELETE FROM sessions WHERE empreinte_jeton = ?', [empreinteJeton(jeton)]);
   }
   boite.delete(COOKIE);
 }
@@ -157,7 +157,7 @@ export async function connecter(
   agent?: string,
 ): Promise<ResultatConnexion> {
   const compte = await ligne<LigneUtilisateur>(
-    'SELECT * FROM utilisateurs WHERE email = $1',
+    'SELECT * FROM utilisateurs WHERE email = ?',
     [email.trim().toLowerCase()],
   );
 
@@ -181,13 +181,13 @@ export async function connecter(
     const essais = compte.essais_rates + 1;
     const bloque = essais >= ESSAIS_AVANT_BLOCAGE ? new Date(Date.now() + DUREE_BLOCAGE) : null;
     await requete(
-      'UPDATE utilisateurs SET essais_rates = $2, bloque_jusqua = $3 WHERE id = $1',
-      [compte.id, bloque ? 0 : essais, bloque],
+      'UPDATE utilisateurs SET essais_rates = ?, bloque_jusqua = ? WHERE id = ?',
+      [bloque ? 0 : essais, bloque, compte.id],
     );
     return refus;
   }
 
-  await requete('UPDATE utilisateurs SET essais_rates = 0, bloque_jusqua = NULL WHERE id = $1', [
+  await requete('UPDATE utilisateurs SET essais_rates = 0, bloque_jusqua = NULL WHERE id = ?', [
     compte.id,
   ]);
   await ouvrirSession(compte.id, agent);
@@ -208,8 +208,8 @@ export async function connecter(
 // ———————————————————————————— Comptes ————————————————————————————
 
 export async function aucunCompte() {
-  const r = await ligne<{ n: string }>('SELECT count(*)::text AS n FROM utilisateurs');
-  return r?.n === '0';
+  const r = await ligne<{ n: number }>('SELECT count(*) AS n FROM utilisateurs');
+  return Number(r?.n ?? 0) === 0;
 }
 
 export async function creerCompte(donnees: {
@@ -230,11 +230,15 @@ export async function creerCompte(donnees: {
   const prenom = espace > 0 ? entier.slice(0, espace) : entier;
   const nom = espace > 0 ? entier.slice(espace + 1).trim() : '';
 
-  return ligne<Utilisateur>(
+  const { insertId } = await ecrire(
     `INSERT INTO utilisateurs (prenom, nom, email, empreinte, sel, role)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, prenom, nom, email, avatar, role`,
+     VALUES (?, ?, ?, ?, ?, ?)`,
     [prenom, nom, donnees.email.trim().toLowerCase(), empreinte, sel, role],
+  );
+
+  return ligne<Utilisateur>(
+    'SELECT id, prenom, nom, email, avatar, role FROM utilisateurs WHERE id = ?',
+    [insertId],
   );
 }
 
@@ -261,11 +265,11 @@ export async function listerUtilisateurs(): Promise<UtilisateurListe[]> {
     role: 'administrateur' | 'editeur';
     cree_le: Date;
     derniere: Date | null;
-    sessions: string;
+    sessions: number | string | null;
   }>(
     `SELECT u.id, u.prenom, u.nom, u.email, u.avatar, u.role, u.cree_le,
             max(s.vue_le) AS derniere,
-            count(s.empreinte_jeton) FILTER (WHERE s.expire_le > now())::text AS sessions
+            SUM(CASE WHEN s.expire_le > now() THEN 1 ELSE 0 END) AS sessions
        FROM utilisateurs u
        LEFT JOIN sessions s ON s.utilisateur_id = u.id
       GROUP BY u.id
@@ -281,13 +285,13 @@ export async function listerUtilisateurs(): Promise<UtilisateurListe[]> {
     role: l.role,
     creeLe: l.cree_le,
     derniereConnexion: l.derniere,
-    sessions: Number(l.sessions),
+    sessions: Number(l.sessions ?? 0),
   }));
 }
 
 export async function compterAdministrateurs() {
-  const r = await ligne<{ n: string }>(
-    `SELECT count(*)::text AS n FROM utilisateurs WHERE role = 'administrateur'`,
+  const r = await ligne<{ n: number }>(
+    `SELECT count(*) AS n FROM utilisateurs WHERE role = 'administrateur'`,
   );
   return Number(r?.n ?? 0);
 }
@@ -300,7 +304,7 @@ export async function compterAdministrateurs() {
  * faudrait intervenir directement en base pour rouvrir la porte.
  */
 async function estDernierAdministrateur(id: number) {
-  const compte = await ligne<{ role: string }>('SELECT role FROM utilisateurs WHERE id = $1', [id]);
+  const compte = await ligne<{ role: string }>('SELECT role FROM utilisateurs WHERE id = ?', [id]);
   if (compte?.role !== 'administrateur') return false;
   return (await compterAdministrateurs()) <= 1;
 }
@@ -309,7 +313,7 @@ export async function changerRole(id: number, role: 'administrateur' | 'editeur'
   if (role === 'editeur' && (await estDernierAdministrateur(id))) {
     return { erreur: 'C’est le dernier administrateur. Nommez-en un autre avant de le rétrograder.' };
   }
-  await requete('UPDATE utilisateurs SET role = $2, modifie_le = now() WHERE id = $1', [id, role]);
+  await requete('UPDATE utilisateurs SET role = ?, modifie_le = now() WHERE id = ?', [role, id]);
   return {};
 }
 
@@ -318,7 +322,7 @@ export async function supprimerUtilisateur(id: number) {
     return { erreur: 'C’est le dernier administrateur. Le supprimer fermerait le BackOffice à tout le monde.' };
   }
   // Les sessions partent avec le compte, par cascade : l'accès cesse à l'instant.
-  await requete('DELETE FROM utilisateurs WHERE id = $1', [id]);
+  await requete('DELETE FROM utilisateurs WHERE id = ?', [id]);
   return {};
 }
 
@@ -335,7 +339,7 @@ export async function changerMotDePasse(
 ) {
   const { sel, empreinte } = await chiffrerMotDePasse(nouveau);
   await requete(
-    'UPDATE utilisateurs SET empreinte = $2, sel = $3, essais_rates = 0, bloque_jusqua = NULL, modifie_le = now() WHERE id = $1',
+    'UPDATE utilisateurs SET empreinte = ?, sel = ?, essais_rates = 0, bloque_jusqua = NULL, modifie_le = now() WHERE id = ?',
     [id, empreinte, sel],
   );
 
@@ -344,19 +348,19 @@ export async function changerMotDePasse(
     : null;
 
   if (jetonCourant) {
-    await requete('DELETE FROM sessions WHERE utilisateur_id = $1 AND empreinte_jeton <> $2', [
+    await requete('DELETE FROM sessions WHERE utilisateur_id = ? AND empreinte_jeton <> ?', [
       id,
       empreinteJeton(jetonCourant),
     ]);
   } else {
-    await requete('DELETE FROM sessions WHERE utilisateur_id = $1', [id]);
+    await requete('DELETE FROM sessions WHERE utilisateur_id = ?', [id]);
   }
 }
 
 /** Vérifie un mot de passe sans ouvrir de session. Pour confirmer une action sensible. */
 export async function motDePasseCorrect(id: number, motDePasse: string) {
   const compte = await ligne<{ empreinte: string; sel: string }>(
-    'SELECT empreinte, sel FROM utilisateurs WHERE id = $1',
+    'SELECT empreinte, sel FROM utilisateurs WHERE id = ?',
     [id],
   );
   if (!compte) return false;
@@ -366,7 +370,7 @@ export async function motDePasseCorrect(id: number, motDePasse: string) {
 export async function fermerAutresSessions(id: number) {
   const jeton = (await cookies()).get(COOKIE)?.value;
   if (!jeton) return;
-  await requete('DELETE FROM sessions WHERE utilisateur_id = $1 AND empreinte_jeton <> $2', [
+  await requete('DELETE FROM sessions WHERE utilisateur_id = ? AND empreinte_jeton <> ?', [
     id,
     empreinteJeton(jeton),
   ]);
@@ -383,8 +387,8 @@ export async function fermerAutresSessions(id: number) {
  */
 export async function majProfil(id: number, d: { prenom: string; nom: string }) {
   await requete(
-    'UPDATE utilisateurs SET prenom = $2, nom = $3, modifie_le = now() WHERE id = $1',
-    [id, d.prenom.trim(), d.nom.trim()],
+    'UPDATE utilisateurs SET prenom = ?, nom = ?, modifie_le = now() WHERE id = ?',
+    [d.prenom.trim(), d.nom.trim(), id],
   );
 }
 
@@ -399,21 +403,21 @@ export async function majProfil(id: number, d: { prenom: string; nom: string }) 
  * passeraient entre les mailles d'une vérification faite en amont.
  */
 export async function majEmail(id: number, email: string) {
-  await requete('UPDATE utilisateurs SET email = $2, modifie_le = now() WHERE id = $1', [
-    id,
+  await requete('UPDATE utilisateurs SET email = ?, modifie_le = now() WHERE id = ?', [
     email.trim().toLowerCase(),
+    id,
   ]);
 }
 
 /** Pose la photo, et rend celle qu'elle remplace pour que l'appelant l'efface. */
 export async function majAvatar(id: number, avatar: string | null) {
   const avant = await ligne<{ avatar: string | null }>(
-    'SELECT avatar FROM utilisateurs WHERE id = $1',
+    'SELECT avatar FROM utilisateurs WHERE id = ?',
     [id],
   );
-  await requete('UPDATE utilisateurs SET avatar = $2, modifie_le = now() WHERE id = $1', [
-    id,
+  await requete('UPDATE utilisateurs SET avatar = ?, modifie_le = now() WHERE id = ?', [
     avatar,
+    id,
   ]);
   return avant?.avatar ?? null;
 }

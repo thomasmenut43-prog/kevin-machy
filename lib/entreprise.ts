@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, requete } from './bdd';
+import { ligne, poserReglage } from './bdd';
 import type { Entreprise } from './modeles';
 import { HORAIRES, LIENS, SITE, ZONE } from './site';
 
@@ -72,7 +72,7 @@ export async function lireEntreprise(): Promise<Entreprise> {
   let enregistre: Partial<Entreprise> = {};
   try {
     const l = await ligne<{ valeur: Partial<Entreprise> }>(
-      'SELECT valeur FROM reglages WHERE cle = $1',
+      'SELECT valeur FROM reglages WHERE cle = ?',
       [CLE],
     );
     enregistre = l?.valeur ?? {};
@@ -94,9 +94,5 @@ export async function lireEntreprise(): Promise<Entreprise> {
 }
 
 export async function majEntreprise(valeurs: Entreprise) {
-  await requete(
-    `INSERT INTO reglages (cle, valeur, modifie_le) VALUES ($1, $2, now())
-     ON CONFLICT (cle) DO UPDATE SET valeur = $2, modifie_le = now()`,
-    [CLE, JSON.stringify(valeurs)],
-  );
+  await poserReglage(CLE, valeurs);
 }

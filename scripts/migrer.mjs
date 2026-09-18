@@ -1,10 +1,15 @@
 /**
  * Applique les migrations SQL de `migrations/`, dans l'ordre de leur nom.
  *
- * Chaque fichier est joué une fois et une seule, dans une transaction : une
- * migration qui échoue à mi-parcours ne laisse pas la base à moitié modifiée.
- * Le nom du fichier sert de clé — renommer un fichier déjà appliqué le ferait
- * rejouer, donc on ne renomme pas.
+ * Chaque fichier est joué une fois et une seule. Le nom du fichier sert de clé
+ * — renommer un fichier déjà appliqué le ferait rejouer, donc on ne renomme
+ * pas, et son empreinte est vérifiée à chaque passage.
+ *
+ * **MySQL ne sait pas annuler une création de table.** PostgreSQL enveloppait
+ * chaque migration dans une transaction ; ici, toute commande de structure
+ * valide d'office ce qui précède. Une migration qui échoue à mi-parcours laisse
+ * donc la base à moitié modifiée, et il faut la reprendre à la main. C'est le
+ * prix du moteur, pas un oubli : mieux vaut le savoir que le découvrir.
  *
  *   npm run migrer
  */
@@ -12,7 +17,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import pg from 'pg';
+import mysql from 'mysql2/promise';
 
 const dossier = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../migrations');
 
@@ -36,18 +41,24 @@ if (!process.env.DATABASE_URI) {
   process.exit(1);
 }
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URI });
-await client.connect();
+// `multipleStatements` : un fichier de migration en contient plusieurs, et le
+// pilote les refuse par défaut — une protection contre l'injection qui n'a pas
+// de sens ici, où le SQL vient du dépôt et de nulle part ailleurs.
+const connexion = await mysql.createConnection({
+  uri: process.env.DATABASE_URI,
+  multipleStatements: true,
+  timezone: 'Z',
+});
 
-await client.query(`
+await connexion.query(`
   CREATE TABLE IF NOT EXISTS migrations (
-    nom        TEXT PRIMARY KEY,
-    empreinte  TEXT NOT NULL,
-    applique_le TIMESTAMPTZ NOT NULL DEFAULT now()
-  )
+    nom         VARCHAR(191) NOT NULL PRIMARY KEY,
+    empreinte   VARCHAR(64)  NOT NULL,
+    applique_le DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+  ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4
 `);
 
-const { rows: deja } = await client.query('SELECT nom, empreinte FROM migrations');
+const [deja] = await connexion.query('SELECT nom, empreinte FROM migrations');
 const appliquees = new Map(deja.map((r) => [r.nom, r.empreinte]));
 
 const fichiers = readdirSync(dossier).filter((f) => f.endsWith('.sql')).sort();
@@ -69,20 +80,22 @@ for (const nom of fichiers) {
   }
 
   try {
-    await client.query('BEGIN');
-    await client.query(sql);
-    await client.query('INSERT INTO migrations (nom, empreinte) VALUES ($1, $2)', [nom, empreinte]);
-    await client.query('COMMIT');
+    await connexion.query(sql);
+    await connexion.query('INSERT INTO migrations (nom, empreinte) VALUES (?, ?)', [
+      nom,
+      empreinte,
+    ]);
     console.log(`  appliquée  ${nom}`);
     jouees++;
   } catch (erreur) {
-    await client.query('ROLLBACK');
     console.error(`  ÉCHEC      ${nom}`);
     console.error(`  ${erreur.message}`);
-    await client.end();
+    console.error('\n  MySQL ne rejoue pas en arrière une migration de structure :');
+    console.error('  vérifier dans quel état la base est restée avant de relancer.\n');
+    await connexion.end();
     process.exit(1);
   }
 }
 
 console.log(jouees ? `\n${jouees} migration(s) appliquée(s).` : '\nBase déjà à jour.');
-await client.end();
+await connexion.end();

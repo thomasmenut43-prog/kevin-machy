@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, requete } from './bdd';
+import { ligne, poserReglage } from './bdd';
 import { chiffrer, dechiffrer } from './secret';
 
 /**
@@ -32,16 +32,12 @@ export type IntegrationsAffichables = {
 };
 
 async function lire(): Promise<Enregistre> {
-  const l = await ligne<{ valeur: Enregistre }>('SELECT valeur FROM reglages WHERE cle = $1', [CLE]);
+  const l = await ligne<{ valeur: Enregistre }>('SELECT valeur FROM reglages WHERE cle = ?', [CLE]);
   return l?.valeur ?? {};
 }
 
 async function ecrire(valeur: Enregistre) {
-  await requete(
-    `INSERT INTO reglages (cle, valeur, modifie_le) VALUES ($1, $2, now())
-     ON CONFLICT (cle) DO UPDATE SET valeur = $2, modifie_le = now()`,
-    [CLE, JSON.stringify(valeur)],
-  );
+  await poserReglage(CLE, valeur);
 }
 
 export async function lireIntegrations(): Promise<IntegrationsAffichables> {
