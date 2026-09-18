@@ -1,13 +1,8 @@
 # Vérification de la construction à chaque poussée.
 #
-# L'envoi FTP vers Hostinger a été retiré : le site n'est plus un export
-# statique. Depuis l'ajout du BackOffice il lui faut un serveur qui exécute du
-# code, une base PostgreSQL et une authentification — un hébergement mutualisé
-# ne sait rien en faire (PRD § 2).
-#
-# Le déploiement sera rebranché sur le VPS, après la démonstration à Kevin et
-# l'ouverture des accès (PRD § 14). D'ici là, cette CI garantit seulement que
-# la branche `main` construit.
+# Le BackOffice a besoin d'un serveur, d'une base et d'une authentification : la
+# CI ne déploie rien, elle garantit seulement que la branche construit. L'envoi
+# vers l'hébergeur sera rebranché quand son hébergement sera arrêté.
 
 name: Construction
 
@@ -26,24 +21,34 @@ jobs:
     runs-on: ubuntu-latest
 
     # Les écrans du BackOffice interrogent la base à la construction : il leur
-    # faut une PostgreSQL, même vide.
+    # faut une MySQL, même vide. Même version que docker-compose.yml — vérifier
+    # sur un autre moteur que celui d'arrivée ne vérifierait rien.
+    #
+    # Une différence avec le développement, et elle est voulue : GitHub ne
+    # permet pas de passer de commande à un service, donc pas de
+    # `--default-time-zone=+00:00`. Le serveur reste sur `SYSTEM`, qui vaut le
+    # temps universel sur les machines de GitHub — le même fuseau, obtenu
+    # autrement.
     services:
       base:
-        image: postgres:17-alpine
+        image: mysql:8.4
         env:
-          POSTGRES_USER: kevin
-          POSTGRES_PASSWORD: kevin
-          POSTGRES_DB: kevinmachy
+          MYSQL_ROOT_PASSWORD: racine
+          MYSQL_USER: kevin
+          MYSQL_PASSWORD: kevin
+          MYSQL_DATABASE: kevinmachy
         ports:
-          - 5432:5432
+          - 3306:3306
         options: >-
-          --health-cmd "pg_isready -U kevin -d kevinmachy"
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ukevin -pkevin"
           --health-interval 5s
           --health-timeout 5s
-          --health-retries 10
+          --health-retries 20
 
     env:
-      DATABASE_URI: postgres://kevin:kevin@localhost:5432/kevinmachy
+      # 127.0.0.1 et non localhost : celui-ci se résout parfois en IPv6, que le
+      # service n'écoute pas.
+      DATABASE_URI: mysql://kevin:kevin@127.0.0.1:3306/kevinmachy
       NEXT_PUBLIC_URL_SITE: http://localhost:3000
 
     steps:
