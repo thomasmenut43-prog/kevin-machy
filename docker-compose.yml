@@ -1,9 +1,11 @@
 # Base de données de développement.
 #
-# MySQL, comme l'hébergement du client : le mutualisé Hostinger ne propose que
-# cela. Développer sur un autre moteur que celui d'arrivée, c'est repousser les
-# mauvaises surprises au jour de la mise en ligne — le risque nommé au § 12 du
-# PRD. Une seule commande suffit :
+# MariaDB, comme l'hébergement du client. Hostinger annonce « MySQL » et sert
+# en réalité MariaDB : c'est vérifiable en s'y connectant, pas dans hPanel.
+# Les deux moteurs parlent presque la même langue, et c'est ce « presque » qui
+# est dangereux — répéter sur l'un pour jouer sur l'autre, c'est repousser les
+# mauvaises surprises au jour de la mise en ligne (PRD § 12). Une seule
+# commande suffit :
 #
 #   docker compose up -d
 #
@@ -12,24 +14,27 @@
 
 services:
   base:
-    image: mysql:8.4
+    image: mariadb:11.8
     container_name: kevin-machy-base
     restart: unless-stopped
     command:
       # Le fuseau du serveur est mis en temps universel, comme le pilote : une
-      # date écrite ici et relue ailleurs doit désigner le même instant.
+      # date écrite ici et relue ailleurs doit désigner le même instant. Le
+      # serveur de Hostinger est en UTC lui aussi, par son fuseau système.
       - --default-time-zone=+00:00
     environment:
-      MYSQL_ROOT_PASSWORD: racine
-      MYSQL_USER: kevin
-      MYSQL_PASSWORD: kevin
-      MYSQL_DATABASE: kevinmachy
+      MARIADB_ROOT_PASSWORD: racine
+      MARIADB_USER: kevin
+      MARIADB_PASSWORD: kevin
+      MARIADB_DATABASE: kevinmachy
     ports:
       - '3306:3306'
     volumes:
       - donnees:/var/lib/mysql
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-ukevin', '-pkevin']
+      # Script fourni par l'image : il attend qu'InnoDB soit vraiment prêt, là
+      # où un simple ping répond déjà pendant l'initialisation.
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
       interval: 5s
       timeout: 5s
       retries: 20

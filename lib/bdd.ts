@@ -2,12 +2,16 @@ import 'server-only';
 import mysql, { type Pool, type RowDataPacket, type ResultSetHeader } from 'mysql2/promise';
 
 /**
- * Accès à MySQL.
+ * Accès à la base.
  *
- * La base était PostgreSQL. Elle est passée à MySQL pour une raison qui n'a
+ * Elle était PostgreSQL. Elle est passée à MariaDB pour une raison qui n'a
  * rien de technique : l'hébergement du client est un mutualisé Hostinger, qui
- * ne propose que MySQL. Le choix est donc celui de l'hébergeur, et le code s'y
- * plie — voir `docs/mysql.md` pour ce que cela a changé.
+ * ne propose que cela. Le choix est celui de l'hébergeur, et le code s'y plie
+ * — voir `docs/mysql.md` pour ce que cela a changé.
+ *
+ * Le pilote s'appelle `mysql2` et le dialecte reste celui de MySQL : MariaDB
+ * en est née, et les requêtes écrites ici valent pour les deux. C'est délibéré
+ * — rien n'oblige l'hébergeur à ne jamais changer d'avis.
  *
  * Une seule réserve de connexions pour toute l'application. En développement,
  * Next recharge les modules à chaque modification : sans la garder sur

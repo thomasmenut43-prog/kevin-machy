@@ -5,7 +5,7 @@
  * — renommer un fichier déjà appliqué le ferait rejouer, donc on ne renomme
  * pas, et son empreinte est vérifiée à chaque passage.
  *
- * **MySQL ne sait pas annuler une création de table.** PostgreSQL enveloppait
+ * **MariaDB ne sait pas annuler une création de table.** PostgreSQL enveloppait
  * chaque migration dans une transaction ; ici, toute commande de structure
  * valide d'office ce qui précède. Une migration qui échoue à mi-parcours laisse
  * donc la base à moitié modifiée, et il faut la reprendre à la main. C'est le
@@ -66,7 +66,11 @@ let jouees = 0;
 
 for (const nom of fichiers) {
   const sql = readFileSync(path.join(dossier, nom), 'utf8');
-  const empreinte = createHash('sha256').update(sql).digest('hex').slice(0, 16);
+  // L'empreinte ignore les fins de ligne. Git les convertit en CRLF sur
+  // Windows et les laisse en LF ailleurs : sans cette normalisation, la même
+  // migration paraît modifiée d'un poste à l'autre, et le contrôle d'intégrité
+  // crie pour un caractère invisible. Ce qui doit être surveillé, c'est le SQL.
+  const empreinte = createHash('sha256').update(sql.replace(/\r\n/g, '\n')).digest('hex').slice(0, 16);
 
   if (appliquees.has(nom)) {
     // Une migration déjà jouée puis modifiée ne sera pas rejouée : la base et le

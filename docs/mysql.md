@@ -1,12 +1,45 @@
-# La base : de PostgreSQL à MySQL
+# La base : de PostgreSQL à MariaDB
 
-Le site s'est construit sur PostgreSQL. Il tourne aujourd'hui sur MySQL, parce
-que l'hébergement du client — un mutualisé Hostinger — ne propose que cela. Le
-choix vient de l'hébergeur, pas d'un avis technique : PostgreSQL faisait mieux
-plusieurs des choses décrites ici.
+Le site s'est construit sur PostgreSQL. Il tourne aujourd'hui sur MariaDB,
+parce que l'hébergement du client — un mutualisé Hostinger — ne propose que
+cela. Le choix vient de l'hébergeur, pas d'un avis technique : PostgreSQL
+faisait mieux plusieurs des choses décrites ici.
+
+**Le dialecte reste celui de MySQL.** MariaDB en est née en 2009, les requêtes
+écrites ici valent pour les deux, et le pilote s'appelle toujours `mysql2`.
+C'est pour cela que ce document parle de MySQL presque partout : ce qu'il
+décrit, c'est la langue, pas le serveur.
 
 Ce document dit ce que le déménagement a changé, pour qu'on ne redécouvre pas
 chaque écueil en le heurtant.
+
+## Hostinger annonce MySQL et sert MariaDB
+
+Ni le panneau ni l'API ne le disent. Une connexion, si :
+
+```sql
+SELECT VERSION();   -- 11.8.9-MariaDB-log
+```
+
+D'où la règle appliquée partout ailleurs : `docker-compose.yml` et la
+vérification GitHub démarrent **la même MariaDB**. Répéter sur un moteur pour
+jouer sur un autre, c'est se préparer une surprise le jour de la mise en ligne.
+
+Ce qui a été vérifié sur le serveur de Hostinger, et qui tient :
+
+| | |
+|---|---|
+| colonne calculée `parent_cle` | `parent_id` à `NULL` donne bien `0` |
+| index unique `nom + parent_cle` | présent |
+| clés étrangères | les cinq |
+| fuseau | `SYSTEM`, et ce système est en UTC — `NOW()` vaut `UTC_TIMESTAMP()` |
+| `TINYINT` booléens | des nombres, comme chez MySQL |
+
+Un point mérite d'être surveillé. **MariaDB n'a pas de vrai type `JSON`** : il
+déclare `LONGTEXT` avec une contrainte de validité. `mysql2` rend malgré tout
+des objets déjà analysés, comme avec MySQL — mais c'est constaté à l'essai, pas
+promis par une spécification. Si un jour une lecture de `sections`, `tailles`
+ou `valeur` rend une chaîne au lieu d'un objet, chercher ici d'abord.
 
 ## Ce qui a bougé dans le schéma
 
@@ -87,10 +120,18 @@ importées portant ces mêmes numéros ont d'abord été rejetées en silence co
 doublons. **Importer d'abord, semer ensuite** — ou vérifier les comptes après
 coup, ce qui a permis de s'en apercevoir.
 
-Pour un prochain déménagement de MySQL à MySQL — le jour où la base part chez
-l'hébergeur — rien de tout cela n'est nécessaire :
+Le départ vers l'hébergeur, lui, n'a rien demandé de tout cela — deux
+commandes, et les comptes de lignes identiques des deux côtés, dates à la
+milliseconde comprises :
 
 ```bash
-docker exec kevin-machy-base mysqldump -ukevin -pkevin kevinmachy > kevinmachy.sql
-mysql -h <hôte> -u <utilisateur> -p <base> < kevinmachy.sql
+docker exec kevin-machy-base mariadb-dump -ukevin -pkevin --single-transaction \
+  --no-tablespaces kevinmachy > kevinmachy.sql
+mariadb -h <hôte> -u <utilisateur> -p <base> < kevinmachy.sql
 ```
+
+Deux précautions valent d'être reprises. Les **sessions** ne voyagent pas :
+elles désignent des connexions à une autre machine, on n'emporte que leur
+structure. Et l'accès distant doit être ouvert **à une adresse IP nommée**,
+jamais à `%` : une base derrière un simple mot de passe n'a rien à faire face à
+Internet.
