@@ -6,6 +6,7 @@ import { cheminsPublies, idsImages, pagePublieeParChemin, type Section } from '@
 import { enTexteNu } from '@/lib/texteRiche';
 import { lireEntreprise } from '@/lib/entreprise';
 import { DonneesStructurees, schemaFaq, schemaFilAriane } from '@/lib/schema';
+import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteIndisponible';
 
 /**
  * Les pages créées dans l'éditeur.
@@ -18,6 +19,9 @@ import { DonneesStructurees, schemaFaq, schemaFilAriane } from '@/lib/schema';
 // site. Une page publiée après coup est rendue à la demande puis mise en cache.
 export const dynamicParams = true;
 
+/** Revérifiées toutes les cinq minutes, comme l'accueil. */
+export const revalidate = 300;
+
 export async function generateStaticParams() {
   const chemins = await cheminsPublies().catch(() => []);
   return chemins.map((chemin) => ({ chemin: chemin.split('/') }));
@@ -27,7 +31,8 @@ type Params = { params: Promise<{ chemin: string[] }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { chemin } = await params;
-  const page = await pagePublieeParChemin(chemin.join('/'));
+  const page = await pagePublieeParChemin(chemin.join('/')).catch(() => 'injoignable' as const);
+  if (page === 'injoignable') return METADONNEES_INDISPONIBLE;
   if (!page) return {};
 
   const description =
@@ -53,7 +58,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function PageEditee({ params }: Params) {
   const { chemin } = await params;
-  const page = await pagePublieeParChemin(chemin.join('/'));
+  // Base injoignable : un cadre d'attente. Page absente : elle n'existe pas,
+  // et c'est un 404 franc — confondre les deux enverrait Google désindexer
+  // des pages bien vivantes le jour d'une panne de base.
+  const page = await pagePublieeParChemin(chemin.join('/')).catch(() => 'injoignable' as const);
+  if (page === 'injoignable') return <SiteIndisponible />;
   if (!page) notFound();
 
   // Toutes les images de la page en une seule requête, plutôt qu'une par image.
