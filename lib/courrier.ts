@@ -1,6 +1,6 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
-import { ligne, requete } from './bdd';
+import { ligne, poserReglage, requete } from './bdd';
 import { chiffrer, dechiffrer } from './secret';
 
 /**
@@ -51,7 +51,7 @@ const CLE = 'smtp';
 
 export async function lireSmtp(): Promise<ReglagesSmtp> {
   const l = await ligne<{ valeur: Partial<ReglagesSmtp> }>(
-    'SELECT valeur FROM reglages WHERE cle = $1',
+    'SELECT valeur FROM reglages WHERE cle = ?',
     [CLE],
   );
   return { ...SMTP_PAR_DEFAUT, ...(l?.valeur ?? {}) };
@@ -80,18 +80,14 @@ export async function ecrireSmtp(
     ? chiffrer(reglages.motDePasse)
     : actuel.motDePasse;
 
-  await requete(
-    `INSERT INTO reglages (cle, valeur) VALUES ($1, $2)
-     ON CONFLICT (cle) DO UPDATE SET valeur = $2, modifie_le = now()`,
-    [CLE, JSON.stringify({ ...reglages, motDePasse })],
-  );
+  await poserReglage(CLE, { ...reglages, motDePasse });
 }
 
 export async function effacerMotDePasseSmtp() {
   const actuel = await lireSmtp();
-  await requete('UPDATE reglages SET valeur = $2, modifie_le = now() WHERE cle = $1', [
-    CLE,
+  await requete('UPDATE reglages SET valeur = ?, modifie_le = now() WHERE cle = ?', [
     JSON.stringify({ ...actuel, motDePasse: null }),
+    CLE,
   ]);
 }
 

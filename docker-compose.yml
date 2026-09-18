@@ -1,8 +1,9 @@
 # Base de données de développement.
 #
-# Même moteur et même version que le serveur visé, pour que le passage du local
-# au VPS ne réserve aucune surprise — c'est la parade au risque nommé dans le
-# PRD (§ 12). Une seule commande suffit :
+# MySQL, comme l'hébergement du client : le mutualisé Hostinger ne propose que
+# cela. Développer sur un autre moteur que celui d'arrivée, c'est repousser les
+# mauvaises surprises au jour de la mise en ligne — le risque nommé au § 12 du
+# PRD. Une seule commande suffit :
 #
 #   docker compose up -d
 #
@@ -11,22 +12,27 @@
 
 services:
   base:
-    image: postgres:17-alpine
+    image: mysql:8.4
     container_name: kevin-machy-base
     restart: unless-stopped
+    command:
+      # Le fuseau du serveur est mis en temps universel, comme le pilote : une
+      # date écrite ici et relue ailleurs doit désigner le même instant.
+      - --default-time-zone=+00:00
     environment:
-      POSTGRES_USER: kevin
-      POSTGRES_PASSWORD: kevin
-      POSTGRES_DB: kevinmachy
+      MYSQL_ROOT_PASSWORD: racine
+      MYSQL_USER: kevin
+      MYSQL_PASSWORD: kevin
+      MYSQL_DATABASE: kevinmachy
     ports:
-      - '5432:5432'
+      - '3306:3306'
     volumes:
-      - donnees:/var/lib/postgresql/data
+      - donnees:/var/lib/mysql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U kevin -d kevinmachy']
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-ukevin', '-pkevin']
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   # Boîte aux lettres de développement.
   #

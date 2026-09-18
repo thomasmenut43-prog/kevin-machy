@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp, { type Metadata as MetaSharp, type Sharp } from 'sharp';
-import { ligne, requete } from './bdd';
+import { ecrire, estDoublon, ligne, requete, transaction } from './bdd';
 import type { Dossier, Media, Taille } from './modeles';
 
 export type { Dossier, Media, Taille } from './modeles';
@@ -27,7 +27,7 @@ const OCTETS_MAX = 25 * 1024 * 1024;
 const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff'];
 
 type LigneMedia = Omit<Media, 'aRemplacer' | 'dossierId'> & {
-  a_remplacer: boolean;
+  a_remplacer: number | boolean;
   dossier_id: number | null;
 };
 
@@ -39,7 +39,7 @@ const versMedia = (l: LigneMedia): Media => ({
   largeur: l.largeur,
   hauteur: l.hauteur,
   tailles: l.tailles ?? [],
-  aRemplacer: l.a_remplacer,
+  aRemplacer: Boolean(l.a_remplacer),
   dossierId: l.dossier_id,
 });
 
@@ -47,14 +47,13 @@ const CHAMPS = 'id, fichier, alt, legende, largeur, hauteur, tailles, a_remplace
 
 export async function listerMedias(limite = 200) {
   const lignes = await requete<LigneMedia>(
-    `SELECT ${CHAMPS} FROM medias ORDER BY cree_le DESC LIMIT $1`,
-    [limite],
+    `SELECT ${CHAMPS} FROM medias ORDER BY cree_le DESC LIMIT ${Math.trunc(limite) || 200}`,
   );
   return lignes.map(versMedia);
 }
 
 export async function mediaParId(id: number) {
-  const l = await ligne<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE id = $1`, [id]);
+  const l = await ligne<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE id = ?`, [id]);
   return l ? versMedia(l) : null;
 }
 
@@ -63,9 +62,10 @@ export async function mediasParIds(ids: number[]) {
   const utiles = [...new Set(ids.filter((n) => Number.isInteger(n) && n > 0))];
   if (!utiles.length) return new Map<number, Media>();
 
+  const marqueurs = utiles.map(() => '?').join(', ');
   const lignes = await requete<LigneMedia>(
-    `SELECT ${CHAMPS} FROM medias WHERE id = ANY($1::int[])`,
-    [utiles],
+    `SELECT ${CHAMPS} FROM medias WHERE id IN (${marqueurs})`,
+    utiles,
   );
   return new Map(lignes.map((l) => [l.id, versMedia(l)]));
 }
@@ -126,10 +126,9 @@ export async function enregistrerMedia(
     tailles.push({ largeur, fichier: nom });
   }
 
-  const cree = await ligne<LigneMedia>(
+  const { insertId } = await ecrire(
     `INSERT INTO medias (fichier, alt, type_mime, largeur, hauteur, octets, tailles, a_remplacer)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-     RETURNING ${CHAMPS}`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       principal,
       alt.trim().slice(0, 500),
@@ -138,10 +137,11 @@ export async function enregistrerMedia(
       meta.height,
       octets.length,
       JSON.stringify(tailles),
-      options?.aRemplacer ?? false,
+      options?.aRemplacer ? 1 : 0,
     ],
   );
 
+  const cree = await ligne<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE id = ?`, [insertId]);
   if (!cree) return { ok: false, message: 'L’enregistrement a échoué.' };
   return { ok: true, media: versMedia(cree) };
 }
@@ -204,11 +204,11 @@ export async function effacerAvatar(avatar: string | null) {
 }
 
 export async function majMedia(id: number, d: { alt: string; legende: string }) {
-  await requete('UPDATE medias SET alt = $2, legende = NULLIF($3, $4) WHERE id = $1', [
-    id,
+  await requete('UPDATE medias SET alt = ?, legende = NULLIF(?, ?) WHERE id = ?', [
     d.alt.trim().slice(0, 500),
     d.legende.trim().slice(0, 500),
     '',
+    id,
   ]);
 }
 
@@ -250,7 +250,7 @@ export async function supprimerMedia(id: number) {
   // octets orphelins, ce qui est sans conséquence. L'inverse laisserait une
   // ligne pointant vers le vide, que les pages afficheraient comme une image
   // cassée.
-  await requete('DELETE FROM medias WHERE id = $1', [id]);
+  await requete('DELETE FROM medias WHERE id = ?', [id]);
 
   for (const nom of [media.fichier, ...media.tailles.map((t) => t.fichier)]) {
     await rm(path.join(DOSSIER, nom), { force: true }).catch(() => {});
@@ -270,7 +270,7 @@ export async function supprimerMedia(id: number) {
  */
 export async function listerDossiers(): Promise<Dossier[]> {
   const lignes = await requete<{ id: number; nom: string; images: number; parent_id: number | null }>(
-    `SELECT d.id, d.nom, d.parent_id, count(m.id)::int AS images
+    `SELECT d.id, d.nom, d.parent_id, count(m.id) AS images
        FROM dossiers_medias d
        LEFT JOIN medias m ON m.dossier_id = d.id
       GROUP BY d.id, d.nom, d.parent_id
@@ -289,14 +289,14 @@ export async function creerDossier(
   try {
     // L'identifiant revient avec la création : l'écran ouvre aussitôt le champ
     // de renommage sur le dossier tout neuf, et il faut savoir lequel.
-    const cree = await ligne<{ id: number }>(
-      'INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2) RETURNING id',
+    const { insertId } = await ecrire(
+      'INSERT INTO dossiers_medias (nom, parent_id) VALUES (?, ?)',
       [propre, parentId],
     );
-    return { id: cree?.id };
+    return { id: insertId };
   } catch (erreur) {
-    // 23505 : deux dossiers du même nom seraient impossibles à distinguer.
-    if ((erreur as { code?: string }).code === '23505') {
+    // Deux dossiers du même nom seraient impossibles à distinguer.
+    if (estDoublon(erreur)) {
       return { erreur: 'Un dossier porte déjà ce nom.' };
     }
     throw erreur;
@@ -324,7 +324,7 @@ export async function renommerDossier(id: number, nom: string) {
   if (!propre) return { erreur: 'Donnez un nom au dossier.' };
 
   try {
-    await requete('UPDATE dossiers_medias SET nom = $2 WHERE id = $1', [id, propre]);
+    await requete('UPDATE dossiers_medias SET nom = ? WHERE id = ?', [propre, id]);
     return {};
   } catch (erreur) {
     if ((erreur as { code?: string }).code === '23505') {
@@ -335,12 +335,25 @@ export async function renommerDossier(id: number, nom: string) {
 }
 
 /** Le dossier disparaît, ses images non : elles retournent au fonds commun. */
+/**
+ * Supprime un dossier, et libère ce qu'il contenait.
+ *
+ * PostgreSQL détachait tout seul : ses clés étrangères remettaient à `NULL` les
+ * sous-dossiers et les images. MySQL refuse cette règle sur `parent_id`, dont
+ * dépend la colonne qui tient l'unicité des noms — le détachement se fait donc
+ * ici, en trois temps et dans une transaction : les sous-dossiers remontent à
+ * la racine, les images retournent aux non rangées, puis le dossier part.
+ */
 export async function supprimerDossier(id: number) {
-  await requete('DELETE FROM dossiers_medias WHERE id = $1', [id]);
+  await transaction(async (_q, e) => {
+    await e('UPDATE dossiers_medias SET parent_id = NULL WHERE parent_id = ?', [id]);
+    await e('UPDATE medias SET dossier_id = NULL WHERE dossier_id = ?', [id]);
+    await e('DELETE FROM dossiers_medias WHERE id = ?', [id]);
+  });
 }
 
 export async function rangerMedia(id: number, dossierId: number | null) {
-  await requete('UPDATE medias SET dossier_id = $2 WHERE id = $1', [id, dossierId]);
+  await requete('UPDATE medias SET dossier_id = ? WHERE id = ?', [dossierId, id]);
 }
 
 
@@ -364,7 +377,7 @@ export async function deplacerDossier(id: number, parentId: number | null) {
     }
   }
 
-  await requete('UPDATE dossiers_medias SET parent_id = $2 WHERE id = $1', [id, parentId]);
+  await requete('UPDATE dossiers_medias SET parent_id = ? WHERE id = ?', [parentId, id]);
   return {};
 }
 
@@ -379,7 +392,7 @@ export async function deplacerDossier(id: number, parentId: number | null) {
  */
 export async function dupliquerDossier(id: number, parentId?: number | null): Promise<number> {
   const source = await ligne<{ nom: string; parent_id: number | null }>(
-    'SELECT nom, parent_id FROM dossiers_medias WHERE id = $1',
+    'SELECT nom, parent_id FROM dossiers_medias WHERE id = ?',
     [id],
   );
   if (!source) return 0;
@@ -387,13 +400,13 @@ export async function dupliquerDossier(id: number, parentId?: number | null): Pr
   const cible = parentId === undefined ? source.parent_id : parentId;
   const nom = parentId === undefined ? `${source.nom} (copie)`.slice(0, 60) : source.nom;
 
-  const copie = await ligne<{ id: number }>(
-    'INSERT INTO dossiers_medias (nom, parent_id) VALUES ($1, $2) RETURNING id',
-    [nom, cible],
-  );
-  if (!copie) return 0;
+  const copie = await ecrire('INSERT INTO dossiers_medias (nom, parent_id) VALUES (?, ?)', [
+    nom,
+    cible,
+  ]);
+  if (!copie.insertId) return 0;
 
-  const images = await requete<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE dossier_id = $1`, [id]);
+  const images = await requete<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE dossier_id = ?`, [id]);
   let copiees = 0;
 
   for (const l of images) {
@@ -415,19 +428,19 @@ export async function dupliquerDossier(id: number, parentId?: number | null): Pr
     await requete(
       `INSERT INTO medias (fichier, alt, legende, largeur, hauteur, tailles, a_remplacer,
                            dossier_id, type_mime, octets)
-       SELECT $2, alt, legende, largeur, hauteur, $3::jsonb, a_remplacer, $4, type_mime, octets
-         FROM medias WHERE id = $1`,
-      [media.id, principal, JSON.stringify(tailles), copie.id],
+       SELECT ?, alt, legende, largeur, hauteur, ?, a_remplacer, ?, type_mime, octets
+         FROM medias WHERE id = ?`,
+      [principal, JSON.stringify(tailles), copie.insertId, media.id],
     );
     copiees++;
   }
 
   // Les sous-dossiers suivent, avec leur contenu.
   const enfants = await requete<{ id: number }>(
-    'SELECT id FROM dossiers_medias WHERE parent_id = $1',
+    'SELECT id FROM dossiers_medias WHERE parent_id = ?',
     [id],
   );
-  for (const enfant of enfants) copiees += await dupliquerDossier(enfant.id, copie.id);
+  for (const enfant of enfants) copiees += await dupliquerDossier(enfant.id, copie.insertId);
 
   return copiees;
 }
@@ -436,11 +449,11 @@ export async function dupliquerDossier(id: number, parentId?: number | null): Pr
 export async function compterRecursif(id: number) {
   const l = await ligne<{ n: number }>(
     `WITH RECURSIVE branche AS (
-       SELECT id FROM dossiers_medias WHERE id = $1
+       SELECT id FROM dossiers_medias WHERE id = ?
        UNION ALL
        SELECT d.id FROM dossiers_medias d JOIN branche b ON d.parent_id = b.id
      )
-     SELECT count(m.id)::int AS n FROM medias m WHERE m.dossier_id IN (SELECT id FROM branche)`,
+     SELECT count(m.id) AS n FROM medias m WHERE m.dossier_id IN (SELECT id FROM branche)`,
     [id],
   );
   return l?.n ?? 0;

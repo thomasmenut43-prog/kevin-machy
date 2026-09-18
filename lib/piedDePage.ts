@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, requete } from './bdd';
+import { ligne, poserReglage, requete } from './bdd';
 import type { LienNav, PiedDePage } from './modeles';
 import { NAV } from './site';
 
@@ -56,7 +56,7 @@ export const PIED_PAR_DEFAUT: PiedDePage = {
 export async function lirePied(): Promise<PiedDePage> {
   try {
     const [enregistre, pages] = await Promise.all([
-      ligne<{ valeur: Partial<PiedDePage> }>('SELECT valeur FROM reglages WHERE cle = $1', [CLE]),
+      ligne<{ valeur: Partial<PiedDePage> }>('SELECT valeur FROM reglages WHERE cle = ?', [CLE]),
       requete<{ chemin: string; titre: string }>(
         "SELECT chemin, titre FROM pages WHERE statut = 'publie'",
       ),
@@ -121,11 +121,7 @@ export async function ecrirePied(entrant: Partial<PiedDePage>): Promise<PiedDePa
     },
   };
 
-  await requete(
-    `INSERT INTO reglages (cle, valeur, modifie_le) VALUES ($1, $2, now())
-     ON CONFLICT (cle) DO UPDATE SET valeur = $2, modifie_le = now()`,
-    [CLE, JSON.stringify(propre)],
-  );
+  await poserReglage(CLE, propre);
 
   return lirePied();
 }

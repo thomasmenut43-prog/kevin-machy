@@ -49,7 +49,7 @@ export async function enregistrerVisite(v: {
 }) {
   await requete(
     `INSERT INTO visites (jour, chemin, visiteur, source, appareil)
-     VALUES (current_date, $1, $2, $3, $4)`,
+     VALUES (CURRENT_DATE, ?, ?, ?, ?)`,
     [v.chemin.slice(0, 300), v.visiteur, v.source, v.mobile ? 'mobile' : 'ordinateur'],
   );
 }
@@ -61,7 +61,7 @@ export async function enregistrerEvenement(e: {
 }) {
   if (!NOMS_EVENEMENTS.includes(e.nom as NomEvenement)) return;
   await requete(
-    'INSERT INTO evenements (jour, nom, chemin, visiteur) VALUES (current_date, $1, $2, $3)',
+    'INSERT INTO evenements (jour, nom, chemin, visiteur) VALUES (CURRENT_DATE, ?, ?, ?)',
     [e.nom, e.chemin.slice(0, 300), e.visiteur],
   );
 }
@@ -87,63 +87,75 @@ export type Audience = {
 export async function lireAudience(jours: number): Promise<Audience> {
   // Série complète, trous compris : un jour sans visite doit valoir zéro et non
   // disparaître, sinon la courbe ment sur la forme de la fréquentation.
-  const serie = await requete<{ jour: string; visiteurs: string; vues: string }>(
-    `SELECT to_char(d.jour, 'YYYY-MM-DD') AS jour,
-            count(DISTINCT v.visiteur)::text AS visiteurs,
-            count(v.id)::text AS vues
-       FROM generate_series(current_date - ($1::int - 1), current_date, '1 day') AS d(jour)
-       LEFT JOIN visites v ON v.jour = d.jour
-      GROUP BY d.jour
-      ORDER BY d.jour`,
-    [jours],
-  );
-
-  const totaux = await ligne<{ visiteurs: string; vues: string }>(
-    `SELECT count(DISTINCT visiteur)::text AS visiteurs, count(*)::text AS vues
-       FROM visites WHERE jour > current_date - $1::int`,
-    [jours],
-  );
-
-  const precedents = await ligne<{ visiteurs: string; vues: string }>(
-    `SELECT count(DISTINCT visiteur)::text AS visiteurs, count(*)::text AS vues
+  const releves = await requete<{ jour: string; visiteurs: number; vues: number }>(
+    `SELECT DATE_FORMAT(jour, '%Y-%m-%d') AS jour,
+            count(DISTINCT visiteur) AS visiteurs,
+            count(*) AS vues
        FROM visites
-      WHERE jour > current_date - ($1::int * 2) AND jour <= current_date - $1::int`,
+      WHERE jour > CURRENT_DATE - INTERVAL ? DAY
+      GROUP BY jour`,
     [jours],
   );
 
-  const sources = await requete<{ nom: string; vues: string }>(
-    `SELECT source AS nom, count(*)::text AS vues
-       FROM visites WHERE jour > current_date - $1::int
+  // La suite complète des jours, trous compris : un jour sans visite vaut zéro
+  // et ne disparaît pas, sinon la courbe ment sur la forme de la fréquentation.
+  const parJour = new Map(releves.map((r) => [r.jour, r]));
+  const serie: { jour: string; visiteurs: number; vues: number }[] = [];
+  for (let recul = jours - 1; recul >= 0; recul--) {
+    const date = new Date();
+    date.setUTCHours(0, 0, 0, 0);
+    date.setUTCDate(date.getUTCDate() - recul);
+    const cle = date.toISOString().slice(0, 10);
+    const trouve = parJour.get(cle);
+    serie.push({ jour: cle, visiteurs: Number(trouve?.visiteurs ?? 0), vues: Number(trouve?.vues ?? 0) });
+  }
+
+  const totaux = await ligne<{ visiteurs: number; vues: number }>(
+    `SELECT count(DISTINCT visiteur) AS visiteurs, count(*) AS vues
+       FROM visites WHERE jour > CURRENT_DATE - INTERVAL ? DAY`,
+    [jours],
+  );
+
+  const precedents = await ligne<{ visiteurs: number; vues: number }>(
+    `SELECT count(DISTINCT visiteur) AS visiteurs, count(*) AS vues
+       FROM visites
+      WHERE jour > CURRENT_DATE - INTERVAL ? DAY AND jour <= CURRENT_DATE - INTERVAL ? DAY`,
+    [jours * 2, jours],
+  );
+
+  const sources = await requete<{ nom: string; vues: number }>(
+    `SELECT source AS nom, count(*) AS vues
+       FROM visites WHERE jour > CURRENT_DATE - INTERVAL ? DAY
       GROUP BY source ORDER BY count(*) DESC LIMIT 8`,
     [jours],
   );
 
-  const pages = await requete<{ chemin: string; vues: string }>(
-    `SELECT chemin, count(*)::text AS vues
-       FROM visites WHERE jour > current_date - $1::int
+  const pages = await requete<{ chemin: string; vues: number }>(
+    `SELECT chemin, count(*) AS vues
+       FROM visites WHERE jour > CURRENT_DATE - INTERVAL ? DAY
       GROUP BY chemin ORDER BY count(*) DESC LIMIT 8`,
     [jours],
   );
 
-  const appareils = await requete<{ appareil: string; vues: string }>(
-    `SELECT appareil, count(*)::text AS vues
-       FROM visites WHERE jour > current_date - $1::int GROUP BY appareil`,
+  const appareils = await requete<{ appareil: string; vues: number }>(
+    `SELECT appareil, count(*) AS vues
+       FROM visites WHERE jour > CURRENT_DATE - INTERVAL ? DAY GROUP BY appareil`,
     [jours],
   );
 
-  const evenements = await requete<{ nom: string; total: string }>(
-    `SELECT nom, count(*)::text AS total
-       FROM evenements WHERE jour > current_date - $1::int
+  const evenements = await requete<{ nom: string; total: number }>(
+    `SELECT nom, count(*) AS total
+       FROM evenements WHERE jour > CURRENT_DATE - INTERVAL ? DAY
       GROUP BY nom ORDER BY count(*) DESC`,
     [jours],
   );
 
-  const n = (v: string | undefined) => Number(v ?? 0);
+  const n = (v: number | string | undefined | null) => Number(v ?? 0);
   const variation = (avant: number, apres: number) =>
     avant === 0 ? null : Math.round(((apres - avant) / avant) * 100);
 
   return {
-    jours: serie.map((j) => ({ jour: j.jour, visiteurs: n(j.visiteurs), vues: n(j.vues) })),
+    jours: serie,
     visiteurs: n(totaux?.visiteurs),
     vues: n(totaux?.vues),
     variationVisiteurs: variation(n(precedents?.visiteurs), n(totaux?.visiteurs)),
@@ -158,6 +170,6 @@ export async function lireAudience(jours: number): Promise<Audience> {
 
 /** Efface les visites de plus de deux ans : on n'a pas besoin d'en garder davantage. */
 export async function purgerAudience() {
-  await requete("DELETE FROM visites WHERE jour < current_date - 730");
-  await requete("DELETE FROM evenements WHERE jour < current_date - 730");
+  await requete('DELETE FROM visites WHERE jour < CURRENT_DATE - INTERVAL 730 DAY');
+  await requete('DELETE FROM evenements WHERE jour < CURRENT_DATE - INTERVAL 730 DAY');
 }

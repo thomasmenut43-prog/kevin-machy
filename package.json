@@ -21,9 +21,9 @@
     "predev": "docker compose up -d"
   },
   "dependencies": {
+    "mysql2": "^3.15.4",
     "next": "^16.3.4",
     "nodemailer": "^10.0.9",
-    "pg": "^8.23.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "server-only": "^0.0.1",
@@ -32,7 +32,6 @@
   "devDependencies": {
     "@types/node": "^26.4.1",
     "@types/nodemailer": "^8.0.1",
-    "@types/pg": "^8.23.1",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "playwright": "^1.62.1",

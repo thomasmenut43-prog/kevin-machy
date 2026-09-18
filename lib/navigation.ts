@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, requete } from './bdd';
+import { ligne, poserReglage, requete } from './bdd';
 import { lireEntreprise } from './entreprise';
 import { LIENS, NAV, SITE } from './site';
 import type { Navigation } from './modeles';
@@ -48,7 +48,7 @@ export const NAV_PAR_DEFAUT: Navigation = {
  */
 export async function lireNavigation(): Promise<Navigation> {
   const [enregistre, pages, entreprise] = await Promise.all([
-    ligne<{ valeur: Partial<Navigation> }>('SELECT valeur FROM reglages WHERE cle = $1', [CLE]),
+    ligne<{ valeur: Partial<Navigation> }>('SELECT valeur FROM reglages WHERE cle = ?', [CLE]),
     requete<{ chemin: string; titre: string }>(
       "SELECT chemin, titre FROM pages WHERE statut = 'publie'",
     ),
@@ -94,11 +94,7 @@ export async function ecrireNavigation(entrant: Partial<Navigation>) {
       : '',
   };
 
-  await requete(
-    `INSERT INTO reglages (cle, valeur, modifie_le) VALUES ($1, $2, now())
-     ON CONFLICT (cle) DO UPDATE SET valeur = $2, modifie_le = now()`,
-    [CLE, JSON.stringify(propre)],
-  );
+  await poserReglage(CLE, propre);
 
   return propre;
 }
