@@ -21,8 +21,9 @@ jobs:
     runs-on: ubuntu-latest
 
     # Les écrans du BackOffice interrogent la base à la construction : il leur
-    # faut une MySQL, même vide. Même version que docker-compose.yml — vérifier
-    # sur un autre moteur que celui d'arrivée ne vérifierait rien.
+    # faut une MariaDB, même vide — c'est ce que sert Hostinger, quoi qu'en
+    # dise son panneau. Même version que docker-compose.yml : vérifier sur un
+    # autre moteur que celui d'arrivée ne vérifierait rien.
     #
     # Une différence avec le développement, et elle est voulue : GitHub ne
     # permet pas de passer de commande à un service, donc pas de
@@ -31,16 +32,16 @@ jobs:
     # autrement.
     services:
       base:
-        image: mysql:8.4
+        image: mariadb:11.8
         env:
-          MYSQL_ROOT_PASSWORD: racine
-          MYSQL_USER: kevin
-          MYSQL_PASSWORD: kevin
-          MYSQL_DATABASE: kevinmachy
+          MARIADB_ROOT_PASSWORD: racine
+          MARIADB_USER: kevin
+          MARIADB_PASSWORD: kevin
+          MARIADB_DATABASE: kevinmachy
         ports:
           - 3306:3306
         options: >-
-          --health-cmd "mysqladmin ping -h 127.0.0.1 -ukevin -pkevin"
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
