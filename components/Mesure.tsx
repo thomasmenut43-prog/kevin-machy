@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { URL_MESURE } from '@/lib/guichets';
 
 /**
  * Compte les pages vues et les gestes qui comptent.
@@ -25,9 +26,9 @@ export function Mesure() {
       // `sendBeacon` survit à la fermeture de l'onglet, là où `fetch` serait
       // annulé : un clic sortant serait sinon perdu une fois sur deux.
       if (navigator.sendBeacon) {
-        navigator.sendBeacon('/api/mesure', new Blob([corps], { type: 'application/json' }));
+        navigator.sendBeacon(URL_MESURE, new Blob([corps], { type: 'application/json' }));
       } else {
-        fetch('/api/mesure', { method: 'POST', body: corps, keepalive: true }).catch(() => {});
+        fetch(URL_MESURE, { method: 'POST', body: corps, keepalive: true }).catch(() => {});
       }
     };
 
