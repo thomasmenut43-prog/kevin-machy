@@ -10,16 +10,19 @@
  * Trois pièces, et chacune répond à un besoin précis.
  */
 import { defineCloudflareConfig } from '@opennextjs/cloudflare';
-import r2IncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache';
+import kvIncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cache/kv-incremental-cache';
 import d1NextTagCache from '@opennextjs/cloudflare/overrides/tag-cache/d1-next-tag-cache';
 
 export default defineCloudflareConfig({
   /**
    * Où sont gardées les pages déjà calculées.
    *
-   * R2, comme les images : on y est déjà, et il ne facture pas la sortie.
+   * KV plutôt que R2, pour une raison qui n'est pas technique : R2 exige
+   * qu'une carte bancaire soit enregistrée sur le compte, même pour sa part
+   * gratuite. KV n'en demande pas, et son gigaoctet offert dépasse de loin ce
+   * que pèsent les pages d'un site vitrine.
    */
-  incrementalCache: r2IncrementalCache,
+  incrementalCache: kvIncrementalCache,
 
   /**
    * Ce qui fait que « Publier » met le site à jour.

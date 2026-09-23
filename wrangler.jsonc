@@ -34,12 +34,13 @@
 			// Les images de la médiathèque.
 			"binding": "MEDIAS",
 			"bucket_name": "kevin-machy-medias"
-		},
+		}
+	],
+	"kv_namespaces": [
 		{
-			// Les pages déjà calculées. Un seau distinct des images : on vide un
-			// cache sans réfléchir, jamais une médiathèque.
-			"binding": "NEXT_INC_CACHE_R2_BUCKET",
-			"bucket_name": "kevin-machy-cache"
+			// Les pages déjà calculées.
+			"binding": "NEXT_INC_CACHE_KV",
+			"id": "713636edcb6c4cf69bcb66c5e30e587b"
 		}
 	],
 	"d1_databases": [
