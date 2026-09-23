@@ -2,8 +2,8 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import sharp, { type Metadata as MetaSharp, type Sharp } from 'sharp';
 import { ecrire, estDoublon, ligne, requete, transaction } from './bdd';
+import { COTES_AVATAR, LARGEURS, OCTETS_MAX } from './largeurs-medias';
 import type { Dossier, Media, Taille } from './modeles';
 
 export type { Dossier, Media, Taille } from './modeles';
@@ -19,12 +19,34 @@ export { urlMedia } from './modeles';
  *
  * Chaque envoi produit quatre largeurs en WebP, comme le fait déjà le script
  * d'encodage du site. Le navigateur choisit celle qu'il lui faut.
+ *
+ * **L'encodage a lieu dans le navigateur**, pas ici — voir
+ * `lib/encoder-images.ts` pour la raison. Ce module ne reçoit donc que des
+ * octets déjà en WebP : il les vérifie, les écrit, et tient la fiche du média.
  */
 
 export const DOSSIER = path.resolve(process.cwd(), 'medias');
-export const LARGEURS = [480, 1024, 1600, 2400] as const;
-const OCTETS_MAX = 25 * 1024 * 1024;
-const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/tiff'];
+
+// Les formats vivent à part : le navigateur encode, et il ne peut pas lire un
+// module `server-only`. Les deux côtés doivent pourtant s'accorder au pixel.
+export { LARGEURS, COTES_AVATAR, TYPES } from './largeurs-medias';
+
+/**
+ * Les octets reçus sont-ils vraiment du WebP ?
+ *
+ * Le serveur ne décode plus les images, donc il ne peut plus constater de
+ * lui-même qu'un fichier est bien ce qu'il prétend. Cette vérification lui
+ * rend l'essentiel : un WebP commence par `RIFF`, puis quatre octets de
+ * longueur, puis `WEBP`. Rien d'autre ne passe, même envoyé par un compte
+ * légitime dont le navigateur aurait été détourné.
+ */
+function estWebp(octets: Buffer) {
+  return (
+    octets.length > 12 &&
+    octets.toString('ascii', 0, 4) === 'RIFF' &&
+    octets.toString('ascii', 8, 12) === 'WEBP'
+  );
+}
 
 type LigneMedia = Omit<Media, 'aRemplacer' | 'dossierId'> & {
   a_remplacer: number | boolean;
@@ -72,35 +94,48 @@ export async function mediasParIds(ids: number[]) {
 
 export type ResultatEnvoi = { ok: true; media: Media } | { ok: false; message: string };
 
+/** Une image déjà encodée par le navigateur, telle qu'elle arrive ici. */
+export type ImageRecue = {
+  largeur: number;
+  hauteur: number;
+  /** Poids du fichier d'origine, avant réencodage. */
+  octets: number;
+  principal: Blob;
+  variantes: { largeur: number; blob: Blob }[];
+};
+
 export async function enregistrerMedia(
-  fichier: File,
+  recue: ImageRecue,
   alt: string,
   options?: { aRemplacer?: boolean },
 ): Promise<ResultatEnvoi> {
   if (!alt.trim()) {
     return { ok: false, message: 'Le texte alternatif est obligatoire.' };
   }
-  if (!TYPES.includes(fichier.type)) {
-    return { ok: false, message: 'Format non accepté. JPEG, PNG, WebP, AVIF ou TIFF.' };
+  if (!Number.isInteger(recue.largeur) || !Number.isInteger(recue.hauteur)) {
+    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
   }
-  if (fichier.size > OCTETS_MAX) {
+  if (recue.largeur < 1 || recue.hauteur < 1) {
+    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  }
+  if (recue.octets > OCTETS_MAX) {
     return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
   }
 
-  const octets = Buffer.from(await fichier.arrayBuffer());
+  const illisible = { ok: false as const, message: 'Ce fichier n’est pas une image lisible.' };
 
-  // Sharp lit l'image pour de vrai : un fichier qui se prétend JPEG sans en
-  // être un échoue ici, avant d'avoir été écrit sur le disque.
-  let image: Sharp;
-  let meta: MetaSharp;
-  try {
-    image = sharp(octets, { failOn: 'error' });
-    meta = await image.metadata();
-  } catch {
-    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
-  }
-  if (!meta.width || !meta.height) {
-    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  const principal = Buffer.from(await recue.principal.arrayBuffer());
+  if (!estWebp(principal)) return illisible;
+
+  // La largeur sert à composer un nom de fichier : elle ne peut être que l'une
+  // de celles qu'on produit. Sans ce contrôle, une valeur choisie par
+  // l'appelant écrirait où bon lui semble.
+  const variantes: { largeur: number; octets: Buffer }[] = [];
+  for (const v of recue.variantes) {
+    if (!LARGEURS.includes(v.largeur as (typeof LARGEURS)[number])) return illisible;
+    const octets = Buffer.from(await v.blob.arrayBuffer());
+    if (!estWebp(octets)) return illisible;
+    variantes.push({ largeur: v.largeur, octets });
   }
 
   await mkdir(DOSSIER, { recursive: true });
@@ -108,21 +143,14 @@ export async function enregistrerMedia(
   // Nom tiré au hasard : le nom d'origine peut contenir n'importe quoi, y
   // compris des séquences qui feraient sortir du dossier.
   const base = randomBytes(12).toString('hex');
-  const principal = `${base}.webp`;
+  const nomPrincipal = `${base}.webp`;
 
-  await writeFile(
-    path.join(DOSSIER, principal),
-    await image.clone().rotate().webp({ quality: 82 }).toBuffer(),
-  );
+  await writeFile(path.join(DOSSIER, nomPrincipal), principal);
 
   const tailles: Taille[] = [];
-  for (const largeur of LARGEURS) {
-    if (largeur > meta.width) continue;
+  for (const { largeur, octets } of variantes) {
     const nom = `${base}-${largeur}.webp`;
-    await writeFile(
-      path.join(DOSSIER, nom),
-      await image.clone().rotate().resize({ width: largeur }).webp({ quality: 80 }).toBuffer(),
-    );
+    await writeFile(path.join(DOSSIER, nom), octets);
     tailles.push({ largeur, fichier: nom });
   }
 
@@ -130,12 +158,12 @@ export async function enregistrerMedia(
     `INSERT INTO medias (fichier, alt, type_mime, largeur, hauteur, octets, tailles, a_remplacer)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
-      principal,
+      nomPrincipal,
       alt.trim().slice(0, 500),
       'image/webp',
-      meta.width,
-      meta.height,
-      octets.length,
+      recue.largeur,
+      recue.hauteur,
+      recue.octets,
       JSON.stringify(tailles),
       options?.aRemplacer ? 1 : 0,
     ],
@@ -156,23 +184,25 @@ export type ResultatAvatar = { ok: true; nom: string } | { ok: false; message: s
  * dans le même dossier et passe par la même route — deux carrés, 256 et 128 —
  * mais n'est référencée que par la ligne du compte.
  */
-export async function enregistrerAvatar(fichier: File): Promise<ResultatAvatar> {
-  if (!TYPES.includes(fichier.type)) {
-    return { ok: false, message: 'Format non accepté. JPEG, PNG, WebP, AVIF ou TIFF.' };
-  }
-  if (fichier.size > OCTETS_MAX) {
-    return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
-  }
+export async function enregistrerAvatar(
+  carres: { largeur: number; blob: Blob }[],
+): Promise<ResultatAvatar> {
+  const illisible = { ok: false as const, message: 'Ce fichier n’est pas une image lisible.' };
 
-  const octets = Buffer.from(await fichier.arrayBuffer());
+  // Les deux tailles sont attendues, ni plus ni moins : une photo de profil
+  // sans sa vignette s'afficherait à trous selon l'écran.
+  if (carres.length !== COTES_AVATAR.length) return illisible;
 
-  let image: Sharp;
-  try {
-    image = sharp(octets, { failOn: 'error' });
-    const meta = await image.metadata();
-    if (!meta.width || !meta.height) throw new Error('illisible');
-  } catch {
-    return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
+  const prets: { cote: number; octets: Buffer }[] = [];
+  for (const cote of COTES_AVATAR) {
+    const carre = carres.find((c) => c.largeur === cote);
+    if (!carre) return illisible;
+    const octets = Buffer.from(await carre.blob.arrayBuffer());
+    if (!estWebp(octets)) return illisible;
+    if (octets.length > OCTETS_MAX) {
+      return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
+    }
+    prets.push({ cote, octets });
   }
 
   await mkdir(DOSSIER, { recursive: true });
@@ -180,16 +210,8 @@ export async function enregistrerAvatar(fichier: File): Promise<ResultatAvatar> 
   // Même longueur de nom que la médiathèque : la route qui sert les fichiers
   // n'accepte que cette forme, et une photo de profil doit y passer aussi.
   const base = randomBytes(12).toString('hex');
-  for (const largeur of [256, 128] as const) {
-    await writeFile(
-      path.join(DOSSIER, `${base}-${largeur}.webp`),
-      await image
-        .clone()
-        .rotate()
-        .resize({ width: largeur, height: largeur, fit: 'cover', position: 'attention' })
-        .webp({ quality: 82 })
-        .toBuffer(),
-    );
+  for (const { cote, octets } of prets) {
+    await writeFile(path.join(DOSSIER, `${base}-${cote}.webp`), octets);
   }
 
   return { ok: true, nom: base };
@@ -198,8 +220,8 @@ export async function enregistrerAvatar(fichier: File): Promise<ResultatAvatar> 
 /** Efface les fichiers d'une photo de profil remplacée ou retirée. */
 export async function effacerAvatar(avatar: string | null) {
   if (!avatar || !/^[a-f0-9]{24}$/.test(avatar)) return;
-  for (const largeur of [256, 128] as const) {
-    await rm(path.join(DOSSIER, `${avatar}-${largeur}.webp`), { force: true });
+  for (const cote of COTES_AVATAR) {
+    await rm(path.join(DOSSIER, `${avatar}-${cote}.webp`), { force: true });
   }
 }
 

@@ -14,7 +14,7 @@ import {
   supprimerUtilisateur,
   utilisateurConnecte,
 } from '@/lib/auth';
-import { effacerAvatar, enregistrerAvatar } from '@/lib/medias';
+import { COTES_AVATAR, effacerAvatar, enregistrerAvatar } from '@/lib/medias';
 
 async function exigerConnexion() {
   const utilisateur = await utilisateurConnecte();
@@ -193,12 +193,18 @@ export async function actionMonEmail(_p: EtatCompte, donnees: FormData): Promise
 export async function actionMaPhoto(_p: EtatCompte, donnees: FormData): Promise<EtatCompte> {
   const moi = await exigerConnexion();
 
-  const fichier = donnees.get('photo');
-  if (!(fichier instanceof File) || fichier.size === 0) {
-    return { erreur: 'Choisissez une image.' };
+  // Le navigateur a déjà découpé les deux carrés : ici on ne fait que les
+  // relire. `enregistrerAvatar` vérifie qu'ils sont bien du WebP.
+  const carres: { largeur: number; blob: Blob }[] = [];
+  for (const cote of COTES_AVATAR) {
+    const blob = donnees.get(`carre${cote}`);
+    if (!(blob instanceof Blob) || blob.size === 0) {
+      return { erreur: 'Choisissez une image.' };
+    }
+    carres.push({ largeur: cote, blob });
   }
 
-  const resultat = await enregistrerAvatar(fichier);
+  const resultat = await enregistrerAvatar(carres);
   if (!resultat.ok) return { erreur: resultat.message };
 
   // L'ancienne photo n'est effacée qu'une fois la nouvelle en base : l'ordre
