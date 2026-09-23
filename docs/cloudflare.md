@@ -40,14 +40,29 @@ vérifie donc la signature `RIFF…WEBP`, et refuse une largeur qui ne serait pa
 l'une des siennes — sans quoi un nom de fichier choisi par l'appelant écrirait
 où bon lui semble.
 
-## Ce qui reste, dans l'ordre
+## Ce qui a été levé : le disque
 
-**1. Les fichiers.** `lib/medias.ts` écrit encore sur le disque
-(`node:fs/promises`), et `app/medias/[fichier]/route.ts` les relit de même. Ça
-**compile** sous `nodejs_compat` mais échouerait à l'exécution : un Worker n'a
-pas de disque. Il faut R2. C'est le prochain chantier, et le plus gros.
+`lib/medias.ts` écrivait sur le disque et la route des médias l'y relisait. Ça
+**compilait** sous `nodejs_compat`, mais aurait échoué à l'exécution : un
+Worker n'a pas de disque.
 
-**2. La base.** Elle reste chez Hostinger, jointe par Hyperdrive. Deux
+Les deux passent désormais par un **coffre** (`lib/coffre.ts`) : quatre
+opérations — écrire, lire, effacer, copier — et deux mises en œuvre. Le disque
+reste le choix par défaut et sert au développement comme à tout hébergement
+qui soit un vrai serveur ; R2 prend le relais quand `COFFRE=r2`.
+
+Chacune est chargée à la demande, sans quoi la version Workers embarquerait
+`node:fs` et la version Node un client R2.
+
+Le seau est à créer avant le premier déploiement :
+
+```bash
+npx wrangler r2 bucket create kevin-machy-medias
+```
+
+## Ce qui reste
+
+**La base.** Elle reste chez Hostinger, jointe par Hyperdrive. Deux
 préalables que le code ne peut pas résoudre :
 
 - l'accès distant de Hostinger n'accepte qu'**une adresse ou `%`**, et
@@ -59,9 +74,25 @@ préalables que le code ne peut pas résoudre :
 Ensuite seulement `lib/bdd.ts` prendra sa connexion depuis la liaison plutôt
 que de `DATABASE_URI`.
 
-**3. Le cache.** `open-next.config.ts` est nu. Le cache incrémental sur R2 et
-la référence au Worker lui-même restent à brancher, sans quoi chaque page se
+**Le cache.** `open-next.config.ts` est nu. Le cache incrémental sur R2 et la
+référence au Worker lui-même restent à brancher, sans quoi chaque page se
 recalcule à chaque visite.
+
+**Le déménagement des fichiers existants.** Le coffre sait écrire dans R2, mais
+personne n'y a encore versé ce qui dort dans `medias/`. À faire le jour du
+basculement, pas avant.
+
+## Les types des liaisons
+
+`worker-configuration.d.ts` est **engendré**, pas écrit à la main :
+
+```bash
+npx wrangler types     # à relancer après toute modification de wrangler.jsonc
+```
+
+Il apporte au passage un typage plus strict du `Request` des Workers —
+`json()` n'y rend plus `any`. C'est un gain de justesse, mais il oblige à
+typer les corps qu'on lisait à l'aveugle.
 
 ## Un détail d'atelier
 
