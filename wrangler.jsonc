@@ -17,10 +17,28 @@
 	},
 	"r2_buckets": [
 		{
-			// Les images de la médiathèque. Le seau est à créer avant le premier
-			// déploiement : `npx wrangler r2 bucket create kevin-machy-medias`.
+			// Les images de la médiathèque.
+			// npx wrangler r2 bucket create kevin-machy-medias
 			"binding": "MEDIAS",
 			"bucket_name": "kevin-machy-medias"
+		},
+		{
+			// Les pages déjà calculées. Un seau distinct des images : on vide un
+			// cache sans réfléchir, jamais une médiathèque.
+			// npx wrangler r2 bucket create kevin-machy-cache
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "kevin-machy-cache"
+		}
+	],
+	"d1_databases": [
+		{
+			// Le registre qui relie chaque page en cache à ce qu'elle contient.
+			// C'est lui qui permet à « Publier » de savoir quoi rafraîchir.
+			// npx wrangler d1 create kevin-machy-etiquettes
+			// puis recopier ici l'identifiant qu'il affiche.
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "kevin-machy-etiquettes",
+			"database_id": "A-REMPLACER-PAR-L-IDENTIFIANT-RENDU-PAR-WRANGLER"
 		}
 	]
 }

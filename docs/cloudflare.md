@@ -74,13 +74,42 @@ préalables que le code ne peut pas résoudre :
 Ensuite seulement `lib/bdd.ts` prendra sa connexion depuis la liaison plutôt
 que de `DATABASE_URI`.
 
-**Le cache.** `open-next.config.ts` est nu. Le cache incrémental sur R2 et la
-référence au Worker lui-même restent à brancher, sans quoi chaque page se
-recalcule à chaque visite.
-
 **Le déménagement des fichiers existants.** Le coffre sait écrire dans R2, mais
 personne n'y a encore versé ce qui dort dans `medias/`. À faire le jour du
 basculement, pas avant.
+
+## Le cache
+
+Sans réglage, chaque visite recalculerait la page : le Worker interrogerait la
+base, rendrait le HTML, et recommencerait au visiteur suivant. Les pages
+portent déjà `revalidate = 300` — encore faut-il dire à Cloudflare **où**
+garder ce qui a été calculé.
+
+| pièce | où | à quoi ça sert |
+|---|---|---|
+| `incrementalCache` | R2, seau `kevin-machy-cache` | garde les pages déjà rendues |
+| `tagCache` | D1, `kevin-machy-etiquettes` | **c'est ce qui fait marcher « Publier »** |
+| `queue` | `direct` | refait une page périmée dans la foulée |
+
+Le registre d'étiquettes mérite un mot. Quand Kevin publie, l'éditeur appelle
+`revalidatePath`. Pour savoir quelles pages en cache cela concerne, il faut
+avoir noté ce que chacune contient — c'est ce registre. Sans lui, le bouton
+Publier resterait sans effet visible pendant cinq minutes.
+
+Pour la file, `direct` suffit : l'autre voie passe par des objets durables,
+utiles quand les régénérations se bousculent, ce qui suppose un trafic que ce
+site n'aura pas. Une pièce de moins à entretenir.
+
+Trois ressources à créer avant le premier déploiement :
+
+```bash
+npx wrangler r2 bucket create kevin-machy-medias
+npx wrangler r2 bucket create kevin-machy-cache
+npx wrangler d1 create kevin-machy-etiquettes    # recopier l'identifiant rendu
+```
+
+Le `database_id` de D1 est un **emplacement à remplir** dans `wrangler.jsonc` :
+il n'existe qu'une fois la base créée.
 
 ## Les types des liaisons
 
