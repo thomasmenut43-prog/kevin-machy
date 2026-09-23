@@ -32,21 +32,29 @@ export type Coffre = {
 };
 
 /**
- * `COFFRE=r2` bascule sur R2. Absent, on écrit sur le disque.
+ * `COFFRE` désigne le rangement. Absent, on écrit sur le disque.
+ *
+ * | valeur | où |
+ * |---|---|
+ * | absent | le disque, à côté de l'application |
+ * | `hostinger` | chez Hostinger, par un guichet PHP |
+ *
+ * R2 avait été écrit puis retiré : il exige une carte bancaire sur le compte,
+ * même pour sa part offerte, et Hostinger offre dix fois plus d'espace déjà
+ * payé. L'implémentation est dans l'historique si le vent tourne.
  *
  * Le choix est explicite plutôt que deviné. Renifler l'environnement marche
  * jusqu'au jour où il se trompe, et ce jour-là on écrit des fichiers là où
  * personne n'ira les chercher.
  */
-const SUR_R2 = process.env.COFFRE === 'r2';
-
 let choisi: Promise<Coffre> | null = null;
 
 export function coffre(): Promise<Coffre> {
   if (!choisi) {
-    choisi = SUR_R2
-      ? import('./coffre-r2').then((m) => m.coffreR2())
-      : import('./coffre-disque').then((m) => m.coffreDisque());
+    choisi =
+      process.env.COFFRE === 'hostinger'
+        ? import('./coffre-hostinger').then((m) => m.coffreHostinger())
+        : import('./coffre-disque').then((m) => m.coffreDisque());
   }
   return choisi;
 }

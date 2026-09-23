@@ -49,16 +49,17 @@ Worker n'a pas de disque.
 Les deux passent désormais par un **coffre** (`lib/coffre.ts`) : quatre
 opérations — écrire, lire, effacer, copier — et deux mises en œuvre. Le disque
 reste le choix par défaut et sert au développement comme à tout hébergement
-qui soit un vrai serveur ; R2 prend le relais quand `COFFRE=r2`.
+qui soit un vrai serveur ; le guichet de Hostinger prend le relais quand
+`COFFRE=hostinger`.
 
 Chacune est chargée à la demande, sans quoi la version Workers embarquerait
-`node:fs` et la version Node un client R2.
+`node:fs` et la version Node un client dont elle n'a que faire.
 
-Le seau est à créer avant le premier déploiement :
-
-```bash
-npx wrangler r2 bucket create kevin-machy-medias
-```
+**R2 avait été écrit, puis retiré.** Il exige une carte bancaire sur le compte
+même pour sa part offerte, et Hostinger offre dix fois plus d'espace déjà payé.
+Surtout, les images y sont servies par Apache et ne passent plus par le Worker :
+Cloudflare compte chaque requête, et une page de vingt photographies en vaudrait
+vingt-et-une. La mise en place est décrite dans `hostinger/LISEZ-MOI.md`.
 
 ## Ce qui a été levé : la base
 
@@ -92,9 +93,9 @@ Puis la passerelle se crée, et donne l'identifiant à poser dans
 npx wrangler hyperdrive create kevin-machy-base   --connection-string="mysql://UTILISATEUR:MOTDEPASSE@srv926.hstgr.io:3306/BASE"
 ```
 
-**Le déménagement des fichiers existants.** Le coffre sait écrire dans R2, mais
-personne n'y a encore versé ce qui dort dans `medias/`. À faire le jour du
-basculement, pas avant.
+**Le déménagement des fichiers existants.** Le guichet sait écrire chez
+Hostinger, mais personne n'y a encore versé ce qui dort dans `medias/`. À faire
+le jour du basculement, pas avant.
 
 ## Le cache
 
@@ -105,7 +106,7 @@ garder ce qui a été calculé.
 
 | pièce | où | à quoi ça sert |
 |---|---|---|
-| `incrementalCache` | R2, seau `kevin-machy-cache` | garde les pages déjà rendues |
+| `incrementalCache` | KV | garde les pages déjà rendues |
 | `tagCache` | D1, `kevin-machy-etiquettes` | **c'est ce qui fait marcher « Publier »** |
 | `queue` | `direct` | refait une page périmée dans la foulée |
 
@@ -118,16 +119,16 @@ Pour la file, `direct` suffit : l'autre voie passe par des objets durables,
 utiles quand les régénérations se bousculent, ce qui suppose un trafic que ce
 site n'aura pas. Une pièce de moins à entretenir.
 
-Trois ressources à créer avant le premier déploiement :
+KV plutôt que R2, là encore pour éviter la carte bancaire. Son gigaoctet offert
+dépasse largement ce que pèsent les pages d'un site vitrine.
 
-```bash
-npx wrangler r2 bucket create kevin-machy-medias
-npx wrangler r2 bucket create kevin-machy-cache
-npx wrangler d1 create kevin-machy-etiquettes    # recopier l'identifiant rendu
-```
+Les ressources sont créées, leurs identifiants sont dans `wrangler.jsonc` :
 
-Le `database_id` de D1 est un **emplacement à remplir** dans `wrangler.jsonc` :
-il n'existe qu'une fois la base créée.
+| | |
+|---|---|
+| Hyperdrive | `5ec15d5b93d84f13ae16e4f44889027b` |
+| KV | `713636edcb6c4cf69bcb66c5e30e587b` |
+| D1 | `6d19748f-0f9a-498c-bf7d-9f4a679086df` |
 
 ## Les types des liaisons
 

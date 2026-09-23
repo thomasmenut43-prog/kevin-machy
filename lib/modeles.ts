@@ -36,24 +36,40 @@ export type Media = {
 };
 
 /**
+ * D'où sont servies les images de la médiathèque.
+ *
+ * Vide, elles passent par la route `/medias/` de l'application — c'est le cas
+ * sur un serveur classique, où les fichiers sont sur le disque d'à côté.
+ *
+ * Renseignée, elles viennent d'ailleurs. C'est ce qu'on fait avec Cloudflare :
+ * les photographies restent chez Hostinger, sur un sous-domaine qui ne passe
+ * pas par le Worker. Deux raisons, et la seconde surprend : un hébergement
+ * mutualisé sert un fichier figé mieux qu'un Worker ne le relaierait, et
+ * surtout Cloudflare compte chaque requête. Une page de vingt photos en vaut
+ * vingt-et-une — de quoi entamer sérieusement les cent mille quotidiennes
+ * offertes, pour des fichiers qu'Apache rend sans effort.
+ */
+const BASE_MEDIAS = (process.env.NEXT_PUBLIC_BASE_MEDIAS ?? '').replace(/\/+$/, '');
+
+/**
  * L'adresse publique d'une image.
  *
  * Deux origines cohabitent, et c'est volontaire. Les images envoyées depuis le
- * BackOffice sont servies par la route dédiée ; celles encodées à l'avance par
+ * BackOffice sont servies par la médiathèque ; celles encodées à l'avance par
  * le script d'images du site portent déjà leur chemin complet et sont servies
  * telles quelles. Un `/` en tête suffit à les distinguer.
  */
 export const urlMedia = (fichier: string) =>
-  fichier.startsWith('/') ? fichier : `/medias/${fichier}`;
+  fichier.startsWith('/') ? fichier : `${BASE_MEDIAS || '/medias'}/${fichier}`;
 
 /**
  * La photo de profil d'un compte, dans la largeur demandée.
  *
- * Elle emprunte la même route que la médiathèque sans y figurer : le carré de
+ * Elle suit le même chemin que la médiathèque sans y figurer : le carré de
  * 256 pour une fiche, celui de 128 pour la pastille du menu.
  */
 export const urlAvatar = (avatar: string, largeur: 128 | 256 = 256) =>
-  `/medias/${avatar}-${largeur}.webp`;
+  `${BASE_MEDIAS || '/medias'}/${avatar}-${largeur}.webp`;
 
 // ————————————————————————————— Entreprise —————————————————————————————
 

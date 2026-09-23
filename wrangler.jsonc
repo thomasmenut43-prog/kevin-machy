@@ -11,12 +11,21 @@
 		"binding": "ASSETS"
 	},
 	"vars": {
-		// Dit au coffre où ranger les images. Absent, il écrit sur le disque —
-		// ce qui reste le bon choix partout ailleurs que dans un Worker.
-		"COFFRE": "r2",
+		// Les images restent chez Hostinger : cent gigaoctets déjà payés contre
+		// dix chez Cloudflare, servies par Apache sans passer par le Worker, et
+		// sans carte bancaire à poser sur le compte du client.
+		"COFFRE": "hostinger",
+		"GUICHET_MEDIAS": "https://medias.dronezvous.com/guichet-medias.php",
+		// D'où le navigateur va chercher les images. Le sous-domaine pointe vers
+		// Hostinger, pas vers le Worker : chaque photographie servie ici
+		// n'entame pas les cent mille requêtes quotidiennes de Cloudflare.
+		"NEXT_PUBLIC_BASE_MEDIAS": "https://medias.dronezvous.com",
 		// Dit à la base de passer par Hyperdrive plutôt que par `DATABASE_URI`.
 		"BASE": "hyperdrive"
 	},
+	// Le jeton du guichet n'est pas ici : il se pose à part, et ne traverse
+	// jamais le dépôt.
+	//   npx wrangler secret put JETON_MEDIAS
 	"hyperdrive": [
 		{
 			// La passerelle vers la MariaDB restée chez Hostinger. Elle tient des
@@ -27,13 +36,6 @@
 			// republiée se refabriquerait parfois avec l'ancien contenu.
 			"binding": "HYPERDRIVE",
 			"id": "5ec15d5b93d84f13ae16e4f44889027b"
-		}
-	],
-	"r2_buckets": [
-		{
-			// Les images de la médiathèque.
-			"binding": "MEDIAS",
-			"bucket_name": "kevin-machy-medias"
 		}
 	],
 	"kv_namespaces": [
