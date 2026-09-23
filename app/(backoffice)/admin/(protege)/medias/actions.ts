@@ -15,6 +15,7 @@ import {
   supprimerDossier,
   supprimerMedia,
   utilisationsMedia,
+  type ImageRecue,
 } from '@/lib/medias';
 
 /** Toute action passe par ce garde : une action serveur est une adresse comme une autre. */
@@ -26,15 +27,57 @@ async function exigerConnexion() {
 
 export type EtatMedia = { erreur?: string; envoyees?: number; saisi?: { alt?: string } };
 
+/**
+ * Relit une image déjà encodée par le navigateur.
+ *
+ * Le formulaire est plat : chaque image porte son rang dans le nom de ses
+ * champs. `img0.principal`, `img0.largeur`, `img0.v480`… Rien ici n'est cru
+ * sur parole — `enregistrerMedia` revérifie que chaque morceau est bien du
+ * WebP et que chaque largeur est l'une des nôtres.
+ */
+function lireImage(donnees: FormData, rang: number): ImageRecue | null {
+  const champ = (nom: string) => donnees.get(`img${rang}.${nom}`);
+
+  const principal = champ('principal');
+  if (!(principal instanceof Blob) || principal.size === 0) return null;
+
+  const largeurs = String(champ('variantes') ?? '')
+    .split(',')
+    .filter(Boolean)
+    .map(Number);
+
+  const variantes: ImageRecue['variantes'] = [];
+  for (const largeur of largeurs) {
+    const blob = champ(`v${largeur}`);
+    if (!(blob instanceof Blob) || blob.size === 0) return null;
+    variantes.push({ largeur, blob });
+  }
+
+  return {
+    largeur: Number(champ('largeur') ?? 0),
+    hauteur: Number(champ('hauteur') ?? 0),
+    octets: Number(champ('octets') ?? 0),
+    principal,
+    variantes,
+  };
+}
+
 export async function actionEnvoyer(_p: EtatMedia, donnees: FormData): Promise<EtatMedia> {
   await exigerConnexion();
 
-  const fichiers = donnees.getAll('fichiers').filter((f): f is File => f instanceof File && f.size > 0);
   const alt = String(donnees.get('alt') ?? '').trim();
   const aRemplacer = donnees.get('aRemplacer') === 'on';
   const dossier = Number(donnees.get('dossier') ?? 0) || null;
+  const combien = Number(donnees.get('combien') ?? 0);
 
-  if (!fichiers.length) return { erreur: 'Choisissez au moins une image.', saisi: { alt } };
+  const images: ImageRecue[] = [];
+  for (let i = 0; i < combien; i++) {
+    const image = lireImage(donnees, i);
+    if (!image) return { erreur: 'Une des images n’est pas arrivée entière.', saisi: { alt } };
+    images.push(image);
+  }
+
+  if (!images.length) return { erreur: 'Choisissez au moins une image.', saisi: { alt } };
   if (!alt) {
     return {
       erreur: 'Le texte alternatif est obligatoire : sans lui, ni référencement ni accessibilité.',
@@ -43,11 +86,11 @@ export async function actionEnvoyer(_p: EtatMedia, donnees: FormData): Promise<E
   }
 
   let envoyees = 0;
-  for (const [i, fichier] of fichiers.entries()) {
+  for (const [i, image] of images.entries()) {
     // Plusieurs images d'un coup partagent la même description, numérotée.
     // Kevin l'affinera image par image, mais aucune n'entre sans description.
-    const description = fichiers.length > 1 ? `${alt} (${i + 1})` : alt;
-    const resultat = await enregistrerMedia(fichier, description, { aRemplacer });
+    const description = images.length > 1 ? `${alt} (${i + 1})` : alt;
+    const resultat = await enregistrerMedia(image, description, { aRemplacer });
     if (!resultat.ok) return { erreur: resultat.message, envoyees, saisi: { alt } };
     // Les images arrivent rangées : le classement après coup ne se fait jamais.
     if (dossier) await rangerMedia(resultat.media.id, dossier);

@@ -3,6 +3,8 @@
 import type React from 'react';
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
+import { encoderImage, ImageIllisible } from '@/lib/encoder-images';
+import { LARGEURS } from '@/lib/largeurs-medias';
 import { urlMedia, type Dossier, type Media } from '@/lib/modeles';
 import {
   actionCompterDossier,
@@ -698,11 +700,19 @@ function IconeDossierPlus() {
   );
 }
 
-function BoutonEnvoi() {
-  const { pending } = useFormStatus();
+/**
+ * L'état est passé, plus lu par `useFormStatus`.
+ *
+ * Le formulaire ne se soumet plus directement : il encode d'abord les images
+ * dans le navigateur, et ce temps-là doit se voir. `useFormStatus` ne connaît
+ * que l'aller-retour serveur, donc il resterait muet pendant le plus long.
+ */
+function BoutonEnvoi({ etape }: { etape: null | 'encodage' | 'envoi' }) {
+  const libelle =
+    etape === 'encodage' ? 'Redimensionnement…' : etape === 'envoi' ? 'Envoi…' : 'Envoyer';
   return (
-    <button className="bo-bouton" type="submit" disabled={pending}>
-      {pending ? 'Envoi et redimensionnement…' : 'Envoyer'}
+    <button className="bo-bouton" type="submit" disabled={etape !== null}>
+      {libelle}
     </button>
   );
 }
@@ -718,6 +728,8 @@ function FormulaireEnvoi({
 }) {
   const [etat, action] = useActionState(actionEnvoyer, VIDE);
   const [noms, setNoms] = useState<string[]>([]);
+  const [etape, setEtape] = useState<null | 'encodage' | 'envoi'>(null);
+  const [erreurLocale, setErreurLocale] = useState<string | null>(null);
 
   // L'envoi réussi referme la fenêtre : rester devant un formulaire vide ne
   // dit pas si quelque chose est arrivé.
@@ -727,11 +739,71 @@ function FormulaireEnvoi({
     return () => clearTimeout(minuteur);
   }, [etat.envoyees, onFini]);
 
+  /**
+   * Les images sont réduites ici, dans le navigateur, avant de partir.
+   *
+   * Le serveur ne sait plus le faire : `sharp` en est parti pour que
+   * l'application puisse tourner ailleurs que sur un serveur Node. Chaque
+   * image devient un WebP pleine taille et ses réductions, et le tout part
+   * dans un seul formulaire.
+   */
+  async function soumettre(evenement: React.FormEvent<HTMLFormElement>) {
+    evenement.preventDefault();
+    if (etape) return;
+
+    const formulaire = evenement.currentTarget;
+    const saisie = new FormData(formulaire);
+    const fichiers = [...(saisie.getAll('fichiers') as File[])].filter((f) => f.size > 0);
+
+    if (!fichiers.length) {
+      setErreurLocale('Choisissez au moins une image.');
+      return;
+    }
+
+    setErreurLocale(null);
+    setEtape('encodage');
+
+    const donnees = new FormData();
+    donnees.set('alt', String(saisie.get('alt') ?? ''));
+    if (saisie.get('aRemplacer')) donnees.set('aRemplacer', 'on');
+    if (saisie.get('dossier')) donnees.set('dossier', String(saisie.get('dossier')));
+
+    try {
+      for (const [rang, fichier] of fichiers.entries()) {
+        const image = await encoderImage(fichier, LARGEURS);
+        donnees.set(`img${rang}.principal`, image.principal, `${rang}.webp`);
+        donnees.set(`img${rang}.largeur`, String(image.largeur));
+        donnees.set(`img${rang}.hauteur`, String(image.hauteur));
+        donnees.set(`img${rang}.octets`, String(image.octets));
+        donnees.set(`img${rang}.variantes`, image.variantes.map((v) => v.largeur).join(','));
+        for (const v of image.variantes) {
+          donnees.set(`img${rang}.v${v.largeur}`, v.blob, `${rang}-${v.largeur}.webp`);
+        }
+      }
+      donnees.set('combien', String(fichiers.length));
+    } catch (erreur) {
+      setEtape(null);
+      setErreurLocale(
+        erreur instanceof ImageIllisible
+          ? 'Une des images n’a pas pu être lue. JPEG, PNG, WebP ou AVIF.'
+          : 'La préparation des images a échoué.',
+      );
+      return;
+    }
+
+    setEtape('envoi');
+    setNoms([]);
+    action(donnees);
+    setEtape(null);
+  }
+
   return (
-    <form className="bo-form" action={action} onSubmit={() => setNoms([])}>
-      {etat.erreur ? (
+    <form className="bo-form" onSubmit={soumettre}>
+      {/* Deux sources d'échec désormais : la préparation dans le navigateur, et
+          le serveur. Le visiteur n'a pas à savoir laquelle a parlé. */}
+      {erreurLocale ?? etat.erreur ? (
         <p className="bo-erreur" role="alert">
-          {etat.erreur}
+          {erreurLocale ?? etat.erreur}
         </p>
       ) : null}
 
@@ -748,13 +820,13 @@ function FormulaireEnvoi({
           id="fichiers"
           name="fichiers"
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/avif,image/tiff"
+          accept="image/jpeg,image/png,image/webp,image/avif"
           multiple
           required
           onChange={(ev) => setNoms([...(ev.target.files ?? [])].map((f) => f.name))}
         />
         <p className="bo-aide">
-          JPEG, PNG, WebP, AVIF ou TIFF. Vingt-cinq mégaoctets par image au maximum.
+          JPEG, PNG, WebP ou AVIF. Vingt-cinq mégaoctets par image au maximum. Les réductions sont faites ici, dans votre navigateur.
         </p>
         {noms.length ? (
           <p className="bo-aide">
@@ -795,7 +867,7 @@ function FormulaireEnvoi({
         <span>Image d’attente, à remplacer avant la mise en ligne</span>
       </label>
 
-      <BoutonEnvoi />
+      <BoutonEnvoi etape={etape} />
     </form>
   );
 }
