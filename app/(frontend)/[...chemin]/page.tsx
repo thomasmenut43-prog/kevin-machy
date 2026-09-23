@@ -17,6 +17,11 @@ import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteInd
 
 // Les pages publiées sont pré-rendues à la construction, comme le reste du
 // site. Une page publiée après coup est rendue à la demande puis mise en cache.
+//
+// En export statique, plus personne n'est là pour rendre à la demande : la
+// valeur doit y être `false`. Next exige un booléen écrit en toutes lettres,
+// donc pas de condition ici — c'est `scripts/exporter.mjs` qui retouche cette
+// ligne le temps de sa construction, et la remet après.
 export const dynamicParams = true;
 
 /** Revérifiées toutes les cinq minutes, comme l'accueil. */

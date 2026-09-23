@@ -21,3 +21,8 @@ Proposition-Nextylab-*.pdf
 # Fichiers envoyés depuis la médiathèque du BackOffice. Ils vivent sur le
 # serveur et dans ses sauvegardes, pas dans le dépôt.
 /medias/
+
+# Sorties de l'export statique
+/.export-retire/
+/out/
+/.next-statique/
