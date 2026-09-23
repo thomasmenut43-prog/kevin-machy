@@ -210,3 +210,66 @@ npx wrangler tail --format json
 Les piles sont minifiées, mais leurs numéros de ligne désignent le paquet que
 `--dry-run` reconstruit à l'identique. C'est ainsi que les deux pannes ci-dessus
 ont été nommées.
+
+## Le déploiement automatique
+
+Depuis `.github/workflows/deploiement.yml` : toute fusion vers `main` met le
+site en ligne. `npm run deployer` reste là pour les envois à la main — un
+correctif urgent, une vérification.
+
+L'ordre des étapes est le garde-fou : base à jour → types → construction →
+envoi. La première qui échoue arrête tout, et rien ne part.
+
+### Les trois secrets, côté GitHub
+
+*Settings → Secrets and variables → Actions → New repository secret*
+
+| Nom | Ce que c'est |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Le droit de déployer. Modèle **Edit Cloudflare Workers**, compte *Kevin Machy* uniquement. |
+| `CLOUDFLARE_ACCOUNT_ID` | L'identifiant du compte — `npx wrangler whoami` le donne. |
+| `DATABASE_URI` | La base de Kevin chez Hostinger, la même adresse que dans le `.env` local. |
+
+Le jeton Cloudflare n'est montré **qu'une fois**, à sa création. Perdu, il ne
+se retrouve pas : on en fabrique un autre et on révoque l'ancien.
+
+### La base est lue, jamais modifiée
+
+Le déploiement construit contre la vraie base, parce que le contenu du site y
+vit : construit contre une base vide, il produirait un site vide.
+
+Il ne fait que lire. Les migrations ne sont **pas** appliquées
+automatiquement — `npm run migrer -- --verifier` se contente de dire si la base
+a pris du retard, et arrête le déploiement si c'est le cas. Ce mode ne crée
+même pas la table de suivi : il peut être lancé contre la base du client sans y
+laisser de trace.
+
+C'est un choix. MariaDB ne sait pas revenir en arrière sur une modification de
+structure : une migration fautive appliquée toute seule toucherait les vraies
+photos et les vrais tarifs avant que quiconque l'ait vue tourner. Le jour où le
+déploiement s'arrête là, sauvegarder la base, puis :
+
+```bash
+npm run migrer
+```
+
+### Les variables figées à la construction
+
+`NEXT_PUBLIC_BASE_MEDIAS` et `NEXT_PUBLIC_URL_SITE` sont **inscrites dans le
+code au moment de la construction**, pas lues à l'exécution — c'est ce que veut
+dire le préfixe. Les déclarer dans `wrangler.jsonc` ne suffit pas : elles
+doivent aussi être dans l'environnement qui construit.
+
+D'où une valeur en deux endroits, qui doivent rester d'accord :
+
+| | `wrangler.jsonc` | `deploiement.yml` |
+|---|---|---|
+| `NEXT_PUBLIC_BASE_MEDIAS` | pour l'exécution | pour la construction |
+
+Oubliée à la construction, elle ne casse rien de visible : les photos repassent
+simplement par le Worker au lieu d'Apache, et chacune consomme une des cent
+mille requêtes quotidiennes. C'est le genre de panne qui ne se voit pas — d'où
+ces deux paragraphes.
+
+En développement elle reste **vide**, et c'est voulu : les images passent alors
+par la route `/medias/`, qui les lit sur le disque d'à côté.

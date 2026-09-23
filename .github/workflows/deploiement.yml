@@ -1,0 +1,90 @@
+# Mise en ligne, à chaque fusion vers `main`.
+#
+# `construction.yml` vérifie qu'une branche tient debout. Celui-ci met en ligne,
+# et il n'est donc pas la même chose : il construit contre la **vraie** base,
+# celle de Kevin, parce que le contenu du site y vit. Construit contre une base
+# vide, il produirait un site vide.
+#
+# L'ordre des étapes est le garde-fou. Rien ne part tant que la base n'est pas à
+# jour et que les types ne passent pas.
+
+name: Déploiement
+
+on:
+  push:
+    branches: [main]
+  # Pour renvoyer la dernière version sans rien fusionner — après avoir changé
+  # un secret, par exemple.
+  workflow_dispatch:
+
+# Un envoi à la fois, et on ne coupe jamais celui qui est en cours : un Worker
+# interrompu en plein téléversement laisserait le site dans un état que
+# personne n'a écrit.
+concurrency:
+  group: deploiement
+  cancel-in-progress: false
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+
+    env:
+      # La base de Kevin, chez Hostinger. La construction la lit — elle n'y
+      # écrit rien — pour figer les pages avec leur vrai contenu.
+      #
+      # Elle est jointe en direct, sans Hyperdrive : `BASE` n'est pas défini
+      # ici, donc `lib/bdd.ts` prend le chemin ordinaire. Hyperdrive ne sert
+      # qu'au Worker, une fois en ligne.
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+
+      # Ces deux-là sont figées dans le code à la construction, pas lues à
+      # l'exécution : c'est ce que veut dire le préfixe `NEXT_PUBLIC_`. Les
+      # déclarer dans `wrangler.jsonc` ne suffit donc pas, il faut qu'elles
+      # soient là, maintenant, sinon elles valent la chaîne vide.
+      #
+      # Oubliée, `NEXT_PUBLIC_BASE_MEDIAS` ne casse rien de visible : les photos
+      # repassent simplement par le Worker au lieu d'Apache, et chacune consomme
+      # une des cent mille requêtes quotidiennes. Une panne silencieuse coûte
+      # plus cher qu'une panne bruyante — d'où ce commentaire.
+      #
+      # **À changer le jour du basculement DNS**, en même temps que
+      # `wrangler.jsonc`, qui porte la même valeur pour l'exécution.
+      NEXT_PUBLIC_BASE_MEDIAS: https://medias.dronezvous.com
+      NEXT_PUBLIC_URL_SITE: https://kevin-machy.kevin-machy.workers.dev
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Ne modifie rien : dit seulement si la base de Kevin a reçu toutes les
+      # migrations du dépôt. Sinon, le déploiement s'arrête ici et nomme celles
+      # qui manquent — à appliquer à la main, après une sauvegarde.
+      #
+      # C'est un choix, pas un oubli. Une migration fautive appliquée
+      # automatiquement toucherait les vraies données avant que quiconque l'ait
+      # vue tourner, et MariaDB ne sait pas revenir en arrière sur une
+      # modification de structure.
+      - name: La base est-elle à jour ?
+        run: npm run migrer -- --verifier
+
+      - name: Types
+        run: npx tsc --noEmit
+
+      # Construit le paquet Cloudflare à partir des sources — `next build` puis
+      # la mise en forme pour Workers.
+      - name: Construction
+        run: npm run paquet
+
+      # `wrangler` lit ces deux variables de lui-même, sans qu'on ait à les lui
+      # passer. Le jeton n'a que le droit de modifier les Workers du compte.
+      - name: Envoi vers Cloudflare
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
