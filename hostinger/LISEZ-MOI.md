@@ -77,7 +77,9 @@ sans lequel la moitié repartirait en `403` :
 ```bash
 for F in medias/*.webp; do
   N=$(basename "$F")
-  base64 -w0 "$F" | curl -s -X POST     -H "X-Jeton: $JETON" -H "Content-Type: text/plain" --data-binary @-     "https://medias.dronezvous.com/guichet-medias.php?action=poser&nom=$N"
+  base64 -w0 "$F" | curl -s -X POST --data-binary @- \
+    -H "X-Jeton: $JETON" -H "Content-Type: text/plain" \
+    "https://medias.dronezvous.com/guichet-medias.php?action=poser&nom=$N"
 done
 ```
 
