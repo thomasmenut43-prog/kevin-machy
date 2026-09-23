@@ -1,0 +1,44 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "kevin-machy",
+	"compatibility_date": "2026-09-01",
+	// `nodejs_compat` donne au Worker une partie des API de Node. Une partie
+	// seulement : ni binaire natif, ni système de fichiers.
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"vars": {
+		// Dit au coffre où ranger les images. Absent, il écrit sur le disque —
+		// ce qui reste le bon choix partout ailleurs que dans un Worker.
+		"COFFRE": "r2"
+	},
+	"r2_buckets": [
+		{
+			// Les images de la médiathèque.
+			// npx wrangler r2 bucket create kevin-machy-medias
+			"binding": "MEDIAS",
+			"bucket_name": "kevin-machy-medias"
+		},
+		{
+			// Les pages déjà calculées. Un seau distinct des images : on vide un
+			// cache sans réfléchir, jamais une médiathèque.
+			// npx wrangler r2 bucket create kevin-machy-cache
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "kevin-machy-cache"
+		}
+	],
+	"d1_databases": [
+		{
+			// Le registre qui relie chaque page en cache à ce qu'elle contient.
+			// C'est lui qui permet à « Publier » de savoir quoi rafraîchir.
+			// npx wrangler d1 create kevin-machy-etiquettes
+			// puis recopier ici l'identifiant qu'il affiche.
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "kevin-machy-etiquettes",
+			"database_id": "A-REMPLACER-PAR-L-IDENTIFIANT-RENDU-PAR-WRANGLER"
+		}
+	]
+}

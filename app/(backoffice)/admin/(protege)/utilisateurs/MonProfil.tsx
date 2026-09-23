@@ -1,7 +1,10 @@
 'use client';
 
+import type React from 'react';
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
+import { encoderAvatar, ImageIllisible } from '@/lib/encoder-images';
+import { COTES_AVATAR } from '@/lib/largeurs-medias';
 import { urlAvatar } from '@/lib/modeles';
 import {
   actionMaPhoto,
@@ -56,6 +59,10 @@ export function MonProfil({ profil, onChange }: { profil: Profil; onChange: () =
   const [photo, envoyerPhoto] = useActionState(actionMaPhoto, VIDE);
   const [enCours, demarrer] = useTransition();
   const formulairePhoto = useRef<HTMLFormElement>(null);
+  // Le découpage a lieu dans le navigateur : ce temps-là doit se voir, et son
+  // échec se dire, avant même que le serveur soit sollicité.
+  const [envoiPhoto, setEnvoiPhoto] = useState(false);
+  const [erreurPhoto, setErreurPhoto] = useState<string | null>(null);
 
   // Aperçu immédiat : l'image choisie s'affiche avant d'être envoyée, sinon on
   // ne sait pas ce qu'on est en train de téléverser.
@@ -75,11 +82,54 @@ export function MonProfil({ profil, onChange }: { profil: Profil; onChange: () =
     [profil.prenom[0], profil.nom[0]].filter(Boolean).join('').toUpperCase() || '?';
   const image = apercu ?? (profil.avatar ? urlAvatar(profil.avatar) : null);
 
+  /**
+   * La photo est découpée ici, dans le navigateur.
+   *
+   * Le serveur ne redimensionne plus : `sharp` en est parti pour que
+   * l'application puisse tourner ailleurs que sur un serveur Node. Il reçoit
+   * donc les deux carrés déjà prêts, et se contente de les ranger.
+   */
+  async function soumettrePhoto(evenement: React.FormEvent<HTMLFormElement>) {
+    evenement.preventDefault();
+    if (envoiPhoto) return;
+
+    const fichier = (new FormData(evenement.currentTarget).get('photo') as File | null) ?? null;
+    if (!fichier || fichier.size === 0) {
+      setErreurPhoto('Choisissez une image.');
+      return;
+    }
+
+    setErreurPhoto(null);
+    setEnvoiPhoto(true);
+    try {
+      const carres = await encoderAvatar(fichier, COTES_AVATAR);
+      const donnees = new FormData();
+      for (const carre of carres) {
+        donnees.set(`carre${carre.largeur}`, carre.blob, `${carre.largeur}.webp`);
+      }
+      envoyerPhoto(donnees);
+    } catch (erreur) {
+      setErreurPhoto(
+        erreur instanceof ImageIllisible
+          ? 'Cette image n’a pas pu être lue. JPEG, PNG, WebP ou AVIF.'
+          : 'La préparation de l’image a échoué.',
+      );
+    } finally {
+      setEnvoiPhoto(false);
+    }
+  }
+
   return (
     <>
-      <form className="bo-form bo-encadre" action={envoyerPhoto} ref={formulairePhoto}>
+      <form className="bo-form bo-encadre" onSubmit={soumettrePhoto} ref={formulairePhoto}>
         <h2 className={u.titre}>Ma photo</h2>
-        <Messages etat={photo} />
+        {erreurPhoto ? (
+          <p className="bo-erreur" role="alert">
+            {erreurPhoto}
+          </p>
+        ) : (
+          <Messages etat={photo} />
+        )}
 
         <div className={u.photoLigne}>
           <span className={u.photoRond} aria-hidden="true">
@@ -94,14 +144,16 @@ export function MonProfil({ profil, onChange }: { profil: Profil; onChange: () =
               id="ma-photo"
               name="photo"
               type="file"
-              accept="image/jpeg,image/png,image/webp,image/avif,image/tiff"
+              accept="image/jpeg,image/png,image/webp,image/avif"
               className="visuellement-cache"
               onChange={(ev) => {
                 const fichier = ev.target.files?.[0];
                 setApercu(fichier ? URL.createObjectURL(fichier) : null);
               }}
             />
-            <Bouton libelle="Enregistrer la photo" enCours="Envoi…" />
+            <button className="bo-bouton" type="submit" disabled={envoiPhoto}>
+              {envoiPhoto ? 'Préparation…' : 'Enregistrer la photo'}
+            </button>
             {profil.avatar ? (
               <button
                 type="button"

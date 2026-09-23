@@ -19,7 +19,9 @@ import {
  */
 export async function POST(requete: Request) {
   try {
-    const corps = await requete.json();
+    // Rien n'est cru sur parole : ce qui arrive ici vient du navigateur d'un
+    // visiteur, et chaque champ est reconverti avant usage.
+    const corps = (await requete.json()) as Record<string, unknown> | null;
     const chemin = String(corps?.chemin ?? '');
 
     // Un chemin absolu du site, rien d'autre. Pas d'adresse complète, pas de
@@ -39,7 +41,7 @@ export async function POST(requete: Request) {
       await enregistrerVisite({
         chemin,
         visiteur,
-        source: sourceDepuis(corps?.referent ?? null, entetes.get('host')),
+        source: sourceDepuis(corps?.referent ? String(corps.referent) : null, entetes.get('host')),
         mobile: estMobile(navigateur),
       });
     }
