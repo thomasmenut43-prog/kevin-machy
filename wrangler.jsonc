@@ -22,23 +22,22 @@
 			// La passerelle vers la MariaDB restée chez Hostinger. Elle tient des
 			// connexions déjà ouvertes près d'elle : sans ça, chaque invocation du
 			// Worker rouvrirait tout, soit plus de cent millisecondes perdues.
-			// npx wrangler hyperdrive create kevin-machy-base 			//   --connection-string="mysql://UTILISATEUR:MOTDEPASSE@srv926.hstgr.io:3306/BASE"
-			// puis recopier ici l'identifiant rendu.
+			// Sa mise en cache des lectures est volontairement désactivée : le site
+			// a déjà son cache de pages, et empiler les deux ferait qu'une page
+			// republiée se refabriquerait parfois avec l'ancien contenu.
 			"binding": "HYPERDRIVE",
-			"id": "A-REMPLACER-PAR-L-IDENTIFIANT-RENDU-PAR-WRANGLER"
+			"id": "5ec15d5b93d84f13ae16e4f44889027b"
 		}
 	],
 	"r2_buckets": [
 		{
 			// Les images de la médiathèque.
-			// npx wrangler r2 bucket create kevin-machy-medias
 			"binding": "MEDIAS",
 			"bucket_name": "kevin-machy-medias"
 		},
 		{
 			// Les pages déjà calculées. Un seau distinct des images : on vide un
 			// cache sans réfléchir, jamais une médiathèque.
-			// npx wrangler r2 bucket create kevin-machy-cache
 			"binding": "NEXT_INC_CACHE_R2_BUCKET",
 			"bucket_name": "kevin-machy-cache"
 		}
@@ -47,11 +46,9 @@
 		{
 			// Le registre qui relie chaque page en cache à ce qu'elle contient.
 			// C'est lui qui permet à « Publier » de savoir quoi rafraîchir.
-			// npx wrangler d1 create kevin-machy-etiquettes
-			// puis recopier ici l'identifiant qu'il affiche.
 			"binding": "NEXT_TAG_CACHE_D1",
 			"database_name": "kevin-machy-etiquettes",
-			"database_id": "A-REMPLACER-PAR-L-IDENTIFIANT-RENDU-PAR-WRANGLER"
+			"database_id": "6d19748f-0f9a-498c-bf7d-9f4a679086df"
 		}
 	]
 }
