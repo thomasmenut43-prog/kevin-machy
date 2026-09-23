@@ -1,7 +1,7 @@
 import 'server-only';
 import { randomBytes } from 'node:crypto';
-import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { coffre } from './coffre';
 import { ecrire, estDoublon, ligne, requete, transaction } from './bdd';
 import { COTES_AVATAR, LARGEURS, OCTETS_MAX } from './largeurs-medias';
 import type { Dossier, Media, Taille } from './modeles';
@@ -24,8 +24,6 @@ export { urlMedia } from './modeles';
  * `lib/encoder-images.ts` pour la raison. Ce module ne reçoit donc que des
  * octets déjà en WebP : il les vérifie, les écrit, et tient la fiche du média.
  */
-
-export const DOSSIER = path.resolve(process.cwd(), 'medias');
 
 // Les formats vivent à part : le navigateur encode, et il ne peut pas lire un
 // module `server-only`. Les deux côtés doivent pourtant s'accorder au pixel.
@@ -138,19 +136,19 @@ export async function enregistrerMedia(
     variantes.push({ largeur: v.largeur, octets });
   }
 
-  await mkdir(DOSSIER, { recursive: true });
+  const rangement = await coffre();
 
   // Nom tiré au hasard : le nom d'origine peut contenir n'importe quoi, y
   // compris des séquences qui feraient sortir du dossier.
   const base = randomBytes(12).toString('hex');
   const nomPrincipal = `${base}.webp`;
 
-  await writeFile(path.join(DOSSIER, nomPrincipal), principal);
+  await rangement.ecrire(nomPrincipal, principal);
 
   const tailles: Taille[] = [];
   for (const { largeur, octets } of variantes) {
     const nom = `${base}-${largeur}.webp`;
-    await writeFile(path.join(DOSSIER, nom), octets);
+    await rangement.ecrire(nom, octets);
     tailles.push({ largeur, fichier: nom });
   }
 
@@ -205,13 +203,13 @@ export async function enregistrerAvatar(
     prets.push({ cote, octets });
   }
 
-  await mkdir(DOSSIER, { recursive: true });
+  const rangement = await coffre();
 
   // Même longueur de nom que la médiathèque : la route qui sert les fichiers
   // n'accepte que cette forme, et une photo de profil doit y passer aussi.
   const base = randomBytes(12).toString('hex');
   for (const { cote, octets } of prets) {
-    await writeFile(path.join(DOSSIER, `${base}-${cote}.webp`), octets);
+    await rangement.ecrire(`${base}-${cote}.webp`, octets);
   }
 
   return { ok: true, nom: base };
@@ -220,8 +218,9 @@ export async function enregistrerAvatar(
 /** Efface les fichiers d'une photo de profil remplacée ou retirée. */
 export async function effacerAvatar(avatar: string | null) {
   if (!avatar || !/^[a-f0-9]{24}$/.test(avatar)) return;
+  const rangement = await coffre();
   for (const cote of COTES_AVATAR) {
-    await rm(path.join(DOSSIER, `${avatar}-${cote}.webp`), { force: true });
+    await rangement.effacer(`${avatar}-${cote}.webp`);
   }
 }
 
@@ -274,8 +273,9 @@ export async function supprimerMedia(id: number) {
   // cassée.
   await requete('DELETE FROM medias WHERE id = ?', [id]);
 
+  const rangement = await coffre();
   for (const nom of [media.fichier, ...media.tailles.map((t) => t.fichier)]) {
-    await rm(path.join(DOSSIER, nom), { force: true }).catch(() => {});
+    await rangement.effacer(nom);
   }
 }
 
@@ -430,6 +430,7 @@ export async function dupliquerDossier(id: number, parentId?: number | null): Pr
 
   const images = await requete<LigneMedia>(`SELECT ${CHAMPS} FROM medias WHERE dossier_id = ?`, [id]);
   let copiees = 0;
+  const rangement = await coffre();
 
   for (const l of images) {
     const media = versMedia(l);
@@ -438,12 +439,12 @@ export async function dupliquerDossier(id: number, parentId?: number | null): Pr
     // Le fichier principal, puis chaque largeur : les noms changent, les
     // octets non.
     const principal = `${base}${path.extname(media.fichier)}`;
-    await copyFile(path.join(DOSSIER, media.fichier), path.join(DOSSIER, principal)).catch(() => {});
+    await rangement.copier(media.fichier, principal);
 
     const tailles: Taille[] = [];
     for (const t of media.tailles) {
       const nomTaille = `${base}-${t.largeur}${path.extname(t.fichier)}`;
-      await copyFile(path.join(DOSSIER, t.fichier), path.join(DOSSIER, nomTaille)).catch(() => {});
+      await rangement.copier(t.fichier, nomTaille);
       tailles.push({ largeur: t.largeur, fichier: nomTaille });
     }
 

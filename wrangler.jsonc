@@ -9,5 +9,18 @@
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
-	}
+	},
+	"vars": {
+		// Dit au coffre où ranger les images. Absent, il écrit sur le disque —
+		// ce qui reste le bon choix partout ailleurs que dans un Worker.
+		"COFFRE": "r2"
+	},
+	"r2_buckets": [
+		{
+			// Les images de la médiathèque. Le seau est à créer avant le premier
+			// déploiement : `npx wrangler r2 bucket create kevin-machy-medias`.
+			"binding": "MEDIAS",
+			"bucket_name": "kevin-machy-medias"
+		}
+	]
 }
