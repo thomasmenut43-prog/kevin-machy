@@ -30,8 +30,10 @@ const global_ = globalThis as unknown as { reserveBdd?: Promise<Pool> };
  *
  * Le choix est explicite plutôt que deviné, comme pour le coffre des fichiers.
  */
+const SUR_WORKER = process.env.BASE === 'hyperdrive';
+
 async function adresse(): Promise<string> {
-  if (process.env.BASE === 'hyperdrive') {
+  if (SUR_WORKER) {
     const { adresseHyperdrive } = await import('./bdd-hyperdrive');
     return adresseHyperdrive();
   }
@@ -65,6 +67,12 @@ function reserve(): Promise<Pool> {
         // pleine requête.
         idleTimeout: 30_000,
         enableKeepAlive: true,
+        // `mysql2` fabrique à la volée le code qui lit les lignes, par
+        // `eval`. Un Worker l'interdit : sans cette option, **aucune requête
+        // ne passerait** une fois là-bas. Elle coûte un lecteur un peu plus
+        // lent, on ne l'impose donc pas au serveur Node, qui n'en a pas
+        // besoin.
+        disableEval: SUR_WORKER,
       }),
     );
   }
