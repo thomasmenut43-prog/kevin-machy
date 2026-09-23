@@ -13,8 +13,21 @@
 	"vars": {
 		// Dit au coffre où ranger les images. Absent, il écrit sur le disque —
 		// ce qui reste le bon choix partout ailleurs que dans un Worker.
-		"COFFRE": "r2"
+		"COFFRE": "r2",
+		// Dit à la base de passer par Hyperdrive plutôt que par `DATABASE_URI`.
+		"BASE": "hyperdrive"
 	},
+	"hyperdrive": [
+		{
+			// La passerelle vers la MariaDB restée chez Hostinger. Elle tient des
+			// connexions déjà ouvertes près d'elle : sans ça, chaque invocation du
+			// Worker rouvrirait tout, soit plus de cent millisecondes perdues.
+			// npx wrangler hyperdrive create kevin-machy-base 			//   --connection-string="mysql://UTILISATEUR:MOTDEPASSE@srv926.hstgr.io:3306/BASE"
+			// puis recopier ici l'identifiant rendu.
+			"binding": "HYPERDRIVE",
+			"id": "A-REMPLACER-PAR-L-IDENTIFIANT-RENDU-PAR-WRANGLER"
+		}
+	],
 	"r2_buckets": [
 		{
 			// Les images de la médiathèque.

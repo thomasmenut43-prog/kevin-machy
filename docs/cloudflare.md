@@ -60,19 +60,37 @@ Le seau est à créer avant le premier déploiement :
 npx wrangler r2 bucket create kevin-machy-medias
 ```
 
+## Ce qui a été levé : la base
+
+Un Worker est éphémère. Joindre MySQL directement lui coûterait, à chaque
+invocation, une poignée de main TCP puis TLS puis l'authentification — plus de
+cent seize millisecondes avant la première requête. Hyperdrive tient des
+connexions déjà ouvertes près de la base et les prête.
+
+Il rend une adresse ordinaire, que `mysql2` sait utiliser telle quelle : c'est
+pourquoi rien d'autre ne change. `lib/bdd.ts` va la chercher quand
+`BASE=hyperdrive`, et lit `DATABASE_URI` partout ailleurs.
+
+Un détail qui compte : la réserve de connexions garde désormais **une promesse**
+et non un objet. Deux requêtes simultanées sur un serveur qui démarre en
+ouvriraient chacune une sans ça.
+
 ## Ce qui reste
 
-**La base.** Elle reste chez Hostinger, jointe par Hyperdrive. Deux
-préalables que le code ne peut pas résoudre :
+**Deux gestes dans les interfaces, que le code ne peut pas faire.**
 
-- l'accès distant de Hostinger n'accepte qu'**une adresse ou `%`**, et
-  Hyperdrive sort par les plages de Cloudflare — donc `%`, avec ce que ça
-  suppose de mot de passe solide ;
-- la configuration Hyperdrive se crée dans le tableau de bord, et donne un
-  identifiant à poser dans `wrangler.jsonc`.
+L'accès distant de Hostinger n'accepte qu'**une adresse ou `%`**, et Hyperdrive
+sort par les plages de Cloudflare : c'est donc `%`. Un port MySQL ouvert sur
+Internet se fait balayer en permanence, et la prochaine faille du moteur
+devient directement exploitable — c'est le vrai coût de ce choix, et il ne se
+règle pas par un mot de passe.
 
-Ensuite seulement `lib/bdd.ts` prendra sa connexion depuis la liaison plutôt
-que de `DATABASE_URI`.
+Puis la passerelle se crée, et donne l'identifiant à poser dans
+`wrangler.jsonc` :
+
+```bash
+npx wrangler hyperdrive create kevin-machy-base   --connection-string="mysql://UTILISATEUR:MOTDEPASSE@srv926.hstgr.io:3306/BASE"
+```
 
 **Le déménagement des fichiers existants.** Le coffre sait écrire dans R2, mais
 personne n'y a encore versé ce qui dort dans `medias/`. À faire le jour du

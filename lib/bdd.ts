@@ -18,27 +18,55 @@ import mysql, { type Pool, type RowDataPacket, type ResultSetHeader } from 'mysq
  * `globalThis`, on ouvrirait une réserve de plus à chaque sauvegarde jusqu'à
  * saturer la base.
  */
-const global_ = globalThis as unknown as { reserveBdd?: Pool };
+const global_ = globalThis as unknown as { reserveBdd?: Promise<Pool> };
 
-function reserve() {
+/**
+ * Où joindre la base.
+ *
+ * `DATABASE_URI` partout, sauf dans un Cloudflare Worker : là, l'adresse vient
+ * d'Hyperdrive, qui tient des connexions déjà ouvertes près de la base. Le
+ * reste du module ne voit pas la différence — c'est une adresse dans les deux
+ * cas.
+ *
+ * Le choix est explicite plutôt que deviné, comme pour le coffre des fichiers.
+ */
+async function adresse(): Promise<string> {
+  if (process.env.BASE === 'hyperdrive') {
+    const { adresseHyperdrive } = await import('./bdd-hyperdrive');
+    return adresseHyperdrive();
+  }
+
+  const url = process.env.DATABASE_URI;
+  if (!url) throw new Error('DATABASE_URI est absent. Voir .env.exemple.');
+  return url;
+}
+
+/**
+ * La promesse est gardée, pas la réserve.
+ *
+ * Deux requêtes arrivant en même temps sur un serveur qui démarre verraient
+ * toutes deux une réserve absente, et en ouvriraient chacune une. Garder la
+ * promesse fait que la seconde attend la première.
+ */
+function reserve(): Promise<Pool> {
   if (!global_.reserveBdd) {
-    const url = process.env.DATABASE_URI;
-    if (!url) throw new Error('DATABASE_URI est absent. Voir .env.exemple.');
-
-    global_.reserveBdd = mysql.createPool({
-      uri: url,
-      connectionLimit: 10,
-      waitForConnections: true,
-      // Tout est écrit et relu en temps universel. Sans cette ligne, le pilote
-      // interprète les dates dans le fuseau de la machine : la même session
-      // expirerait à deux moments différents selon l'endroit où tourne le site.
-      timezone: 'Z',
-      // Un mutualisé coupe les connexions oisives. Mieux vaut qu'elles meurent
-      // de notre côté d'abord, plutôt que de découvrir la coupure en pleine
-      // requête.
-      idleTimeout: 30_000,
-      enableKeepAlive: true,
-    });
+    global_.reserveBdd = adresse().then((uri) =>
+      mysql.createPool({
+        uri,
+        connectionLimit: 10,
+        waitForConnections: true,
+        // Tout est écrit et relu en temps universel. Sans cette ligne, le
+        // pilote interprète les dates dans le fuseau de la machine : la même
+        // session expirerait à deux moments différents selon l'endroit où
+        // tourne le site.
+        timezone: 'Z',
+        // Un mutualisé coupe les connexions oisives. Mieux vaut qu'elles
+        // meurent de notre côté d'abord, plutôt que de découvrir la coupure en
+        // pleine requête.
+        idleTimeout: 30_000,
+        enableKeepAlive: true,
+      }),
+    );
   }
   return global_.reserveBdd;
 }
@@ -55,7 +83,7 @@ export async function requete<T extends object>(
   sql: string,
   valeurs: unknown[] = [],
 ): Promise<T[]> {
-  const [lignes] = await reserve().execute<RowDataPacket[]>(sql, valeurs as unknown[] as never);
+  const [lignes] = await (await reserve()).execute<RowDataPacket[]>(sql, valeurs as unknown[] as never);
   return lignes as unknown as T[];
 }
 
@@ -80,7 +108,7 @@ export async function ecrire(
   sql: string,
   valeurs: unknown[] = [],
 ): Promise<{ insertId: number; touchees: number }> {
-  const [resultat] = await reserve().execute<ResultSetHeader>(sql, valeurs as unknown[] as never);
+  const [resultat] = await (await reserve()).execute<ResultSetHeader>(sql, valeurs as unknown[] as never);
   return { insertId: resultat.insertId, touchees: resultat.affectedRows };
 }
 
@@ -96,7 +124,7 @@ export async function ecrire(
 export async function transaction<T>(
   travail: (q: typeof requete, e: typeof ecrire) => Promise<T>,
 ): Promise<T> {
-  const connexion = await reserve().getConnection();
+  const connexion = await (await reserve()).getConnection();
   try {
     await connexion.beginTransaction();
 
