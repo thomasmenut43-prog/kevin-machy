@@ -37,13 +37,21 @@ const OCTETS_MAX = 26214400;
 const NOM_VALIDE = '/^[a-f0-9]{24}(?:-\d{3,4})?\.webp$/';
 
 /**
- * Le secret vit **au-dessus** de la racine web.
+ * Le secret vit **hors de tout dossier servi par Apache**.
  *
  * Posé à côté des images, il serait téléchargeable par n'importe qui, et le
- * guichet serait ouvert à tous les vents. Un cran plus haut, Apache ne peut
- * pas le servir, PHP peut encore le lire.
+ * guichet ouvert à tous les vents. Un cran au-dessus ne suffit pas non plus :
+ * la racine du sous-domaine étant `public_html/medias`, ce cran-là est
+ * `public_html`, que le site principal sert. Il en faut donc deux.
+ *
+ *   /home/…/domains/dronezvous.com/jeton-medias.txt   ← ici, hors d'atteinte
+ *   /home/…/domains/dronezvous.com/public_html/       ← servi par dronezvous.com
+ *   /home/…/domains/dronezvous.com/public_html/medias/ ← servi par medias.…, et c'est __DIR__
+ *
+ * Si la racine du sous-domaine change un jour, cette ligne change avec elle —
+ * et on vérifie en demandant le fichier à Apache, qui doit répondre 404.
  */
-const FICHIER_JETON = __DIR__ . '/../jeton-medias.txt';
+const FICHIER_JETON = __DIR__ . '/../../jeton-medias.txt';
 
 function repondre(int $code, array $corps): never
 {
@@ -92,9 +100,31 @@ $action = (string) ($_GET['action'] ?? '');
 if ($action === 'poser') {
     $cible = chemin((string) ($_GET['nom'] ?? ''));
 
-    $octets = (string) file_get_contents('php://input');
-    if ($octets === '') {
+    /**
+     * Le corps arrive **en base64**, et ce n'est pas un caprice.
+     *
+     * Un pare-feu applicatif inspecte les corps de requête sur cet
+     * hébergement, et refuse certaines suites d'octets — la même image passe
+     * ou non selon son contenu, sans rapport avec sa taille. Le constat est
+     * net : un WebP brut de dix kilooctets repart en 403 avant même
+     * d'atteindre PHP, le même encodé en base64 arrive sans encombre.
+     *
+     * L'encodage coûte un tiers de poids en plus. C'est le prix d'un envoi
+     * qui aboutit à tous les coups plutôt qu'au hasard du contenu.
+     */
+    $encode = (string) file_get_contents('php://input');
+    if ($encode === '') {
         repondre(400, ['ok' => false, 'message' => 'Corps vide.']);
+    }
+    // Le plafond s'applique au corps reçu, base64 comprise : refuser tôt évite
+    // de décoder pour rien.
+    if (strlen($encode) > OCTETS_MAX * 4 / 3 + 1024) {
+        repondre(413, ['ok' => false, 'message' => 'Fichier trop lourd.']);
+    }
+
+    $octets = base64_decode($encode, true);
+    if ($octets === false) {
+        repondre(400, ['ok' => false, 'message' => 'Corps illisible : base64 attendue.']);
     }
     if (strlen($octets) > OCTETS_MAX) {
         repondre(413, ['ok' => false, 'message' => 'Fichier trop lourd.']);

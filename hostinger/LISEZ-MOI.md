@@ -23,12 +23,16 @@ qu'un Worker ne le relaierait.
 
 ### 1. Le sous-domaine
 
-Dans hPanel, *Sites web → dronezvous.com → Sous-domaines*, créer
-`medias.dronezvous.com`.
+**Fait.** `medias.dronezvous.com`, racine
+`/home/u750876317/domains/dronezvous.com/public_html/medias`.
 
-Noter le répertoire qu'il donne : c'est là que vivront les images.
+C'est cette racine qui explique le chemin du jeton, deux crans plus haut : un
+seul cran tomberait dans `public_html`, que le site principal sert.
 
 ### 2. Le jeton
+
+**Fait.** Vérifié depuis l'extérieur : `dronezvous.com/jeton-medias.txt`
+répond **404**, il est hors d'atteinte.
 
 Le guichet n'ouvre qu'à qui présente un secret. Il le lit **un cran au-dessus
 de la racine web** — posé à côté des images, il serait téléchargeable par
@@ -43,8 +47,8 @@ voulu : une porte d'entrée sans serrure ne s'ouvre pas, elle reste fermée.
 
 ### 3. Le guichet
 
-Déposer `guichet-medias.php` à la racine du sous-domaine, à côté des images.
-Il exige **PHP 8.1 ou plus** (à régler dans *Avancé → Configuration PHP* si
+**Fait.** `guichet-medias.php` est à la racine du sous-domaine, à côté des
+images. Il exige **PHP 8.1 ou plus** (à régler dans *Avancé → Configuration PHP* si
 besoin).
 
 Le nom des images étant contraint à vingt-quatre caractères hexadécimaux
@@ -52,6 +56,8 @@ suivis de `.webp`, aucune requête ne peut viser le guichet lui-même ni sortir
 du dossier.
 
 ### 4. Le secret, côté Cloudflare
+
+**Fait.**
 
 ```bash
 npx wrangler secret put JETON_MEDIAS
@@ -62,9 +68,18 @@ dans `wrangler.jsonc`.
 
 ### 5. Les images déjà là
 
-Celles qui dorment dans `medias/` ne se déplacent pas toutes seules. Les
-téléverser dans la racine du sous-domaine, par le gestionnaire de fichiers de
-hPanel ou par FTP.
+**Fait.** Les dix-sept fichiers de `medias/` ont été déposés par le guichet
+lui-même et vérifiés un à un : tous servis, tous identiques à l'octet près.
+
+Pour recommencer un jour, la boucle tient en une ligne — noter le `base64`,
+sans lequel la moitié repartirait en `403` :
+
+```bash
+for F in medias/*.webp; do
+  N=$(basename "$F")
+  base64 -w0 "$F" | curl -s -X POST     -H "X-Jeton: $JETON" -H "Content-Type: text/plain" --data-binary @-     "https://medias.dronezvous.com/guichet-medias.php?action=poser&nom=$N"
+done
+```
 
 ### 6. Le jour du basculement DNS
 
@@ -75,6 +90,36 @@ Le **nuage orange** est ici souhaitable, contrairement aux enregistrements de
 courrier : il met les photographies dans le cache de Cloudflare, gratuitement,
 et sans consommer la moindre requête de Worker.
 
+## Le pare-feu de l'hébergeur, et pourquoi le corps part en base64
+
+Constaté sur place, et suffisamment déroutant pour mériter d'être écrit.
+
+Un pare-feu applicatif inspecte les corps de requête. Il refuse **certaines
+suites d'octets**, sans rapport avec la taille : sur dix-sept images, six
+passaient et onze repartaient en `403`, toujours les mêmes, alors qu'un avatar
+de 2 226 octets échouait là où une image de 2 744 passait.
+
+La démonstration, en trois requêtes :
+
+| corps envoyé | réponse |
+|---|---|
+| 10 000 octets de `AAAA…` | **400** — atteint PHP, refusé comme non-WebP |
+| le même WebP, brut | **403** — bloqué avant PHP |
+| le même WebP, **en base64** | **400** — atteint PHP |
+
+D'où l'encodage. Il coûte un tiers de poids en plus, contre un envoi qui
+aboutit à tous les coups plutôt qu'au hasard du contenu.
+
+## Le CDN garde les 404
+
+Un `Server: hcdn` se tient devant le sous-domaine. Demander une image **avant**
+de l'avoir déposée fait mémoriser le 404, qui survit quelques minutes au dépôt.
+
+Sans conséquence en usage réel — une image nouvelle porte un nom que personne
+n'a jamais demandé. Mais en mise au point, c'est un piège : on croit l'envoi
+raté alors que le fichier est bien là. Un paramètre quelconque dans l'adresse
+(`?v=123`) contourne le cache et tranche la question.
+
 ## Ce que le guichet sait faire
 
 Trois gestes, et **il ne sait pas lire** — les images sont servies par Apache,
@@ -82,7 +127,7 @@ il n'a donc aucune raison de renvoyer quoi que ce soit. C'est autant de
 surface en moins.
 
 ```
-POST ?action=poser&nom=<nom>     corps = les octets
+POST ?action=poser&nom=<nom>     corps = les octets, en base64
 POST ?action=effacer&nom=<nom>
 POST ?action=copier&de=<nom>&vers=<nom>
 ```

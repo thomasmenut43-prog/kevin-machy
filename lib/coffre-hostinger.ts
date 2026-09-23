@@ -43,7 +43,9 @@ async function appeler(parametres: Record<string, string>, corps?: BodyInit) {
     method: 'POST',
     headers: {
       'X-Jeton': exiger(JETON, 'JETON_MEDIAS'),
-      'Content-Type': 'application/octet-stream',
+      // Du texte, puisque le corps est encodé — et c'est aussi ce qui le fait
+      // passer devant le pare-feu applicatif de l'hébergeur.
+      'Content-Type': 'text/plain; charset=utf-8',
     },
     body: corps ?? null,
   });
@@ -58,15 +60,26 @@ async function appeler(parametres: Record<string, string>, corps?: BodyInit) {
 
 export function coffreHostinger(): Coffre {
   return {
+    /**
+     * L'image part **en base64**, et ce n'est pas un caprice.
+     *
+     * Un pare-feu applicatif inspecte les corps de requête sur cet
+     * hébergement et refuse certaines suites d'octets : la même image passe ou
+     * non selon son contenu, sans rapport avec sa taille. Constaté sur place —
+     * un WebP brut de dix kilooctets repart en 403, le même encodé arrive.
+     *
+     * Un tiers de poids en plus, contre un envoi qui aboutit à tous les coups.
+     */
     async ecrire(nom, octets) {
-      // `octets` est une vue sur un tampon qui peut être plus grand : on
-      // n'envoie que la portion utile, sans quoi l'image arriverait suivie
-      // d'un fond de mémoire.
-      const corps = octets.buffer.slice(
-        octets.byteOffset,
-        octets.byteOffset + octets.byteLength,
-      ) as ArrayBuffer;
-      await appeler({ action: 'poser', nom }, corps);
+      // Par tranches : `String.fromCharCode` prend ses octets en arguments, et
+      // une image entière d'un coup dépasserait ce qu'une pile d'appel
+      // accepte. `subarray` ne copie rien, il regarde.
+      const PAS = 0x8000;
+      let binaire = '';
+      for (let i = 0; i < octets.length; i += PAS) {
+        binaire += String.fromCharCode(...octets.subarray(i, i + PAS));
+      }
+      await appeler({ action: 'poser', nom }, btoa(binaire));
     },
 
     /**
