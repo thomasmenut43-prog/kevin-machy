@@ -35,7 +35,11 @@
 			// a déjà son cache de pages, et empiler les deux ferait qu'une page
 			// republiée se refabriquerait parfois avec l'ancien contenu.
 			"binding": "HYPERDRIVE",
-			"id": "5ec15d5b93d84f13ae16e4f44889027b"
+			"id": "5ec15d5b93d84f13ae16e4f44889027b",
+			// Ne sert qu'à l'émulateur local, que les commandes de wrangler
+			// démarrent même pour déployer. En ligne, c'est la passerelle
+			// ci-dessus qui répond, et cette adresse est ignorée.
+			"localConnectionString": "mysql://kevin:kevin@127.0.0.1:3306/kevinmachy"
 		}
 	],
 	"kv_namespaces": [

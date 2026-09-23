@@ -149,3 +149,64 @@ développeur : OpenNext crée des liens symboliques, que Windows refuse aux
 comptes ordinaires. *Paramètres → Confidentialité et sécurité → Espace
 développeurs*, ou construire en intégration continue, sous Linux — ce qui sera
 de toute façon le cas en production.
+
+## Déployer : toujours reconstruire
+
+```bash
+npm run deployer
+```
+
+Ce script fait deux choses dans l'ordre, et l'ordre est tout : il refabrique
+`.open-next/` à partir des sources, **puis** l'envoie.
+
+`wrangler deploy` seul n'est pas un déploiement du code : c'est un envoi du
+dernier paquet construit. Appelé après une correction non recompilée, il
+renvoie l'ancien code sans rien signaler — la commande réussit, la version
+change, et la panne qu'on vient de corriger persiste. Deux correctifs ont été
+« déployés » ainsi avant qu'on s'en aperçoive.
+
+Ce qui a tranché : lire le paquet réellement envoyé.
+
+```bash
+npx wrangler deploy --dry-run --outdir=.paquet
+```
+
+Il fabrique, sans rien envoyer, le fichier exact que Cloudflare reçoit — celui
+dont les numéros de ligne apparaissent dans les piles d'erreur. `.open-next/worker.js`
+n'en est que l'enveloppe, et ses quarante lignes ne correspondent à rien de ce
+qui tourne là-bas.
+
+## Hyperdrive ne prépare pas les requêtes
+
+`mysql2` sait parler à la base de deux façons, et Hyperdrive n'en relaie
+qu'une.
+
+| | |
+|---|---|
+| `execute()` | prépare la requête côté base (`COM_STMT_PREPARE`) — **refusé** |
+| `query()` | envoie la requête assemblée et échappée — accepté |
+
+Le refus est explicite dans les journaux du Worker — *« Hyperdrive does not
+currently support MySQL COM_STMT_PREPARE messages »* — mais invisible depuis le
+navigateur, qui n'obtient qu'un 500 sans corps. Toute page lisant la base
+tombait ; celles qui redirigeaient avant de lire semblaient fonctionner, ce qui
+égarait le diagnostic.
+
+`lib/bdd.ts` utilise donc `query()` **partout**, et non seulement sur
+Cloudflare : `execute()` étant le plus strict des deux, garder les deux chemins
+aurait laissé passer en développement des requêtes refusées en ligne.
+
+La protection contre l'injection SQL est inchangée — c'est `mysql2` qui
+échappe les valeurs, et il le fait pour le dialecte qu'il a en face.
+
+## Pour lire une erreur en ligne
+
+Le Worker n'envoie qu'un 500 nu. Le message est dans ses journaux :
+
+```bash
+npx wrangler tail --format json
+```
+
+Les piles sont minifiées, mais leurs numéros de ligne désignent le paquet que
+`--dry-run` reconstruit à l'identique. C'est ainsi que les deux pannes ci-dessus
+ont été nommées.

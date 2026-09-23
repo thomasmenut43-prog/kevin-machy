@@ -31,5 +31,13 @@ export function adresseHyperdrive(): string {
     // sur « le site revient dans un instant » sans qu'on sache pourquoi.
     throw new Error('La liaison Hyperdrive « HYPERDRIVE » est absente de wrangler.jsonc.');
   }
-  return env.HYPERDRIVE.connectionString;
+
+  // Hyperdrive glisse un `ssl-mode` dans son adresse. `mysql2` ne connaît pas
+  // ce nom : il s'en plaint aujourd'hui, et promet d'en faire une erreur dans
+  // une version à venir. On le retire ici plutôt que de découvrir la panne le
+  // jour d'une mise à jour — le chiffrement se règle entre Hyperdrive et la
+  // base, pas entre le Worker et Hyperdrive.
+  const url = new URL(env.HYPERDRIVE.connectionString);
+  url.searchParams.delete('ssl-mode');
+  return url.toString();
 }

@@ -18,9 +18,14 @@ import type { Coffre, FichierLu } from './coffre';
  * que trois gestes et exige un jeton partagé.
  */
 
-const GUICHET = (process.env.GUICHET_MEDIAS ?? '').replace(/\/+$/, '');
-const JETON = process.env.JETON_MEDIAS ?? '';
-const PUBLIC = (process.env.NEXT_PUBLIC_BASE_MEDIAS ?? '').replace(/\/+$/, '');
+/**
+ * Lus à l'appel, jamais au chargement du module : Cloudflare ne peuple
+ * l'environnement qu'à la première requête, et une lecture trop tôt rend une
+ * chaîne vide sans rien dire.
+ */
+const guichet = () => (process.env.GUICHET_MEDIAS ?? '').replace(/\/+$/, '');
+const jeton = () => process.env.JETON_MEDIAS ?? '';
+const publique = () => (process.env.NEXT_PUBLIC_BASE_MEDIAS ?? '').replace(/\/+$/, '');
 
 function exiger(valeur: string, nom: string) {
   if (!valeur) {
@@ -34,7 +39,7 @@ function exiger(valeur: string, nom: string) {
 
 /** Appelle le guichet et lève si celui-ci refuse. */
 async function appeler(parametres: Record<string, string>, corps?: BodyInit) {
-  const url = new URL(exiger(GUICHET, 'GUICHET_MEDIAS'));
+  const url = new URL(exiger(guichet(), 'GUICHET_MEDIAS'));
   for (const [cle, valeur] of Object.entries(parametres)) {
     url.searchParams.set(cle, valeur);
   }
@@ -42,7 +47,7 @@ async function appeler(parametres: Record<string, string>, corps?: BodyInit) {
   const reponse = await fetch(url, {
     method: 'POST',
     headers: {
-      'X-Jeton': exiger(JETON, 'JETON_MEDIAS'),
+      'X-Jeton': exiger(jeton(), 'JETON_MEDIAS'),
       // Du texte, puisque le corps est encodé — et c'est aussi ce qui le fait
       // passer devant le pare-feu applicatif de l'hébergeur.
       'Content-Type': 'text/plain; charset=utf-8',
@@ -88,7 +93,7 @@ export function coffreHostinger(): Coffre {
      * de surface exposée en moins.
      */
     async lire(nom): Promise<FichierLu | null> {
-      const reponse = await fetch(`${exiger(PUBLIC, 'NEXT_PUBLIC_BASE_MEDIAS')}/${nom}`);
+      const reponse = await fetch(`${exiger(publique(), 'NEXT_PUBLIC_BASE_MEDIAS')}/${nom}`);
       if (!reponse.ok || !reponse.body) return null;
       return {
         corps: reponse.body as ReadableStream<Uint8Array>,
