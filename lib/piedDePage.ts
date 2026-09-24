@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, poserReglage, requete } from './bdd';
+import { ligne, poserReglage, requete, jsonDeLaBase } from './bdd';
 import type { LienNav, PiedDePage } from './modeles';
 import { NAV } from './site';
 
@@ -62,7 +62,7 @@ export async function lirePied(): Promise<PiedDePage> {
       ),
     ]);
 
-    const v = enregistre?.valeur ?? {};
+    const v = jsonDeLaBase(enregistre?.valeur) ?? {};
     const titres = new Map(pages.map((p) => [p.chemin, p.titre]));
     const menu = (v.site?.menu ?? PIED_PAR_DEFAUT.site.menu)
       .filter((l) => titres.has(l.chemin))

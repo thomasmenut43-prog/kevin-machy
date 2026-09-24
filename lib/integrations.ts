@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, poserReglage } from './bdd';
+import { ligne, poserReglage, jsonDeLaBase } from './bdd';
 import { chiffrer, dechiffrer } from './secret';
 
 /**
@@ -33,7 +33,7 @@ export type IntegrationsAffichables = {
 
 async function lire(): Promise<Enregistre> {
   const l = await ligne<{ valeur: Enregistre }>('SELECT valeur FROM reglages WHERE cle = ?', [CLE]);
-  return l?.valeur ?? {};
+  return jsonDeLaBase(l?.valeur) ?? {};
 }
 
 async function ecrire(valeur: Enregistre) {

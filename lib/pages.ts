@@ -1,7 +1,7 @@
 import 'server-only';
 import { PAR_TYPE } from '@/cms/catalogue';
 import type { Champ } from '@/cms/schema';
-import { ecrire, ligne, requete, transaction } from './bdd';
+import { ecrire, ligne, requete, transaction, jsonDeLaBase } from './bdd';
 import { nouvelleCle, type Page, type Section } from './modeles';
 
 export type { Page, Section } from './modeles';
@@ -29,8 +29,8 @@ const versPage = (l: LignePage): Page => ({
   chemin: l.chemin,
   titre: l.titre,
   statut: l.statut,
-  sections: l.sections ?? [],
-  brouillon: l.brouillon,
+  sections: jsonDeLaBase(l.sections) ?? [],
+  brouillon: jsonDeLaBase(l.brouillon),
   metaTitre: l.meta_titre,
   metaDescription: l.meta_description,
   metaImage: l.meta_image,

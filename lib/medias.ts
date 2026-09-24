@@ -2,7 +2,7 @@ import 'server-only';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { coffre } from './coffre';
-import { ecrire, estDoublon, ligne, requete, transaction } from './bdd';
+import { ecrire, estDoublon, ligne, requete, transaction, jsonDeLaBase } from './bdd';
 import { COTES_AVATAR, LARGEURS, OCTETS_MAX } from './largeurs-medias';
 import type { Dossier, Media, Taille } from './modeles';
 
@@ -58,7 +58,7 @@ const versMedia = (l: LigneMedia): Media => ({
   legende: l.legende,
   largeur: l.largeur,
   hauteur: l.hauteur,
-  tailles: l.tailles ?? [],
+  tailles: jsonDeLaBase(l.tailles) ?? [],
   aRemplacer: Boolean(l.a_remplacer),
   dossierId: l.dossier_id,
 });
