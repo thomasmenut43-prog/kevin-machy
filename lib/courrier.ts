@@ -1,6 +1,6 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
-import { ligne, poserReglage, requete } from './bdd';
+import { ligne, poserReglage, requete, jsonDeLaBase } from './bdd';
 import { chiffrer, dechiffrer } from './secret';
 
 /**
@@ -54,7 +54,7 @@ export async function lireSmtp(): Promise<ReglagesSmtp> {
     'SELECT valeur FROM reglages WHERE cle = ?',
     [CLE],
   );
-  return { ...SMTP_PAR_DEFAUT, ...(l?.valeur ?? {}) };
+  return { ...SMTP_PAR_DEFAUT, ...(jsonDeLaBase(l?.valeur) ?? {}) };
 }
 
 /**

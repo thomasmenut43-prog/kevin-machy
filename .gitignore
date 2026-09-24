@@ -30,3 +30,6 @@ Proposition-Nextylab-*.pdf
 # Cloudflare Workers
 /.open-next/
 /.wrangler/
+
+# Paquet reconstruit par `wrangler deploy --dry-run`, pour lire les piles minifiées.
+.paquet/

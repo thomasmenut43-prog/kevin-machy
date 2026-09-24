@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, poserReglage, requete } from './bdd';
+import { ligne, poserReglage, requete, jsonDeLaBase } from './bdd';
 import { lireEntreprise } from './entreprise';
 import { LIENS, NAV, SITE } from './site';
 import type { Navigation } from './modeles';
@@ -55,7 +55,7 @@ export async function lireNavigation(): Promise<Navigation> {
     lireEntreprise(),
   ]);
 
-  const nav = { ...NAV_PAR_DEFAUT, ...(enregistre?.valeur ?? {}) };
+  const nav = { ...NAV_PAR_DEFAUT, ...(jsonDeLaBase(enregistre?.valeur) ?? {}) };
   const titres = new Map(pages.map((p) => [p.chemin, p.titre]));
 
   return {

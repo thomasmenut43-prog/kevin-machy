@@ -1,5 +1,5 @@
 import 'server-only';
-import { ligne, poserReglage } from './bdd';
+import { ligne, poserReglage, jsonDeLaBase } from './bdd';
 import type { Entreprise } from './modeles';
 import { HORAIRES, LIENS, SITE, ZONE } from './site';
 
@@ -75,7 +75,7 @@ export async function lireEntreprise(): Promise<Entreprise> {
       'SELECT valeur FROM reglages WHERE cle = ?',
       [CLE],
     );
-    enregistre = l?.valeur ?? {};
+    enregistre = jsonDeLaBase(l?.valeur) ?? {};
   } catch {
     // Base injoignable : le site garde ses coordonnées plutôt que de perdre
     // son pied de page. C'est le même parti pris que le menu de l'en-tête.

@@ -277,6 +277,32 @@ export async function poserReglage(cle: string, valeur: unknown) {
 }
 
 /**
+ * Décode une colonne `JSON`, que le pilote l'ait fait ou non.
+ *
+ * `mysql2` décode tout seul les colonnes `JSON` — quand la base lui dit que
+ * c'en est. Cette information voyage dans les métadonnées du résultat, et
+ * **Hyperdrive ne les relaie pas toujours** : la même requête rend un tableau
+ * en développement et une chaîne de caractères une fois en ligne.
+ *
+ * La panne qui en découle ne ressemble pas à une panne de base. L'éditeur
+ * recevait ses sections sous forme de texte, et cassait sur
+ * `sections.map is not a function` — une erreur de rendu, à trois étages du
+ * vrai coupable.
+ *
+ * On ne dépend donc plus de ce que le pilote a bien voulu faire : si c'est une
+ * chaîne, on la décode ; sinon on la prend telle quelle. Un `JSON.parse` qui
+ * échoue lève, et c'est voulu — une colonne `JSON` qui ne contient pas du JSON
+ * est une corruption, pas un cas à rattraper en silence.
+ */
+export function jsonDeLaBase<T>(valeur: T | string | null | undefined): T | null {
+  if (valeur === null || valeur === undefined) return null;
+  if (typeof valeur === 'string') return JSON.parse(valeur) as T;
+  // MariaDB peut aussi rendre un `Buffer` selon le jeu de caractères déclaré.
+  if (valeur instanceof Uint8Array) return JSON.parse(new TextDecoder().decode(valeur)) as T;
+  return valeur;
+}
+
+/**
  * Le code d'erreur d'un doublon, à un seul endroit.
  *
  * PostgreSQL disait `23505`, MySQL dit `ER_DUP_ENTRY`. Les appelants
