@@ -18,6 +18,7 @@
     "base:stop": "docker compose down",
     "base:reinit": "docker compose down -v && docker compose up -d",
     "migrer": "node scripts/migrer.mjs",
+    "mot-de-passe": "node scripts/mot-de-passe.mjs",
     "importer-images": "node scripts/relever-alt.mjs && node scripts/importer-images.mjs",
     "convertir": "node scripts/convertir-pages.mjs",
     "predev": "docker compose up -d",

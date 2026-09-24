@@ -273,3 +273,32 @@ ces deux paragraphes.
 
 En développement elle reste **vide**, et c'est voulu : les images passent alors
 par la route `/medias/`, qui les lit sur le disque d'à côté.
+
+## Rentrer dans le BackOffice quand le mot de passe est perdu
+
+Il n'y a pas de « mot de passe oublié » dans l'application, et c'est un choix :
+un tel formulaire suppose une boîte mail joignable, et ouvre une porte de
+secours que personne ne surveille. Les comptes se comptent sur une main, et
+leurs titulaires se joignent au téléphone.
+
+Le revers, c'est qu'un mot de passe perdu enferme dehors — les empreintes
+scrypt ne se remontent pas, et on ne change le sien qu'une fois entré. D'où
+`scripts/mot-de-passe.mjs`, qui écrit directement en base.
+
+```bash
+npm run mot-de-passe                      # liste les comptes
+npm run mot-de-passe -- kevin@machy.fr    # en redéfinit un
+```
+
+Il vise la base de `DATABASE_URI`, donc celle du docker-compose par défaut.
+Pour la base en ligne, poser la variable le temps de la commande — sous
+PowerShell, en une ligne qui ne laisse rien derrière elle :
+
+```powershell
+$env:DATABASE_URI = "mysql://u750876317_kevinmachy:$(Read-Host 'Mot de passe de la base')@srv926.hstgr.io:3306/u750876317_kevinmachy"; npm run mot-de-passe; $env:DATABASE_URI = $null
+```
+
+Redéfinir un mot de passe **ferme les sessions ouvertes** du compte. Un mot de
+passe qu'on remplace parce qu'on l'a perdu peut aussi l'avoir été parce qu'il a
+fuité : laisser vivre les sessions existantes ne changerait rien pour qui les
+détient.
