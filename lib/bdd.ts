@@ -1,4 +1,5 @@
 import 'server-only';
+import { cache } from 'react';
 import mysql, {
   type Connection,
   type Pool,
@@ -97,31 +98,50 @@ function reserve(): Promise<Pool> {
 }
 
 /**
- * De quoi exécuter une requête, puis ranger.
+ * Une connexion par requête HTTP, et une seule.
  *
- * Deux régimes, et la différence n'est pas un détail de performance.
+ * `cache` de React mémorise par requête : le premier appel ouvre la connexion,
+ * tous les suivants reçoivent la même, et la requête d'après repart de zéro.
+ * C'est exactement la portée qu'un Worker autorise — ni plus courte, ni plus
+ * longue.
+ *
+ * Pourquoi pas plus longue : un objet d'entrée-sortie créé pendant une requête
+ * ne peut pas servir à la suivante, la plateforme le refuse explicitement
+ * (« Cannot perform I/O on behalf of a different request »). Une réserve gardée
+ * sur `globalThis` faisait donc échouer toute page servie après la première.
+ *
+ * Pourquoi pas plus courte : une connexion par requête SQL, c'était le premier
+ * correctif, et il a tenu tant que les pages n'interrogeaient la base que
+ * deux ou trois fois. L'éditeur du BackOffice en fait **cinquante-sept**. Il
+ * ouvrait donc cinquante-sept connexions, dont beaucoup en même temps, là où
+ * Hyperdrive n'en accepte que vingt de front. La page ne répondait jamais, et
+ * le journal du Worker ne montrait ni erreur ni trace — seulement un
+ * `canceled`, la marque d'une requête qui n'a pas abouti.
+ *
+ * Plusieurs requêtes SQL lancées ensemble sur une même connexion ne se gênent
+ * pas : `mysql2` les met en file et les envoie l'une après l'autre. On perd le
+ * parallélisme, on gagne cinquante-six poignées de main.
+ *
+ * **La connexion n'est pas refermée à la main**, et c'est délibéré : `cache` ne
+ * prévient pas de la fin d'une requête. Cloudflare détruit le contexte
+ * d'entrée-sortie quand la réponse est partie, ce qui coupe la liaison, et
+ * Hyperdrive reprend la sienne de son côté. Une connexion en suspens par
+ * requête, au lieu de cinquante-sept ouvertes et refermées.
+ */
+const connexionDeLaRequete = cache(
+  async (): Promise<Connection> =>
+    mysql.createConnection({ uri: await adresse(), ...commun() }),
+);
+
+/**
+ * De quoi exécuter une requête.
  *
  * Sur un serveur, la réserve est partagée et survit aux requêtes : c'est tout
- * l'intérêt d'une réserve.
- *
- * **Dans un Worker, c'est interdit.** Un objet d'entrée-sortie créé pendant une
- * requête ne peut pas servir à la suivante — la plateforme le refuse
- * explicitement : « Cannot perform I/O on behalf of a different request ».
- * Garder la réserve sur `globalThis` faisait donc échouer toute page servie
- * après la première. On ouvre une connexion par opération, et on la ferme.
- *
- * C'est précisément ce pour quoi Hyperdrive existe : il garde les connexions
- * ouvertes de son côté, à nous de ne rien garder du nôtre.
+ * l'intérêt d'une réserve. Dans un Worker, voir juste au-dessus.
  */
 async function avec<T>(travail: (c: Pool | Connection) => Promise<T>): Promise<T> {
   if (!surWorker()) return travail(await reserve());
-
-  const connexion = await mysql.createConnection({ uri: await adresse(), ...commun() });
-  try {
-    return await travail(connexion);
-  } finally {
-    await connexion.end();
-  }
+  return travail(await connexionDeLaRequete());
 }
 
 /**
