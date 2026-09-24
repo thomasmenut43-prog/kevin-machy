@@ -12,6 +12,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "paquet": "opennextjs-cloudflare build",
+    "deployer": "npm run paquet && wrangler deploy",
     "base": "docker compose up -d",
     "base:stop": "docker compose down",
     "base:reinit": "docker compose down -v && docker compose up -d",

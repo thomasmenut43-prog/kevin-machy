@@ -49,34 +49,53 @@ Worker n'a pas de disque.
 Les deux passent désormais par un **coffre** (`lib/coffre.ts`) : quatre
 opérations — écrire, lire, effacer, copier — et deux mises en œuvre. Le disque
 reste le choix par défaut et sert au développement comme à tout hébergement
-qui soit un vrai serveur ; R2 prend le relais quand `COFFRE=r2`.
+qui soit un vrai serveur ; le guichet de Hostinger prend le relais quand
+`COFFRE=hostinger`.
 
 Chacune est chargée à la demande, sans quoi la version Workers embarquerait
-`node:fs` et la version Node un client R2.
+`node:fs` et la version Node un client dont elle n'a que faire.
 
-Le seau est à créer avant le premier déploiement :
+**R2 avait été écrit, puis retiré.** Il exige une carte bancaire sur le compte
+même pour sa part offerte, et Hostinger offre dix fois plus d'espace déjà payé.
+Surtout, les images y sont servies par Apache et ne passent plus par le Worker :
+Cloudflare compte chaque requête, et une page de vingt photographies en vaudrait
+vingt-et-une. La mise en place est décrite dans `hostinger/LISEZ-MOI.md`.
 
-```bash
-npx wrangler r2 bucket create kevin-machy-medias
-```
+## Ce qui a été levé : la base
+
+Un Worker est éphémère. Joindre MySQL directement lui coûterait, à chaque
+invocation, une poignée de main TCP puis TLS puis l'authentification — plus de
+cent seize millisecondes avant la première requête. Hyperdrive tient des
+connexions déjà ouvertes près de la base et les prête.
+
+Il rend une adresse ordinaire, que `mysql2` sait utiliser telle quelle : c'est
+pourquoi rien d'autre ne change. `lib/bdd.ts` va la chercher quand
+`BASE=hyperdrive`, et lit `DATABASE_URI` partout ailleurs.
+
+Un détail qui compte : la réserve de connexions garde désormais **une promesse**
+et non un objet. Deux requêtes simultanées sur un serveur qui démarre en
+ouvriraient chacune une sans ça.
 
 ## Ce qui reste
 
-**La base.** Elle reste chez Hostinger, jointe par Hyperdrive. Deux
-préalables que le code ne peut pas résoudre :
+**Deux gestes dans les interfaces, que le code ne peut pas faire.**
 
-- l'accès distant de Hostinger n'accepte qu'**une adresse ou `%`**, et
-  Hyperdrive sort par les plages de Cloudflare — donc `%`, avec ce que ça
-  suppose de mot de passe solide ;
-- la configuration Hyperdrive se crée dans le tableau de bord, et donne un
-  identifiant à poser dans `wrangler.jsonc`.
+L'accès distant de Hostinger n'accepte qu'**une adresse ou `%`**, et Hyperdrive
+sort par les plages de Cloudflare : c'est donc `%`. Un port MySQL ouvert sur
+Internet se fait balayer en permanence, et la prochaine faille du moteur
+devient directement exploitable — c'est le vrai coût de ce choix, et il ne se
+règle pas par un mot de passe.
 
-Ensuite seulement `lib/bdd.ts` prendra sa connexion depuis la liaison plutôt
-que de `DATABASE_URI`.
+Puis la passerelle se crée, et donne l'identifiant à poser dans
+`wrangler.jsonc` :
 
-**Le déménagement des fichiers existants.** Le coffre sait écrire dans R2, mais
-personne n'y a encore versé ce qui dort dans `medias/`. À faire le jour du
-basculement, pas avant.
+```bash
+npx wrangler hyperdrive create kevin-machy-base   --connection-string="mysql://UTILISATEUR:MOTDEPASSE@srv926.hstgr.io:3306/BASE"
+```
+
+**Le déménagement des fichiers existants.** Le guichet sait écrire chez
+Hostinger, mais personne n'y a encore versé ce qui dort dans `medias/`. À faire
+le jour du basculement, pas avant.
 
 ## Le cache
 
@@ -87,7 +106,7 @@ garder ce qui a été calculé.
 
 | pièce | où | à quoi ça sert |
 |---|---|---|
-| `incrementalCache` | R2, seau `kevin-machy-cache` | garde les pages déjà rendues |
+| `incrementalCache` | KV | garde les pages déjà rendues |
 | `tagCache` | D1, `kevin-machy-etiquettes` | **c'est ce qui fait marcher « Publier »** |
 | `queue` | `direct` | refait une page périmée dans la foulée |
 
@@ -100,16 +119,16 @@ Pour la file, `direct` suffit : l'autre voie passe par des objets durables,
 utiles quand les régénérations se bousculent, ce qui suppose un trafic que ce
 site n'aura pas. Une pièce de moins à entretenir.
 
-Trois ressources à créer avant le premier déploiement :
+KV plutôt que R2, là encore pour éviter la carte bancaire. Son gigaoctet offert
+dépasse largement ce que pèsent les pages d'un site vitrine.
 
-```bash
-npx wrangler r2 bucket create kevin-machy-medias
-npx wrangler r2 bucket create kevin-machy-cache
-npx wrangler d1 create kevin-machy-etiquettes    # recopier l'identifiant rendu
-```
+Les ressources sont créées, leurs identifiants sont dans `wrangler.jsonc` :
 
-Le `database_id` de D1 est un **emplacement à remplir** dans `wrangler.jsonc` :
-il n'existe qu'une fois la base créée.
+| | |
+|---|---|
+| Hyperdrive | `5ec15d5b93d84f13ae16e4f44889027b` |
+| KV | `713636edcb6c4cf69bcb66c5e30e587b` |
+| D1 | `6d19748f-0f9a-498c-bf7d-9f4a679086df` |
 
 ## Les types des liaisons
 
@@ -130,3 +149,127 @@ développeur : OpenNext crée des liens symboliques, que Windows refuse aux
 comptes ordinaires. *Paramètres → Confidentialité et sécurité → Espace
 développeurs*, ou construire en intégration continue, sous Linux — ce qui sera
 de toute façon le cas en production.
+
+## Déployer : toujours reconstruire
+
+```bash
+npm run deployer
+```
+
+Ce script fait deux choses dans l'ordre, et l'ordre est tout : il refabrique
+`.open-next/` à partir des sources, **puis** l'envoie.
+
+`wrangler deploy` seul n'est pas un déploiement du code : c'est un envoi du
+dernier paquet construit. Appelé après une correction non recompilée, il
+renvoie l'ancien code sans rien signaler — la commande réussit, la version
+change, et la panne qu'on vient de corriger persiste. Deux correctifs ont été
+« déployés » ainsi avant qu'on s'en aperçoive.
+
+Ce qui a tranché : lire le paquet réellement envoyé.
+
+```bash
+npx wrangler deploy --dry-run --outdir=.paquet
+```
+
+Il fabrique, sans rien envoyer, le fichier exact que Cloudflare reçoit — celui
+dont les numéros de ligne apparaissent dans les piles d'erreur. `.open-next/worker.js`
+n'en est que l'enveloppe, et ses quarante lignes ne correspondent à rien de ce
+qui tourne là-bas.
+
+## Hyperdrive ne prépare pas les requêtes
+
+`mysql2` sait parler à la base de deux façons, et Hyperdrive n'en relaie
+qu'une.
+
+| | |
+|---|---|
+| `execute()` | prépare la requête côté base (`COM_STMT_PREPARE`) — **refusé** |
+| `query()` | envoie la requête assemblée et échappée — accepté |
+
+Le refus est explicite dans les journaux du Worker — *« Hyperdrive does not
+currently support MySQL COM_STMT_PREPARE messages »* — mais invisible depuis le
+navigateur, qui n'obtient qu'un 500 sans corps. Toute page lisant la base
+tombait ; celles qui redirigeaient avant de lire semblaient fonctionner, ce qui
+égarait le diagnostic.
+
+`lib/bdd.ts` utilise donc `query()` **partout**, et non seulement sur
+Cloudflare : `execute()` étant le plus strict des deux, garder les deux chemins
+aurait laissé passer en développement des requêtes refusées en ligne.
+
+La protection contre l'injection SQL est inchangée — c'est `mysql2` qui
+échappe les valeurs, et il le fait pour le dialecte qu'il a en face.
+
+## Pour lire une erreur en ligne
+
+Le Worker n'envoie qu'un 500 nu. Le message est dans ses journaux :
+
+```bash
+npx wrangler tail --format json
+```
+
+Les piles sont minifiées, mais leurs numéros de ligne désignent le paquet que
+`--dry-run` reconstruit à l'identique. C'est ainsi que les deux pannes ci-dessus
+ont été nommées.
+
+## Le déploiement automatique
+
+Depuis `.github/workflows/deploiement.yml` : toute fusion vers `main` met le
+site en ligne. `npm run deployer` reste là pour les envois à la main — un
+correctif urgent, une vérification.
+
+L'ordre des étapes est le garde-fou : base à jour → types → construction →
+envoi. La première qui échoue arrête tout, et rien ne part.
+
+### Les trois secrets, côté GitHub
+
+*Settings → Secrets and variables → Actions → New repository secret*
+
+| Nom | Ce que c'est |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Le droit de déployer. Modèle **Edit Cloudflare Workers**, compte *Kevin Machy* uniquement. |
+| `CLOUDFLARE_ACCOUNT_ID` | L'identifiant du compte — `npx wrangler whoami` le donne. |
+| `DATABASE_URI` | La base de Kevin chez Hostinger, la même adresse que dans le `.env` local. |
+
+Le jeton Cloudflare n'est montré **qu'une fois**, à sa création. Perdu, il ne
+se retrouve pas : on en fabrique un autre et on révoque l'ancien.
+
+### La base est lue, jamais modifiée
+
+Le déploiement construit contre la vraie base, parce que le contenu du site y
+vit : construit contre une base vide, il produirait un site vide.
+
+Il ne fait que lire. Les migrations ne sont **pas** appliquées
+automatiquement — `npm run migrer -- --verifier` se contente de dire si la base
+a pris du retard, et arrête le déploiement si c'est le cas. Ce mode ne crée
+même pas la table de suivi : il peut être lancé contre la base du client sans y
+laisser de trace.
+
+C'est un choix. MariaDB ne sait pas revenir en arrière sur une modification de
+structure : une migration fautive appliquée toute seule toucherait les vraies
+photos et les vrais tarifs avant que quiconque l'ait vue tourner. Le jour où le
+déploiement s'arrête là, sauvegarder la base, puis :
+
+```bash
+npm run migrer
+```
+
+### Les variables figées à la construction
+
+`NEXT_PUBLIC_BASE_MEDIAS` et `NEXT_PUBLIC_URL_SITE` sont **inscrites dans le
+code au moment de la construction**, pas lues à l'exécution — c'est ce que veut
+dire le préfixe. Les déclarer dans `wrangler.jsonc` ne suffit pas : elles
+doivent aussi être dans l'environnement qui construit.
+
+D'où une valeur en deux endroits, qui doivent rester d'accord :
+
+| | `wrangler.jsonc` | `deploiement.yml` |
+|---|---|---|
+| `NEXT_PUBLIC_BASE_MEDIAS` | pour l'exécution | pour la construction |
+
+Oubliée à la construction, elle ne casse rien de visible : les photos repassent
+simplement par le Worker au lieu d'Apache, et chacune consomme une des cent
+mille requêtes quotidiennes. C'est le genre de panne qui ne se voit pas — d'où
+ces deux paragraphes.
+
+En développement elle reste **vide**, et c'est voulu : les images passent alors
+par la route `/medias/`, qui les lit sur le disque d'à côté.
