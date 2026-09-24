@@ -34,9 +34,18 @@ Corollaire pour le simulateur d'iris : si `IRIS_GRILLE.parIris` est vide, la pag
 
 ## Aucune image générique
 
-Les photographies actuelles sont des images de substitution Pexels, en attendant la sélection
-de Kevin — voir `assets.md` et `CREDITS-IMAGES.md`. Un emplacement sans source affiche un cadre
-nommé, jamais un visuel de banque d'images choisi au hasard pour boucher un trou.
+Le site tourne sur les photographies de Kevin depuis le 24 septembre 2026. Les images de
+substitution Pexels ont été retirées, et `CREDITS-IMAGES.md` avec elles — il ne servait qu'à
+tracer leur provenance. L'inventaire, ce qui manque encore et les consignes de livraison vivent
+dans `assets.md`.
+
+La règle ne bouge pas : un emplacement sans source affiche un **cadre nommé**, jamais un visuel
+de banque d'images choisi au hasard pour boucher un trou. Trois emplacements sont dans ce cas
+aujourd'hui, et ça se voit à l'écran — c'est voulu.
+
+Corollaire découvert en chemin : le script d'encodage **n'agrandit plus** une source trop petite.
+Il écarte les largeurs qu'elle ne porte pas, et l'annonce à chaque passage. Une galerie un peu
+moins définie vaut mieux qu'une galerie floue.
 
 ## Dépôt public
 
