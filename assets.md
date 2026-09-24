@@ -24,17 +24,44 @@ Dernière mise à jour : 2026-09-03.
 
 ---
 
-## 2. Photographies : 75 emplacements occupés par des images de substitution
+## 2. Photographies : la sélection de Kevin
 
-Aucune photographie de reportage de Kevin n'a été fournie. Sur demande explicite, les emplacements ont été remplis avec des **images libres de droits issues de Pexels**, pour que la mise en page, les recadrages et le rythme puissent être jugés dès maintenant.
+**Les images de substitution Pexels ont été retirées.** Le site tourne
+désormais sur les photographies de Kevin, versées depuis son dossier
+« Photos du site » le 24 septembre 2026.
 
-> **Ces images ne sont pas le travail de Kevin Machy et le site n'est pas publiable en l'état.**
-> Provenance détaillée : [`CREDITS-IMAGES.md`](CREDITS-IMAGES.md).
+Ce dossier contenait 80 fichiers matriciels. Le tri en a écarté 25 : treize qui
+ne sont pas des photographies (logos de clients, captures d'écran, fiches
+commerciales, une attestation de formation, une image générée par IA), sept
+simulations d'accrochage murale — un canapé, un cadre — qui sont des visuels
+produit sans emplacement sur le site, et cinq doublons exacts.
 
-Sélection guidée par trois règles, à reprendre pour la vraie sélection :
-- registre sombre et contrasté, cohérent avec le fond du site ;
-- pas d'image à fond blanc, qui perce un trou dans la page ;
-- rareté assumée — douze images d'accueil, quinze au maximum par galerie.
+**46 photographies ont été versées** dans `.cache/raw` sous des noms lisibles
+(`km-wed-`, `km-por-`, `km-iris-`, `km-kevin-`). Le tableau des
+emplacements ci-dessous dit laquelle va où.
+
+### Ce qui manque encore
+
+**La définition, pour les formats couchés.** Aucun fichier fourni ne dépasse
+1600 px de large : ce sont les copies web de son site actuel, pas ses
+originaux — 63 sur 80 portent une marque de réduction dans leur nom
+(`-scaled` de WordPress, `_11zon` d'un compresseur en ligne, `_rw_1200`
+d'un constructeur de site).
+
+Les 57 emplacements verticaux et carrés s'en contentent. Les 25 emplacements
+couchés, non : `heroWide` réclame 2560 px et `wide` 1920 px. Le script
+**n'agrandit plus** — il écarte les largeurs que la source ne porte pas et le
+dit à chaque passage. La plus grande image du premier écran fait donc 1440 px
+au lieu de 2560.
+
+**Une vingtaine d'originaux en 2560 px de large** suffiraient à lever ça, pour
+les seuls bandeaux.
+
+**La photographie d'entreprise n'a nulle part où aller.** Onze images fournies
+— Darty, Audiosolution, un cabinet médical, une équipe comptable — alors que le
+site n'a que trois univers : mariage, portrait, Studio de l'Iris. Soit elles
+ont été envoyées par réflexe, soit il manque une section. C'est une question de
+cadrage, pas de sélection.
 
 ### Emplacements par page
 
@@ -64,9 +91,17 @@ Sélection guidée par trois règles, à reprendre pour la vraie sélection :
 | **Contact** | `contact-studio` | Paysage 3/2 — le studio du 14 avenue Foch |
 | **Partage** | `og-default`, `og-mariage`, `og-portrait`, `og-iris`, `og-apropos`, `og-contact` | 1200 × 630, générés automatiquement à partir des sources |
 
-### Le seul emplacement réellement vide
+### Les trois emplacements vides
 
-`iris-support-bijou` — aucune photographie de bijou gravé d'iris n'existe dans les sources disponibles, et il n'a pas été jugé acceptable d'y mettre une image générique. Le site affiche à cet endroit un cadre nommé portant l'identifiant de l'emplacement. Il disparaîtra dès que Kevin fournira la photographie : un bracelet, un collier ou une bague portés, en carré.
+Un emplacement sans source n'est **jamais** comblé par un visuel générique : le
+composant `<Photo>` affiche un cadre nommé portant l'identifiant. Trois
+subsistent.
+
+| Emplacement | Ce qu'il faudrait |
+|---|---|
+| `iris-animal-02` | Un second iris d'animal. Le premier existe — un œil à pupille en fente horizontale, à côté d'un iris humain — et occupe `iris-animal-01`. |
+| `iris-support-bijou` | Un bracelet, un collier ou une bague gravés d'un iris, portés, en carré. |
+| `contact-studio` | Une vue du studio du 14 avenue Foch, en 3/2. |
 
 ---
 
@@ -83,10 +118,18 @@ Sélection guidée par trois règles, à reprendre pour la vraie sélection :
 
 ## 4. Poids produit
 
+Mesuré le 24 septembre 2026, après la bascule sur les photographies de Kevin.
+
 | Format | Fichiers | Moyenne | Total |
 |---|---|---|---|
-| AVIF | 300 | 40 Ko | 11,8 Mo |
-| WebP | 300 | 54 Ko | 15,8 Mo |
-| JPEG | 306 | 80 Ko | 24,0 Mo |
+| AVIF | 214 | 44 Ko | 9,2 Mo |
+| WebP | 214 | 62 Ko | 12,9 Mo |
+| JPEG | 220 | 81 Ko | 17,5 Mo |
 
-L'image du premier écran pèse **100 Ko en AVIF à 1920 px**, **65 Ko à 1440 px** et **47 Ko sur téléphone** — c'est le seul levier qui compte pour le LCP, et il est tenu.
+Moins de fichiers qu'avant, et pour une raison qui n'est pas une bonne
+nouvelle : les largeurs qu'aucune source ne porte ne sont plus fabriquées.
+
+L'image du premier écran pèse **107 Ko en AVIF à 1440 px** et **61 Ko à
+960 px**. La variante 1920 px n'existe plus, faute de source assez grande — sur
+un écran dense, le navigateur étire donc celle de 1440. C'est le seul levier
+qui compte pour le LCP, et il est tenu de justesse.
