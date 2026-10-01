@@ -117,7 +117,7 @@ export function Temoignages() {
   return (
     <ul className="trio">
       {TEMOIGNAGES.map((t, i) => (
-        <Reveal key={t.auteur} as="li" retard={i * 110}>
+        <Reveal key={t.auteur} as="li" retard={Math.min(i, 3) * 110}>
           <figure className="citation">
             <blockquote>« {t.texte} »</blockquote>
             <figcaption>
