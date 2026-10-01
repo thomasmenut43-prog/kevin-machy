@@ -40,9 +40,18 @@
   --mesure: 62ch;
   --mesure-courte: 46ch;
 
-  /* — Mouvement — */
+  /* — Mouvement —
+
+     600 ms, c'était assez long pour qu'on voie l'animation plutôt que la
+     photographie. Sur le site d'un photographe, la mise en scène doit préparer
+     le regard, pas le faire attendre : le mouvement se remarque, l'attente
+     s'agace.
+
+     350 ms reste perceptible — l'image monte et se révèle — mais c'est fini
+     avant que l'œil se pose. Combiné au déclenchement anticipé de
+     `components/Reveal.tsx`, il ne reste aucun délai visible. */
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --duree: 600ms;
+  --duree: 350ms;
 
   color-scheme: dark;
 }
@@ -565,7 +574,10 @@ html[data-js] [data-voile] > * {
 
 html[data-js] [data-voile].est-visible > * {
   clip-path: inset(0 0 0 0);
-  transition: clip-path 700ms var(--ease);
+  /* 700 ms à l'origine. Le voile reste la révélation la plus lente du site —
+     c'est sa raison d'être — mais il ne doit plus se terminer après que le
+     regard est arrivé. */
+  transition: clip-path 450ms var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {

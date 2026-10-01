@@ -300,7 +300,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
           <Entete champ={v.entete} />
           <div className={s.collections}>
             {((v.cartes ?? []) as Valeurs[]).map((c, i) => (
-              <Reveal key={i} retard={i * 120}>
+              <Reveal key={i} retard={Math.min(i, 3) * 120}>
                 <Link href={c.href || '/'} className={s.collection}>
                   <Image media={img(c.image)} sizes="(min-width: 860px) 30vw, 100vw" />
                   {c.numero ? <span className={s.collectionNum}>{c.numero}</span> : null}
@@ -557,11 +557,11 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
                 {/* L'image d'abord, le texte dessous : c'est l'ordre de lecture
                     du site, et il tient aussi bien en colonne sur téléphone. */}
                 {img(etape.image) ? (
-                  <Reveal mode="voile" retard={i * 110}>
+                  <Reveal mode="voile" retard={Math.min(i, 3) * 110}>
                     <Image media={img(etape.image)} sizes="(min-width: 760px) 30vw, 100vw" />
                   </Reveal>
                 ) : null}
-                <Reveal retard={i * 110 + 80} style={{ marginTop: 'clamp(18px, 2vw, 26px)' }}>
+                <Reveal retard={Math.min(i, 3) * 110 + 80} style={{ marginTop: 'clamp(18px, 2vw, 26px)' }}>
                   <p className={p.jalonNum}>{String(i + 1).padStart(2, '0')}</p>
                   <h3 className="h4" style={{ marginTop: '0.7rem' }}>
                     {etape.titre}
@@ -611,7 +611,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
           <Entete champ={v.entete} />
           <div className={p.tarifs}>
             {((v.formules ?? []) as Valeurs[]).map((f, i) => (
-              <Reveal as="article" className={p.tarif} key={i} retard={i * 100}>
+              <Reveal as="article" className={p.tarif} key={i} retard={Math.min(i, 3) * 100}>
                 <div>
                   <h3 className="h3">{f.nom}</h3>
                   {/* Le prix dépend du nombre d'iris : plutôt que de l'écrire,

@@ -45,7 +45,19 @@ export function Reveal({
           obs.unobserve(entree.target);
         }
       },
-      { rootMargin: '0px 0px -12% 0px', threshold: 0.08 },
+      // Déclenché **avant** que l'élément entre dans l'écran, pas après.
+      //
+      // La marge basse était négative — il fallait être 12 % à l'intérieur pour
+      // que la révélation commence. On voyait donc l'animation se jouer, ce qui
+      // ressemblait à une lenteur de chargement alors que c'en était l'inverse :
+      // une mise en scène, arrivée trop tard.
+      //
+      // Positive, elle étend le bas de l'écran de 25 % : l'animation démarre
+      // pendant que l'élément monte encore, et elle est finie quand le regard
+      // l'atteint. Le navigateur, lui, a commencé à télécharger l'image bien
+      // avant — son propre seuil de chargement différé est de l'ordre d'un
+      // millier de pixels, largement devant cette marge.
+      { rootMargin: '0px 0px 25% 0px', threshold: 0 },
     );
 
     obs.observe(el);
