@@ -138,3 +138,78 @@ nslookup -type=TXT dronezvous.com 8.8.8.8
 Puis, et c'est le seul contrôle qui prouve vraiment quelque chose :
 **s'envoyer un message depuis une adresse extérieure vers
 `kevin@dronezvous.com`, et vérifier qu'il arrive.**
+
+---
+
+# Fait le 1er octobre 2026
+
+La zone a été déplacée. **Rien n'a changé de ce qui est servi** : `dronezvous.com`
+affiche toujours l'ancien WordPress, le courrier arrive toujours chez Hostinger.
+
+## Ce qui a été corrigé avant la bascule
+
+Le scan automatique de Cloudflare avait importé 14 enregistrements, et il s'est
+trompé sur presque tous.
+
+| | |
+|---|---|
+| **`medias` manquait** | le scan ne suit pas les enregistrements `ALIAS`. Sans lui, toutes les photographies du site tombaient |
+| Quatre adresses de CDN importées | deux `A`, deux `AAAA` pointant vers `*.cdn.hstgr.net`, qui ne répondent plus pour un domaine qu'Hostinger ne sert plus |
+| `autoconfig` et `autodiscover` proxifiés | la configuration automatique de sa boîte mail aurait cessé de fonctionner |
+| `www` pointait vers un nom de CDN | remplacé par l'adresse du serveur |
+
+Corrections faites par l'API plutôt qu'à la main : dix opérations sur la zone
+d'un client, c'est trop pour cliquer dans une interface sans se tromper.
+
+## La zone, après
+
+Douze enregistrements, **tous en nuage gris**. Cloudflare n'est pour l'instant
+qu'un annuaire : il répond aux questions, il ne voit passer aucun trafic.
+
+```
+A      dronezvous.com                145.14.156.225
+A      www.dronezvous.com            145.14.156.225
+A      medias.dronezvous.com         145.14.156.225
+A      ftp.dronezvous.com            145.14.156.225
+CNAME  autoconfig.dronezvous.com     autoconfig.mail.hostinger.com
+CNAME  autodiscover.dronezvous.com   autodiscover.mail.hostinger.com
+MX     dronezvous.com                mx1.hostinger.fr   priorité 5
+MX     dronezvous.com                mx2.hostinger.fr   priorité 10
+TXT    dronezvous.com                v=spf1 include:_spf.mail.hostinger.com ~all
+TXT    dronezvous.com                google-site-verification=th6lWyELs1cnMlo_VOeqi4w1FX0ql7DWcrj98EAjJx8
+TXT    dronezvous.com                openai-domain-verification=dv-ocEOUk5xg8lbb6jkojV244AH
+TXT    _dmarc.dronezvous.com         v=DMARC1; p=none
+```
+
+Serveurs de noms : `galilea.ns.cloudflare.com` et `max.ns.cloudflare.com`.
+
+## Pourquoi il n'y a pas eu de coupure
+
+Pendant la propagation, une partie des visiteurs interrogeait encore Hostinger
+et l'autre déjà Cloudflare. Les deux servaient la même chose : le site et le
+courrier au même endroit. Vérifié avant de basculer — le serveur répond en
+direct sur les deux noms, avec un certificat valide, donc aucun des deux chemins
+ne menait à une erreur.
+
+**La zone est restée chez Hostinger.** Tant qu'elle existe, revenir en arrière
+consiste à remettre les deux anciens serveurs de noms chez IONOS.
+
+# Ce qui vient ensuite
+
+Kevin veut **`kevinmachy.fr`** comme adresse principale. Il possède déjà quatre
+noms, les trois autres redirigeant aujourd'hui vers `dronezvous.com` :
+
+| | |
+|---|---|
+| `dronezvous.com` | le site actuel — expire le 12 juillet 2027 |
+| `dronezvous.fr` | redirection |
+| `kevinmachy.com` | redirection — expire le 5 février 2027 |
+| `kevinmachy.fr` | redirection — expire le 5 février 2027 |
+
+**`dronezvous.com` ne se jette pas.** Il porte l'historique, les liens entrants
+et la fiche Google. Il redirigera vers `kevinmachy.fr` **définitivement**, ce
+qui veut dire qu'on le renouvelle indéfiniment.
+
+**L'adresse mail ne bouge pas.** `kevin@dronezvous.com` est sur ses devis, ses
+factures, et dans les carnets d'adresses de ses clients. Un changement à la
+fois.
