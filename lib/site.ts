@@ -6,8 +6,21 @@
 export const SITE = {
   nom: 'Kevin Machy',
   role: 'Photographe · Artisan d’Art',
-  /** À remplacer par le domaine définitif avant mise en ligne. */
-  url: 'https://www.kevinmachy.fr',
+  /**
+   * Le domaine définitif, **sans `www`**.
+   *
+   * Kevin possède quatre noms : `dronezvous.com` porte le site actuel et tout
+   * son référencement, les trois autres y redirigent. Celui-ci devient le
+   * principal — `dronezvous` datait de l'époque où il faisait surtout du drone.
+   *
+   * Une seule forme fait autorité, et `www.kevinmachy.fr` redirige vers elle.
+   * Laisser vivre les deux dédoublerait le référencement : Google verrait deux
+   * sites identiques et répartirait entre eux ce qui devrait aller à un seul.
+   *
+   * Cette valeur n'est qu'un repli : les Paramètres du BackOffice la
+   * remplacent, et ce sont eux qui font foi en ligne.
+   */
+  url: 'https://kevinmachy.fr',
   ville: 'Le Puy-en-Velay',
   /** Adresse du studio, confirmée par la page de réservation SumUp. */
   adresse: '14 avenue Foch',
