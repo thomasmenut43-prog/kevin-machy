@@ -1,0 +1,68 @@
+# Corrections de contenu, à la demande.
+#
+# Certaines corrections ne vivent pas dans le code mais dans la base : le texte
+# des pages, les ancres des sections. Les déployer ne suffit donc pas — il faut
+# les appliquer.
+#
+# Or le mot de passe de la base n'existe en clair nulle part : il est posé en
+# secret ici, en secret chez Hyperdrive, et Hostinger ne le réaffiche pas. Le
+# réinitialiser pour lancer deux scripts coûterait une coupure de courrier, ce
+# qui est arrivé une fois et suffit.
+#
+# Ce workflow emprunte donc le secret que le déploiement utilise déjà. Il ne se
+# déclenche que sur un clic : **Actions → Corrections de contenu → Run
+# workflow**.
+
+name: Corrections de contenu
+
+on:
+  workflow_dispatch:
+    inputs:
+      appliquer:
+        description: 'Appliquer les corrections (sinon, se contente de dire ce qui manque)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: corrections
+  cancel-in-progress: false
+
+jobs:
+  corriger:
+    runs-on: ubuntu-latest
+
+    env:
+      # La base de Kevin. Le même secret que le déploiement, qui ne la lit que
+      # pour construire — ici on y écrit, d'où le déclenchement manuel.
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Toujours commencé par là, même quand on applique : le relevé d'avant
+      # dit ce qui va changer, et reste dans le journal si quelque chose se
+      # passe mal ensuite.
+      - name: Ce qui manque, avant
+        run: |
+          npm run ancres -- --verifier || true
+          npm run adresse -- --verifier || true
+
+      # Les deux scripts sont idempotents : relancés, ils ne refont rien.
+      - name: Appliquer
+        if: ${{ inputs.appliquer }}
+        run: |
+          npm run ancres
+          npm run adresse
+
+      - name: Ce qui reste, après
+        if: ${{ inputs.appliquer }}
+        run: |
+          npm run ancres -- --verifier
+          npm run adresse -- --verifier
