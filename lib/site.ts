@@ -23,7 +23,7 @@ export const SITE = {
   url: 'https://kevinmachy.fr',
   ville: 'Le Puy-en-Velay',
   /** Adresse du studio, confirmée par la page de réservation SumUp. */
-  adresse: '14 avenue Foch',
+  adresse: '7 avenue Charles Dupuy',
   codePostal: '43000',
   region: 'Haute-Loire',
   telephone: '07 81 74 32 84',
@@ -36,9 +36,9 @@ export const SITE = {
 export const LIENS = {
   accesClients: 'https://kevinmachy.pic-time.com/client',
   reservation: 'https://www.sumupbookings.com/kevin-photographe',
-  linkedin: 'https://www.linkedin.com/in/kevin-machy-dronez-vous-43a342253',
+  linkedin: 'https://www.linkedin.com/in/kevin-machy-43a342253/',
   facebook: 'https://www.facebook.com/profile.php?id=100072639815595',
-  instagram: 'https://www.instagram.com/kevinphotographe43/',
+  instagram: 'https://www.instagram.com/kevinmachy.photographe/',
   youtube: 'https://www.youtube.com/channel/UCP4akj3DrpgwqEhnrrp9V3w',
   avis: 'https://dronezvous.com/temoignages/',
   mentions: 'https://dronezvous.com/mentions-legales/',

@@ -80,8 +80,19 @@ function Enveloppe({
 }) {
   // L'identifiant sert à l'éditeur : sélectionner une section dans le rail
   // amène l'aperçu dessus.
+  //
+  // Une ancre nommée le remplace quand elle existe, pour qu'un bouton puisse
+  // viser cette section par un nom stable. L'identifiant engendré, lui, change
+  // si la section est recréée — un lien écrit dessus se casserait en silence.
+  //
+  // L'éditeur garde sa prise : il cible `[data-cle]`, qui ne bouge jamais.
   return (
-    <section id={`section-${cle}`} data-type={type} style={styleSection(reglages)}>
+    <section
+      id={reglages?.ancre || `section-${cle}`}
+      data-cle={cle}
+      data-type={type}
+      style={styleSection(reglages)}
+    >
       {children}
     </section>
   );
