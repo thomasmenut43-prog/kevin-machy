@@ -23,8 +23,10 @@ on:
         type: boolean
         default: false
 
+# Partagé avec le déploiement : ce workflow en déclenche un, et deux
+# constructions simultanées se marcheraient dessus.
 concurrency:
-  group: corrections
+  group: mise-en-ligne
   cancel-in-progress: false
 
 jobs:
@@ -66,3 +68,20 @@ jobs:
         run: |
           npm run ancres -- --verifier
           npm run adresse -- --verifier
+
+  # Écrire en base ne suffit pas : les pages sont en cache, et ce cache ne
+  # s'invalide que par le bouton « Publier » du BackOffice, qui pose les
+  # étiquettes de rafraîchissement. Un script qui écrit directement contourne ce
+  # mécanisme — les corrections sont en base, et le site sert toujours
+  # l'ancienne version.
+  #
+  # Reconstruire règle la question : les pages sont figées à la construction,
+  # avec le contenu du moment.
+  #
+  # Constaté le 2 octobre 2026 : les ancres et l'adresse étaient corrigées en
+  # base depuis dix minutes, et le site n'en montrait rien.
+  remettre-en-ligne:
+    needs: corriger
+    if: ${{ inputs.appliquer }}
+    uses: ./.github/workflows/mise-en-ligne.yml
+    secrets: inherit
