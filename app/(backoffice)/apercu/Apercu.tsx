@@ -51,7 +51,12 @@ export function Apercu({
       // Message de navigation : on amène la section à l'écran sans rien
       // rerendre. Le rendu est déjà là, seule la position change.
       if (typeof ev.data.cible === 'string') {
-        const cible = document.getElementById(`section-${ev.data.cible}`);
+        // Par `data-cle`, et non par l'identifiant : une section peut porter
+        // une ancre nommée — « collections », « seance » — que l'éditeur ne
+        // connaît pas. `data-cle` ne bouge jamais, lui.
+        const cible = document.querySelector(
+          `[data-cle="${CSS.escape(ev.data.cible)}"]`,
+        ) as HTMLElement | null;
         cible?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }

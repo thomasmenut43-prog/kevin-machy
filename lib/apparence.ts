@@ -126,6 +126,19 @@ export type ReglagesSection = {
   fond?: Fond | null;
   espacement?: Espacement | null;
   masquee?: boolean | null;
+  /**
+   * Le nom sous lequel un bouton peut viser cette section.
+   *
+   * Sans lui, une section ne porte que l'identifiant que l'éditeur lui donne —
+   * `section-conv7ber0` — qui change si la section est recréée et ne veut rien
+   * dire pour qui écrit un lien. Un bouton « Voir les collections » pointant
+   * vers `#collections` ne trouvait donc rien, et ne faisait rien : pas
+   * d'erreur, pas de défilement, juste un bouton mort.
+   *
+   * Renseigné, il devient l'identifiant de la section. `#collections` mène
+   * alors où il dit.
+   */
+  ancre?: string | null;
 };
 
 /** Fond et rythme vertical d'une section. */
