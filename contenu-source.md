@@ -12,7 +12,7 @@ Règle : aucun fait, prix, durée, récompense ou témoignage absent de ce docum
 | Nom | Kevin Machy |
 | Statut | Photographe professionnel · Artisan d'Art · Télépilote de drone professionnel |
 | Base | Le Puy-en-Velay (Haute-Loire) |
-| Studio | 14 avenue Foch, Le Puy-en-Velay — **sur rendez-vous uniquement** |
+| Studio | 14 avenue Foch, Le Puy-en-Velay — **sur rendez-vous uniquement** *(relevé de l'ancien site ; Kevin a donné le 7 avenue Charles Dupuy en octobre 2026 — c'est elle que porte `lib/site.ts`)* |
 | Téléphone | 07 81 74 32 84 |
 | E-mail | kevin@dronezvous.com |
 | Zone | Haute-Loire et Loire — notamment Le Puy-en-Velay, Yssingeaux, Monistrol-sur-Loire, Saint-Étienne. Déplacements partout en Auvergne-Rhône-Alpes et au-delà selon les projets. |

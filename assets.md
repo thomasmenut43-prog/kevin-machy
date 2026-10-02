@@ -88,7 +88,7 @@ cadrage, pas de sélection.
 | **À propos** | `apropos-portrait` | Disponible — le vrai portrait de Kevin |
 | | `apropos-travail` | Paysage 3/2 — Kevin en reportage, photographié par un tiers |
 | | `apropos-silence` | Paysage 16/9 |
-| **Contact** | `contact-studio` | Paysage 3/2 — le studio du 14 avenue Foch |
+| **Contact** | `contact-studio` | Paysage 3/2 — le studio du 7 avenue Charles Dupuy |
 | **Partage** | `og-default`, `og-mariage`, `og-portrait`, `og-iris`, `og-apropos`, `og-contact` | 1200 × 630, générés automatiquement à partir des sources |
 
 ### Les trois emplacements vides
@@ -101,7 +101,7 @@ subsistent.
 |---|---|
 | `iris-animal-02` | Un second iris d'animal. Le premier existe — un œil à pupille en fente horizontale, à côté d'un iris humain — et occupe `iris-animal-01`. |
 | `iris-support-bijou` | Un bracelet, un collier ou une bague gravés d'un iris, portés, en carré. |
-| `contact-studio` | Une vue du studio du 14 avenue Foch, en 3/2. |
+| `contact-studio` | Une vue du studio du 7 avenue Charles Dupuy, en 3/2. |
 
 ---
 
