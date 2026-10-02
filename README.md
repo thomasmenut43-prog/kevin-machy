@@ -50,6 +50,7 @@ cms/catalogue.ts   les treize sections du catalogue
 lib/apparence.ts   tailles, couleurs, polices autorisées — source unique
 lib/bdd.ts         accès MySQL — voir docs/mysql.md
 lib/auth.ts        mots de passe, sessions, rôles
+contenu/           les textes repris de l'ancien site — voir docs/juridique.md
 migrations/        le schéma, un fichier SQL par étape
 docker-compose.yml MySQL de développement, le moteur de l'hébergeur visé
 ```
@@ -117,8 +118,9 @@ sources vivent dans `.cache/raw/`, ignoré par git. Après toute modification de
    publiable avant ce remplacement.**
 2. **Renseigner le domaine** dans `lib/site.ts` (`SITE.url`). Il sert aux URL canoniques, à
    l'Open Graph, au sitemap et aux données structurées.
-3. **Confirmer l'adresse du studio.** `14 avenue Foch, 43000 Le Puy-en-Velay` est relevé sur
-   la page Studio de l'Iris du site actuel ; le code postal a été complété. À valider avec Kevin.
+3. ~~**Confirmer l'adresse du studio.**~~ Fait : `7 avenue Charles Dupuy, 43000 Le
+   Puy-en-Velay`, donnée par Kevin en octobre 2026. L'ancienne adresse relevée sur le site
+   était fausse. Reste à la corriger sur sa page de réservation SumUp, qui l'affiche encore.
 4. **Brancher le formulaire de contact** (voir ci-dessous).
 5. **Vérifier l'adresse e-mail.** Elle est encore en `@dronezvous.com`, ce qui ne colle plus
    avec le positionnement. À arbitrer avec Kevin en même temps que le domaine.

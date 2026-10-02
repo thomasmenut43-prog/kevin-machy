@@ -53,11 +53,9 @@ export const ENTREPRISE_DEFAUT: Entreprise = {
     linkedin: LIENS.linkedin,
     youtube: LIENS.youtube,
     avis: LIENS.avis,
-    // Les pages légales vivent désormais sur le site : ces liens pointent chez
-    // lui, et non plus vers l'ancien domaine qui s'éteindra.
-    mentions: '/mentions-legales/',
-    cgv: '/conditions-generales-de-vente/',
-    cookies: '/politique-de-confidentialite/',
+    mentions: LIENS.mentions,
+    cgv: LIENS.cgv,
+    cookies: LIENS.cookies,
   },
   horaires: HORAIRES.map((h) => ({ jour: h.jour, ouverture: h.ouverture })),
 };

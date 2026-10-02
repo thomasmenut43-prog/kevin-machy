@@ -41,9 +41,13 @@ export const LIENS = {
   instagram: 'https://www.instagram.com/kevinmachy.photographe/',
   youtube: 'https://www.youtube.com/channel/UCP4akj3DrpgwqEhnrrp9V3w',
   avis: 'https://dronezvous.com/temoignages/',
-  mentions: 'https://dronezvous.com/mentions-legales/',
-  cgv: 'https://dronezvous.com/cgv/',
-  cookies: 'https://dronezvous.com/politique-de-cookies-ue/',
+  // Les trois pages juridiques vivent sur ce site depuis octobre 2026 : mentions
+  // légales, politique de confidentialité et conditions de vente y sont reprises
+  // de l'ancien site, intégralement. Elles pointaient vers dronezvous.com, qui
+  // s'éteindra — et la page de cookies, elle, n'existe plus du tout.
+  mentions: '/mentions-legales/',
+  cgv: '/conditions-generales-de-vente/',
+  cookies: '/politique-de-confidentialite/',
 } as const;
 
 export const NAV = [
