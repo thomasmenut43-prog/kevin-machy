@@ -24,8 +24,8 @@ import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteInd
 // ligne le temps de sa construction, et la remet après.
 export const dynamicParams = true;
 
-/** Revérifiées toutes les cinq minutes, comme l'accueil. */
-export const revalidate = 300;
+/** Revérifiées toutes les heures, comme l'accueil — qui explique pourquoi. */
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const chemins = await cheminsPublies().catch(() => []);
