@@ -86,12 +86,28 @@ function Enveloppe({
   // si la section est recréée — un lien écrit dessus se casserait en silence.
   //
   // L'éditeur garde sa prise : il cible `[data-cle]`, qui ne bouge jamais.
+  //
+  // ———
+  //
+  // **Un héros ne prend pas l'espacement vertical des sections.**
+  //
+  // Il porte le sien : `min-height: 100svh` pour le cadre, et le rembourrage de
+  // `.hero__contenu` pour poser le titre au-dessus du bas de l'image. Lui
+  // ajouter `--section` par-dessus poussait l'image vers le bas et laissait une
+  // bande noire entre la barre de navigation et la photographie — cent quatre-
+  // vingt-sept pixels sur un écran de 1440, puisque la valeur vaut 13vw.
+  //
+  // Kevin l'a signalé en se demandant si la barre n'était pas trop grosse. Elle
+  // fait soixante-dix-huit pixels : ce n'était pas elle.
+  const style = styleSection(reglages);
+  if (type === 'heros') delete style.paddingBlock;
+
   return (
     <section
       id={reglages?.ancre || `section-${cle}`}
       data-cle={cle}
       data-type={type}
-      style={styleSection(reglages)}
+      style={style}
     >
       {children}
     </section>
