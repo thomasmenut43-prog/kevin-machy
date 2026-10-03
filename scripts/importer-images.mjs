@@ -23,9 +23,19 @@ import mysql from 'mysql2/promise';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-for (const ligne of readFileSync(path.join(racine, '.env'), 'utf8').split('\n')) {
-  const m = ligne.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-  if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+try {
+  for (const ligne of readFileSync(path.join(racine, '.env'), 'utf8').split('\n')) {
+    const m = ligne.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+} catch {
+  // Pas de `.env` : les variables viennent de l'environnement. C'est le cas sur
+  // un runner GitHub, où le mot de passe de la base est un secret du dépôt.
+}
+
+if (!process.env.DATABASE_URI) {
+  console.error('DATABASE_URI est absent. Voir .env.exemple.');
+  process.exit(1);
 }
 
 // Le manifeste est un fichier TypeScript : on isole l'objet lui-même, sans se
