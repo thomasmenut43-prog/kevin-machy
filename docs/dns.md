@@ -241,23 +241,44 @@ qui comptait vraiment — la refonte des adresses de pages — reste entier : vo
 
 ## La bascule elle-même
 
-`dronezvous.com` a servi l'ancien site WordPress jusqu'au 3 octobre 2026. Le
-jour où il a désigné le Worker, cet ancien site a disparu.
+**Faite le 3 octobre 2026.** `dronezvous.com` sert le nouveau site ; l'ancien
+WordPress a disparu avec la bascule.
 
 Quatre gestes, le même jour et dans cet ordre :
 
-1. **ajouter `dronezvous.com` aux domaines du Worker**, chez Cloudflare —
-   Workers & Pages → `kevin-machy` → Domaines et routes → Ajouter → Domaine
-   personnalisé. Cloudflare remplace de lui-même l'enregistrement `A` qui
-   pointait vers Hostinger ;
-2. **passer `INDEXATION` à `ouverte`** dans
+1. **supprimer l'enregistrement `A` de l'apex**, qui pointait vers Hostinger
+   (`145.14.156.225`). Contrairement à ce qu'on croyait, Cloudflare ne le
+   remplace pas : il refuse d'ajouter le domaine tant qu'un enregistrement
+   « externally managed » existe. Entre cette suppression et le geste suivant,
+   le domaine ne résout plus — quelques minutes ;
+2. **ajouter `dronezvous.com` aux domaines du Worker** — Workers & Pages →
+   `kevin-machy` → Domaines → Ajouter un domaine → sous-domaine vide pour la
+   racine ;
+3. **passer `INDEXATION` à `ouverte`** dans
    `.github/workflows/mise-en-ligne.yml`, et redéployer. Entre ce geste et le
    précédent, le vrai domaine sert un `robots.txt` qui refuse tout : quelques
    minutes sont sans conséquence, quelques jours ne le seraient pas ;
-3. **proxifier `www.dronezvous.com`** (nuage orange) et poser la règle de
-   redirection vers la racine. Sans cela, `www` continuerait de servir
-   l'ancien WordPress chez Hostinger ;
-4. **poser la règle `kevinmachy.fr` → `dronezvous.com`**, sur l'autre zone.
+4. **poser la règle `kevinmachy.fr` → `dronezvous.com`** sur l'autre zone, en
+   301, chemin conservé. Modèle « Rediriger vers un autre domaine ». Sans elle,
+   deux domaines servent le même site et Google répartit entre eux ce qui doit
+   aller à un seul.
+
+`www.dronezvous.com` n'a rien demandé : l'enregistrement pointe toujours vers
+Hostinger, qui renvoie en 301 vers la racine — donc vers le nouveau site. À
+reprendre en règle Cloudflare le jour où l'hébergement Hostinger s'arrêtera.
+
+### Ce qui a été vérifié juste après
+
+| | |
+|---|---|
+| les quinze pages | 200 |
+| les quatorze anciennes adresses | 308 vers leur nouvelle page |
+| `robots.txt` | `Allow: /`, avec le plan du site |
+| les canoniques | toutes en `dronezvous.com` |
+| `kevinmachy.fr` | 301 vers `dronezvous.com`, chemin conservé |
+| `www.dronezvous.com` | 301 vers la racine |
+| le courrier | `mx1`/`mx2.hostinger.fr`, intacts |
+| `medias.dronezvous.com` | répond toujours |
 
 Ouvrir l'indexation avant le premier geste aurait recréé le problème qu'on
 évitait depuis le début : deux sites du même photographe, sur les mêmes sujets.
