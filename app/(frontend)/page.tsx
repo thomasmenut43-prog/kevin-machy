@@ -8,15 +8,32 @@ import { lireEntreprise } from '@/lib/entreprise';
 import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteIndisponible';
 
 /**
- * Les pages sont pré-rendues, puis revérifiées toutes les cinq minutes.
+ * Les pages sont pré-rendues, puis revérifiées toutes les heures.
  *
  * C'est ce qui permet à une construction faite sans base — un environnement
  * monté avant elle — de se rattraper toute seule : la page d'attente qu'elle
  * aura produite cède la place au vrai contenu dès que la base répond, sans
  * qu'il faille reconstruire. Une publication depuis l'éditeur, elle, n'attend
- * pas ces cinq minutes : elle rafraîchit la page sur-le-champ.
+ * pas ce délai : `revalidatePath` rafraîchit la page sur-le-champ.
+ *
+ * ———
+ *
+ * **Pourquoi une heure et non cinq minutes.** Chaque revérification écrit dans
+ * Workers KV, et le forfait gratuit en autorise mille par jour. Quinze pages
+ * revérifiées toutes les cinq minutes, c'est jusqu'à quatre mille trois cents
+ * écritures — le plafond pouvait tomber sur le seul trafic du site, sans
+ * qu'on déploie quoi que ce soit.
+ *
+ * Il est tombé le 3 octobre 2026, à force d'interroger les pages pour vérifier
+ * des correctifs. Les déploiements n'y étaient pour presque rien : ils coûtent
+ * quinze écritures chacun.
+ *
+ * À l'heure, le pire des cas tombe à trois cent soixante. Et rien n'est perdu :
+ * le contenu ne bouge que quand Kevin publie, ce qui invalide immédiatement.
+ * Ce délai ne rattrape qu'une écriture faite directement en base — ce que seuls
+ * les scripts de correction font, et ils redéploient derrière.
  */
-export const revalidate = 300;
+export const revalidate = 3600;
 
 /**
  * La page d'accueil, servie depuis la base.
