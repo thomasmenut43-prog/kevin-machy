@@ -115,10 +115,10 @@ sources vivent dans `.cache/raw/`, ignoré par git. Après toute modification de
 1. ~~**Remplacer toutes les photographies.**~~ Fait le 24 septembre 2026 : le site tourne sur
    les images de Kevin, les substitutions Pexels sont parties. Trois emplacements restent sans
    source et affichent un cadre nommé — c'est voulu, et ça se voit. Voir [`assets.md`](assets.md).
-2. ~~**Renseigner le domaine.**~~ Tranché le 3 octobre 2026 : le site garde **`dronezvous.com`**,
-   qui porte tout son référencement. Il a passé deux jours sur `kevinmachy.fr` avant qu'on
-   revienne — voir [`docs/dns.md`](docs/dns.md). La valeur vit dans `lib/site.ts` (`SITE.url`)
-   et `npm run domaine` l'aligne en base, où elle fait foi.
+2. ~~**Renseigner le domaine.**~~ Le site est **en ligne sur `dronezvous.com`** depuis le
+   3 octobre 2026, indexation ouverte. Il a passé deux jours sur `kevinmachy.fr`, qui y
+   redirige désormais en 301 — voir [`docs/dns.md`](docs/dns.md). La valeur vit dans
+   `lib/site.ts` (`SITE.url`) et `npm run domaine` l'aligne en base, où elle fait foi.
 3. ~~**Confirmer l'adresse du studio.**~~ Fait : `7 avenue Charles Dupuy, 43000 Le
    Puy-en-Velay`, donnée par Kevin en octobre 2026. L'ancienne adresse relevée sur le site
    était fausse. Reste à la corriger sur sa page de réservation SumUp, qui l'affiche encore.
