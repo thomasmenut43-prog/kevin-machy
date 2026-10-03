@@ -409,6 +409,25 @@ button {
   gap: 0.9rem 1.1rem;
 }
 
+/*
+ * Un bouton ne colle pas au texte qui l'amène.
+ *
+ * Troisième des trois points relevés par Kevin, et le plus net : mesuré à
+ * **zéro pixel** entre le dernier paragraphe et la rangée de boutons, sept
+ * entre un paragraphe et un lien fléché. Rien ne disait où finissait la phrase
+ * et où commençait l'action.
+ *
+ * L'écart est plus large que celui qui sépare deux paragraphes : un bouton
+ * n'est pas la suite du texte, c'est ce qu'on en fait.
+ */
+.corps + .actions,
+.corps + .lien,
+.corps + .bouton,
+p + .actions,
+p + .lien {
+  margin-top: clamp(24px, 2.4vw, 40px);
+}
+
 /* ————————————————————————————————— Grilles ——————————————————————————————— */
 
 .duo {
