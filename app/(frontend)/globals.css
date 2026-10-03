@@ -226,6 +226,43 @@ button {
   max-width: 30ch;
 }
 
+/*
+ * Le souffle autour d'un titre.
+ *
+ * Les titres n'avaient aucune marge : dans une colonne de texte, le surtitre
+ * touchait le titre, et le titre touchait le paragraphe. Rien ne les séparait
+ * que le dépassement de l'interligne — trois à quatre pixels sur un corps de
+ * texte, zéro sur un titre serré à 1.08. Kevin l'a vu tout de suite, et il
+ * avait raison : ça se lit comme un pâté.
+ *
+ * La marge ne peut pas être en `em` : elle se calculerait sur le texte qui
+ * suit, pas sur le titre. Sous un titre de soixante-trois pixels, 0,62 em de
+ * corps à dix-huit donnait onze pixels — mesuré, et toujours trop serré. Un
+ * `clamp` tient la même respiration quelle que soit la taille d'écran.
+ */
+.surtitre {
+  margin-bottom: 0.9em;
+}
+
+.h1 + *,
+.h2 + *,
+.h3 + * {
+  margin-top: clamp(16px, 1.7vw, 28px);
+}
+
+/* La ligne de distinctions sous un bloc de texte touchait le dernier
+   paragraphe : elle appartient au bloc, mais elle n'en est pas la suite. */
+.corps + .distinctions {
+  margin-top: clamp(20px, 2vw, 32px);
+}
+
+/* Deux titres qui se suivent — un sous-titre sous un titre — se resserrent :
+   ils forment un seul bloc, pas deux. */
+.h1 + .h2,
+.h2 + .h3 {
+  margin-top: 0.3em;
+}
+
 .h3 {
   font-family: var(--pile-titre);
   font-size: var(--t-h3);
@@ -256,8 +293,11 @@ button {
   text-wrap: pretty;
 }
 
+/* 1,5 em plutôt que 1,15 : à 18 px de corps, c'est vingt-sept pixels au lieu de
+   vingt et un. L'écart décide si deux paragraphes se lisent comme deux idées ou
+   comme un pavé. */
 .corps + .corps {
-  margin-top: 1.15em;
+  margin-top: 1.5em;
 }
 
 /* Deux paragraphes d'un même bloc de texte riche : sans cette règle ils se
@@ -265,7 +305,7 @@ button {
 .corps p + p,
 .corps ul,
 .corps ol {
-  margin-top: 1.15em;
+  margin-top: 1.5em;
 }
 
 .corps li + li {
