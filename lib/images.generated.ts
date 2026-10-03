@@ -662,7 +662,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/iris-hero-wide"
   },
@@ -770,9 +772,11 @@ export const IMAGES = {
   "iris-animal-02": {
     "name": "iris-animal-02",
     "ratio": 1,
-    "missing": true,
-    "widths": [],
-    "base": null
+    "missing": false,
+    "widths": [
+      480
+    ],
+    "base": "/img/iris-animal-02"
   },
   "iris-support-tableau": {
     "name": "iris-support-tableau",
@@ -857,7 +861,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       480,
-      720
+      720,
+      960,
+      1280
     ],
     "base": "/img/prestations-photobooth"
   },
@@ -917,13 +923,13 @@ export const IMAGES = {
   },
   "ent-equipe": {
     "name": "ent-equipe",
-    "ratio": 0.8,
+    "ratio": 1.5,
     "missing": false,
     "widths": [
-      480,
-      720,
+      640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/ent-equipe"
   },
@@ -941,6 +947,18 @@ export const IMAGES = {
   },
   "ent-magasin": {
     "name": "ent-magasin",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/ent-magasin"
+  },
+  "ent-accueil": {
+    "name": "ent-accueil",
     "ratio": 1.5,
     "missing": false,
     "widths": [
@@ -949,17 +967,19 @@ export const IMAGES = {
       1280,
       1920
     ],
-    "base": "/img/ent-magasin"
+    "base": "/img/ent-accueil"
   },
-  "ent-accueil": {
-    "name": "ent-accueil",
-    "ratio": 1,
+  "ent-metier": {
+    "name": "ent-metier",
+    "ratio": 1.5,
     "missing": false,
     "widths": [
-      480,
-      720
+      640,
+      960,
+      1280,
+      1920
     ],
-    "base": "/img/ent-accueil"
+    "base": "/img/ent-metier"
   },
   "drone-hero-wide": {
     "name": "drone-hero-wide",
@@ -1000,7 +1020,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/photobooth-hero-wide"
   },
@@ -1010,9 +1032,22 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       640,
-      960
+      960,
+      1280,
+      1920
     ],
     "base": "/img/photobooth-invites"
+  },
+  "photobooth-tirage": {
+    "name": "photobooth-tirage",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280
+    ],
+    "base": "/img/photobooth-tirage"
   },
   "formation-hero-wide": {
     "name": "formation-hero-wide",

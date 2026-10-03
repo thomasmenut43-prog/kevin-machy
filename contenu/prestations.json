@@ -482,7 +482,7 @@
         "cle": "ent-6",
         "type": "galerie",
         "valeurs": {
-          "variante": "trio",
+          "variante": "mosaique",
           "entete": {
             "numero": "05",
             "surtitre": "Quelques images",
@@ -497,6 +497,9 @@
           "images": [
             {
               "image": "@ent-portrait"
+            },
+            {
+              "image": "@ent-metier"
             },
             {
               "image": "@ent-magasin"
@@ -947,6 +950,18 @@
       },
       {
         "cle": "pb-4",
+        "type": "bande",
+        "valeurs": {
+          "variante": "pleineLargeur",
+          "image": "@photobooth-tirage",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "aucun"
+          }
+        }
+      },
+      {
+        "cle": "pb-5",
         "type": "tarifs",
         "valeurs": {
           "entete": {
@@ -1036,7 +1051,7 @@
         }
       },
       {
-        "cle": "pb-5",
+        "cle": "pb-6",
         "type": "options",
         "valeurs": {
           "entete": {
@@ -1090,7 +1105,7 @@
         }
       },
       {
-        "cle": "pb-6",
+        "cle": "pb-7",
         "type": "texteLibre",
         "valeurs": {
           "entete": {

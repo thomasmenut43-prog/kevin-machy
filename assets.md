@@ -109,12 +109,39 @@ plus grande chez WordPress : `ent-accueil` (768 px), `photobooth-invites`,
 `photobooth-hero-wide` et `prestations-photobooth`. Le script l'annonce à chaque
 passage.
 
-### Les sept tirages d'art — à fournir
+### La livraison du 3 octobre 2026
+
+Kevin a transmis un lot de photographies pleine définition — jusqu'à
+12 000 × 8 000 px. Elles remplacent les originaux récupérés sur WordPress, que
+l'ancien site avait rapetissés, et comblent un emplacement vide.
+
+| Emplacement | Avant | Après |
+|---|---|---|
+| `ent-hero-wide`, `ent-hero-tall`, `ent-portrait`, `ent-magasin`, `ent-accueil` | sources WordPress, dont une de 768 px | originaux, de 2 362 à 5 432 px |
+| `ent-nb` | un portrait en 2 048 px | un autre portrait, en 3 641 px |
+| `ent-equipe` | deux collaboratrices | **une équipe de six**, 6 006 px |
+| `ent-metier` | — | **nouveau** : un audioprothésiste au travail |
+| `photobooth-hero-wide`, `photobooth-invites` | 1 152 et 1 772 px | deux vraies prises, 6 000 × 4 000 |
+| `photobooth-tirage` | — | **nouveau** : le tirage qu'un invité emporte |
+| `iris-hero-wide` | source courte | un iris en 12 000 × 8 000 |
+| `iris-animal-02` | **vide** | l'iris d'un chien à côté de celui de sa maîtresse |
+
+Deux photographies livrées n'ont pas été retenues : « Portes Ouvertes », qui est
+un reportage d'entreprise et aurait raconté quelque chose de faux sur la page
+drone, et « Ambrine et John — Vin d'honneur », qui n'est pas une prise de
+photobooth.
+
+### Les sept tirages d'art — toujours à fournir
 
 L'ancien site illustrait ses six tirages d'art par des **maquettes** : le même
 salon gris, le même canapé, le même cadre au mur, et l'œuvre dedans. Dans une
 source de 1080 px, la photographie n'occupe que 490 × 327 px — en dessous de la
 plus petite largeur que ce site produit.
+
+**La livraison du 3 octobre contenait les mêmes maquettes**, dans un dossier
+« Tableau a vendre » : même salon, même format 1080 × 1080, une centaine de
+kilo-octets. Ce ne sont pas les photographies. Ce qu'il faut, ce sont les
+fichiers d'origine — ceux qui ont servi à fabriquer ces maquettes.
 
 Les recadrer donnerait des images molles ; les garder entières afficherait six
 fois un salon de banque d'images sur la page d'un photographe. Ce sont donc des
