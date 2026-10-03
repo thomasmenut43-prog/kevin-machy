@@ -112,18 +112,19 @@ sources vivent dans `.cache/raw/`, ignoré par git. Après toute modification de
 
 ## Avant la mise en ligne — cinq points
 
-1. **Remplacer toutes les photographies.** Les images actuelles viennent de Pexels et ne sont
-   pas le travail de Kevin. Voir [`assets.md`](assets.md) pour la liste des emplacements et
-   [`CREDITS-IMAGES.md`](CREDITS-IMAGES.md) pour leur provenance. **Le site n'est pas
-   publiable avant ce remplacement.**
-2. **Renseigner le domaine** dans `lib/site.ts` (`SITE.url`). Il sert aux URL canoniques, à
-   l'Open Graph, au sitemap et aux données structurées.
+1. ~~**Remplacer toutes les photographies.**~~ Fait le 24 septembre 2026 : le site tourne sur
+   les images de Kevin, les substitutions Pexels sont parties. Trois emplacements restent sans
+   source et affichent un cadre nommé — c'est voulu, et ça se voit. Voir [`assets.md`](assets.md).
+2. ~~**Renseigner le domaine.**~~ Tranché le 3 octobre 2026 : le site garde **`dronezvous.com`**,
+   qui porte tout son référencement. Il a passé deux jours sur `kevinmachy.fr` avant qu'on
+   revienne — voir [`docs/dns.md`](docs/dns.md). La valeur vit dans `lib/site.ts` (`SITE.url`)
+   et `npm run domaine` l'aligne en base, où elle fait foi.
 3. ~~**Confirmer l'adresse du studio.**~~ Fait : `7 avenue Charles Dupuy, 43000 Le
    Puy-en-Velay`, donnée par Kevin en octobre 2026. L'ancienne adresse relevée sur le site
    était fausse. Reste à la corriger sur sa page de réservation SumUp, qui l'affiche encore.
 4. **Brancher le formulaire de contact** (voir ci-dessous).
-5. **Vérifier l'adresse e-mail.** Elle est encore en `@dronezvous.com`, ce qui ne colle plus
-   avec le positionnement. À arbitrer avec Kevin en même temps que le domaine.
+5. ~~**Vérifier l'adresse e-mail.**~~ Sans objet depuis que le domaine reste `dronezvous.com` :
+   `kevin@dronezvous.com` est de nouveau cohérente avec l'adresse du site.
 
 ---
 

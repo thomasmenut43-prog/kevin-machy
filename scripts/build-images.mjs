@@ -141,6 +141,64 @@ const SLOTS = [
   // ————————————————————————————————— Contact
   // Aucune vue de l'atelier n'a été fournie — cadre nommé, voir assets.md.
   { name: 'contact-studio', profile: 'wide', src: null },
+
+  // ————————————————————————————————— Prestations
+  //
+  // Les cinq prestations reprises de l'ancien site en octobre 2026. Leurs
+  // photographies viennent de là : ce sont celles de Kevin, publiées sur
+  // dronezvous.com, récupérées une fois pour toutes avant son extinction.
+  // Voir assets.md.
+  { name: 'prestations-entreprise', profile: 'tall', src: R('km-ent-portrait-studio.jpg') },
+  { name: 'prestations-drone', profile: 'tall', src: R('km-drone-inspection.jpg') },
+  { name: 'prestations-photobooth', profile: 'tall', src: R('km-photobooth-tirage.jpg') },
+  { name: 'prestations-formation', profile: 'tall', src: R('km-formation-stage.jpg') },
+  { name: 'prestations-tirages', profile: 'tall', src: null },
+
+  // ————————————————————————————————— Entreprise
+  { name: 'ent-hero-wide', profile: 'heroWide', src: R('km-ent-magasin-02.jpg') },
+  { name: 'ent-hero-tall', profile: 'heroTall', src: R('km-ent-situation.jpg') },
+  { name: 'ent-nb', profile: 'portraitBook', src: R('km-ent-portrait-nb.jpg') },
+  { name: 'ent-equipe', profile: 'tall', src: R('km-ent-duo.jpg') },
+  { name: 'ent-portrait', profile: 'tall', src: R('km-ent-portrait-studio.jpg') },
+  { name: 'ent-magasin', profile: 'wide', src: R('km-ent-magasin-01.jpg') },
+  // Source carrée de 768 px : l'emplacement ne portera que ses deux plus
+  // petites largeurs, et le script le dira. C'est le prix d'une image que
+  // WordPress n'a jamais stockée plus grande.
+  { name: 'ent-accueil', profile: 'square', src: R('km-ent-accueil.jpg') },
+
+  // ————————————————————————————————— Drone
+  { name: 'drone-hero-wide', profile: 'heroWide', src: R('km-drone-inspection.jpg') },
+  { name: 'drone-chantier-01', profile: 'wide', src: R('km-drone-chantier-01.jpg') },
+  { name: 'drone-chantier-02', profile: 'wide', src: R('km-drone-chantier-02.jpg') },
+
+  // ————————————————————————————————— Photobooth
+  { name: 'photobooth-hero-wide', profile: 'heroWide', src: R('km-photobooth-tirage.jpg') },
+  { name: 'photobooth-invites', profile: 'wide', src: R('km-photobooth-invites.jpg') },
+
+  // ————————————————————————————————— Formation
+  { name: 'formation-hero-wide', profile: 'heroWide', src: R('km-formation-stage.jpg') },
+  { name: 'formation-pratique', profile: 'wide', src: R('km-formation-pratique.jpg') },
+
+  // ————————————————————————————————— Tirages d'art
+  //
+  // Sept cadres nommés, et c'est la règle qui s'applique, pas un oubli.
+  //
+  // L'ancien site illustrait ses six tirages par des **maquettes** : le même
+  // salon gris, le même canapé, le même cadre au mur, et l'œuvre dedans. Dans
+  // une source de 1080 px, la photographie elle-même n'occupe que 490 × 327 px
+  // — en dessous de la plus petite largeur que ce site produit. La recadrer
+  // donnerait une image molle ; la garder entière afficherait six fois un salon
+  // de banque d'images sur la page d'un photographe.
+  //
+  // Les fichiers sont dans `.cache/raw/` et ne servent à rien d'autre qu'à
+  // documenter ce que l'ancien site montrait. Kevin a les originaux : ce sont
+  // ses photographies. Voir assets.md.
+  { name: 'tirage-lac-bleu', profile: 'square', src: null },
+  { name: 'tirage-ocean', profile: 'square', src: null },
+  { name: 'tirage-coucher', profile: 'square', src: null },
+  { name: 'tirage-voiles', profile: 'square', src: null },
+  { name: 'tirage-pont-amours', profile: 'square', src: null },
+  { name: 'tirage-pont-face', profile: 'square', src: null },
 ];
 
 /** Images Open Graph : format fixe 1200 × 630, JPEG seul. */

@@ -79,9 +79,12 @@ const CORRECTIONS = [
   // Laisser la date d'avant laisserait croire que rien n'a bougé.
   [/Dernière mise à jour\s*:\s*[^.<]*\./gi, 'Dernière mise à jour : octobre 2026.'],
 
-  // Le site a changé d'adresse ; la boîte mail, non.
-  [/Site internet\s*:\s*dronezvous\.com/gi, 'Site internet : kevinmachy.fr'],
-  [/\bhttps?:\/\/(www\.)?dronezvous\.com\b/gi, 'https://kevinmachy.fr'],
+  // Rien ne corrige l'adresse du site : il garde la sienne, `dronezvous.com`.
+  // Deux règles la remplaçaient par `kevinmachy.fr`, du temps où le site devait
+  // déménager. Elles ne tombaient d'ailleurs sur rien : la ligne « Site
+  // internet » vit dans la rubrique « Éditeur du site », que le PLAN écarte au
+  // profit de la fiche d'identité, et les autres occurrences sont dans le menu
+  // de l'ancien site, que la conversion ne lit pas.
 
   // L'ancien site affichait « kevin@dronezvous.com » sur un lien qui écrivait
   // à « contact@ ». La bonne adresse est celle affichée — c'est elle que

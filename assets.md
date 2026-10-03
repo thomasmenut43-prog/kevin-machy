@@ -91,6 +91,48 @@ cadrage, pas de sélection.
 | **Contact** | `contact-studio` | Paysage 3/2 — le studio du 7 avenue Charles Dupuy |
 | **Partage** | `og-default`, `og-mariage`, `og-portrait`, `og-iris`, `og-apropos`, `og-contact` | 1200 × 630, générés automatiquement à partir des sources |
 
+### Les prestations reprises de l'ancien site
+
+Vingt et une photographies ont été récupérées sur `dronezvous.com` en octobre
+2026, avant son extinction : ce sont celles de Kevin, publiées sur ses pages
+entreprise, drone, photobooth et formation. Le script qui les a téléchargées est
+`.cache/recuperer-photos.mjs`, et les originaux sont dans `.cache/raw/` sous
+leurs noms `km-ent-*`, `km-drone-*`, `km-photobooth-*`, `km-formation-*`.
+
+Trois fichiers de ces pages n'ont **pas** été repris : une image engendrée par
+IA et une capture d'écran, qui n'ont rien à faire là, et trois logos de clients
+— une marque appartient à son titulaire, pas au photographe qui a travaillé pour
+elle.
+
+Quatre emplacements ne portent que leurs plus petites largeurs, faute de source
+plus grande chez WordPress : `ent-accueil` (768 px), `photobooth-invites`,
+`photobooth-hero-wide` et `prestations-photobooth`. Le script l'annonce à chaque
+passage.
+
+### Les sept tirages d'art — à fournir
+
+L'ancien site illustrait ses six tirages d'art par des **maquettes** : le même
+salon gris, le même canapé, le même cadre au mur, et l'œuvre dedans. Dans une
+source de 1080 px, la photographie n'occupe que 490 × 327 px — en dessous de la
+plus petite largeur que ce site produit.
+
+Les recadrer donnerait des images molles ; les garder entières afficherait six
+fois un salon de banque d'images sur la page d'un photographe. Ce sont donc des
+cadres nommés, et Kevin a les originaux — ce sont ses photographies.
+
+| Emplacement | Ce qu'il faudrait |
+|---|---|
+| `tirage-lac-bleu` | « Lac Bleu d'Automne » — le lac Bleu vu du ciel, automne 2023, Haute-Loire. |
+| `tirage-ocean` | « Océan d'Été » — vue aérienne d'une plage, été 2023, Portugal. |
+| `tirage-coucher` | « Coucher d'Été ». |
+| `tirage-voiles` | « Toutes voiles dehors ». |
+| `tirage-pont-amours` | « Pont des Amours ». |
+| `tirage-pont-face` | « Pont d'en face ». |
+| `prestations-tirages` | La carte du sommaire des prestations. L'une des six fait l'affaire, en 4/5. |
+
+Format carré pour les six œuvres, 4/5 pour la carte. **L'œuvre seule, sans cadre
+ni mise en situation** — c'est la page qui l'encadre.
+
 ### Les trois emplacements vides
 
 Un emplacement sans source n'est **jamais** comblé par un visuel générique : le

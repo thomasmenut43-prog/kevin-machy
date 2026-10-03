@@ -21,6 +21,8 @@
     "ancres": "node scripts/poser-ancres.mjs",
     "adresse": "node scripts/corriger-adresse.mjs",
     "juridique": "node scripts/poser-juridique.mjs",
+    "domaine": "node scripts/poser-domaine.mjs",
+    "prestations": "node scripts/poser-prestations.mjs",
     "mot-de-passe": "node scripts/mot-de-passe.mjs",
     "importer-images": "node scripts/relever-alt.mjs && node scripts/importer-images.mjs",
     "convertir": "node scripts/convertir-pages.mjs",
