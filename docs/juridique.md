@@ -48,7 +48,6 @@ Toutes les corrections sont dans `CORRECTIONS` et `PLAN`, en tête de
 | --- | --- | --- |
 | Siège social | 13 place du Coudert, 43130 Solignac-sous-Roche | 7 avenue Charles Dupuy, 43000 Le Puy-en-Velay |
 | Hébergeur | IONOS | Cloudflare pour les pages, Hostinger pour les photos et la base |
-| Site internet | dronezvous.com | kevinmachy.fr |
 | Cookies | un bandeau de consentement et 108 cookies | aucun cookie, rubrique réécrite |
 | SIRET | gras coupé avant le dernier chiffre | `904 158 284 00029` |
 | Lien courriel | `mailto:contact@` sous un texte `kevin@` | `mailto:kevin@` |

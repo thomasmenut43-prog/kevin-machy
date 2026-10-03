@@ -194,22 +194,68 @@ ne menait à une erreur.
 **La zone est restée chez Hostinger.** Tant qu'elle existe, revenir en arrière
 consiste à remettre les deux anciens serveurs de noms chez IONOS.
 
-# Ce qui vient ensuite
+# Le domaine principal reste `dronezvous.com`
 
-Kevin veut **`kevinmachy.fr`** comme adresse principale. Il possède déjà quatre
-noms, les trois autres redirigeant aujourd'hui vers `dronezvous.com` :
+*Décidé le 3 octobre 2026, après deux jours passés sur `kevinmachy.fr`.*
+
+Kevin possède quatre noms :
 
 | | |
 |---|---|
-| `dronezvous.com` | le site actuel — expire le 12 juillet 2027 |
+| **`dronezvous.com`** | **le domaine principal** — expire le 12 juillet 2027 |
 | `dronezvous.fr` | redirection |
 | `kevinmachy.com` | redirection — expire le 5 février 2027 |
 | `kevinmachy.fr` | redirection — expire le 5 février 2027 |
 
-**`dronezvous.com` ne se jette pas.** Il porte l'historique, les liens entrants
-et la fiche Google. Il redirigera vers `kevinmachy.fr` **définitivement**, ce
-qui veut dire qu'on le renouvelle indéfiniment.
+Il avait d'abord été question de passer à `kevinmachy.fr` : `dronezvous` date de
+l'époque où Kevin faisait surtout du drone, et le nom colle mal à un
+photographe de mariage. Le nouveau site y a vécu deux jours.
 
-**L'adresse mail ne bouge pas.** `kevin@dronezvous.com` est sur ses devis, ses
-factures, et dans les carnets d'adresses de ses clients. Un changement à la
-fois.
+**Ce qui a fait revenir en arrière, c'est le référencement.** `dronezvous.com`
+porte dix-neuf pages indexées, des années d'ancienneté, les liens entrants et la
+fiche Google. Changer de domaine, c'est demander à Google de transférer tout
+cela — il en transfère une partie, jamais la totalité, et sur plusieurs mois. Le
+prix est payé en visiteurs, et rien ne dit quand il s'arrête.
+
+Garder le nom, à l'inverse, ne coûte qu'un nom qui vieillit mal. Et le travail
+qui comptait vraiment — la refonte des adresses de pages — reste entier : voir
+`lib/redirections.ts`.
+
+## Ce que ça change concrètement
+
+- **`kevinmachy.fr` redirigera vers `dronezvous.com`**, et non l'inverse. À
+  poser en règle de redirection Cloudflare le jour de la bascule.
+- **Les redirections d'adresses ne franchissent plus de domaine.** Elles
+  traduisent d'anciens chemins en nouveaux, sur le même hôte. Deux entrées ont
+  disparu — `/` et `/mentions-legales/` sont identiques des deux côtés, et
+  auraient bouclé.
+- **Pas de changement d'adresse à déclarer dans la Search Console.** C'est la
+  démarche la plus délicate de la migration ; elle n'a plus lieu d'être.
+- **`medias.dronezvous.com` reste tel quel.** Le sous-domaine des photographies
+  se retrouve sur le domaine du site, ce qui règle au passage un point bloqué :
+  le déplacer vers `medias.kevinmachy.fr` demandait une réécriture d'en-tête
+  Host, réservée au forfait Entreprise de Cloudflare.
+- **`kevin@dronezvous.com` retrouve son domaine.** L'adresse est sur ses devis,
+  ses factures et dans les carnets de ses clients ; elle n'avait de toute façon
+  pas vocation à bouger.
+
+## La bascule elle-même
+
+Elle n'a pas encore eu lieu. `dronezvous.com` sert toujours l'ancien site
+WordPress, et le jour où il désignera le Worker, cet ancien site disparaît.
+
+Trois gestes, le même jour et dans cet ordre :
+
+1. ajouter `dronezvous.com` aux domaines du Worker, chez Cloudflare ;
+2. passer `INDEXATION` à `ouverte` dans `.github/workflows/mise-en-ligne.yml`,
+   et redéployer ;
+3. poser la règle de redirection `kevinmachy.fr` → `dronezvous.com`.
+
+Ouvrir l'indexation avant le premier geste recréerait le problème qu'on évite
+depuis le début : deux sites du même photographe, sur les mêmes sujets.
+
+**Ce que la bascule emporte avec elle :** cinq pages que l'ancien site vend et
+que le nouveau ne présente pas encore — entreprise, drone, photobooth,
+formation, tirages — plus le blog et deux articles. Voir `SANS_EQUIVALENT` dans
+`lib/redirections.ts`. Tant que la décision n'est pas prise, elles répondront
+« page introuvable ». C'est le dernier point à trancher avec Kevin.

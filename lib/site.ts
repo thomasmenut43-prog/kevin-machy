@@ -9,18 +9,30 @@ export const SITE = {
   /**
    * Le domaine définitif, **sans `www`**.
    *
-   * Kevin possède quatre noms : `dronezvous.com` porte le site actuel et tout
-   * son référencement, les trois autres y redirigent. Celui-ci devient le
-   * principal — `dronezvous` datait de l'époque où il faisait surtout du drone.
+   * Kevin possède quatre noms. `dronezvous.com` porte le site depuis des
+   * années : dix-neuf pages indexées, les liens entrants, l'ancienneté. Les
+   * trois autres y redirigent.
    *
-   * Une seule forme fait autorité, et `www.kevinmachy.fr` redirige vers elle.
-   * Laisser vivre les deux dédoublerait le référencement : Google verrait deux
-   * sites identiques et répartirait entre eux ce qui devrait aller à un seul.
+   * Il a été question de passer à `kevinmachy.fr` — `dronezvous` datait de
+   * l'époque où il faisait surtout du drone. Ce site y a vécu quelques jours,
+   * puis on est revenu : changer de domaine, c'est demander à Google de
+   * transférer un classement acquis, et il n'en transfère jamais la totalité.
+   * Garder `dronezvous.com` ne coûte qu'un nom qui vieillit mal ; en changer
+   * coûte du trafic, sans date de retour.
+   *
+   * Reste à faire, et c'est l'essentiel du travail : les adresses des pages
+   * changent, elles. Voir `lib/redirections.ts`.
+   *
+   * Une seule forme fait autorité, et `www` redirige vers elle. Laisser vivre
+   * les deux dédoublerait le référencement : Google verrait deux sites
+   * identiques et répartirait entre eux ce qui devrait aller à un seul. Même
+   * raison pour `kevinmachy.fr`, qui redirigera ici.
    *
    * Cette valeur n'est qu'un repli : les Paramètres du BackOffice la
-   * remplacent, et ce sont eux qui font foi en ligne.
+   * remplacent, et ce sont eux qui font foi en ligne — d'où
+   * `scripts/poser-domaine.mjs`, qui les aligne sur celle-ci.
    */
-  url: 'https://kevinmachy.fr',
+  url: 'https://dronezvous.com',
   ville: 'Le Puy-en-Velay',
   /** Adresse du studio, confirmée par la page de réservation SumUp. */
   adresse: '7 avenue Charles Dupuy',

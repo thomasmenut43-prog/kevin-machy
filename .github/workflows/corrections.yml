@@ -56,14 +56,16 @@ jobs:
           npm run ancres -- --verifier || true
           npm run adresse -- --verifier || true
           npm run juridique -- --verifier || true
+          npm run domaine -- --verifier || true
 
-      # Les trois scripts sont idempotents : relancés, ils ne refont rien.
+      # Les quatre scripts sont idempotents : relancés, ils ne refont rien.
       - name: Appliquer
         if: ${{ inputs.appliquer }}
         run: |
           npm run ancres
           npm run adresse
           npm run juridique
+          npm run domaine
 
       - name: Ce qui reste, après
         if: ${{ inputs.appliquer }}
@@ -71,6 +73,7 @@ jobs:
           npm run ancres -- --verifier
           npm run adresse -- --verifier
           npm run juridique -- --verifier
+          npm run domaine -- --verifier
 
   # Écrire en base ne suffit pas : les pages sont en cache, et ce cache ne
   # s'invalide que par le bouton « Publier » du BackOffice, qui pose les

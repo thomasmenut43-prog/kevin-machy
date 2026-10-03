@@ -27,17 +27,20 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   /**
-   * L'ancien domaine renvoie vers le nouveau, adresse par adresse.
+   * Les anciennes adresses renvoient vers les nouvelles.
    *
-   * `has` restreint la règle aux requêtes qui arrivent **sur `dronezvous.com`** :
-   * sans cette condition, `/cgv/` redirigerait aussi depuis `kevinmachy.fr`, où
-   * cette adresse n'a jamais existé.
+   * Le site garde son domaine, `dronezvous.com` ; ce sont les chemins qui
+   * changent — `/photographe-mariage-haute-loire/` devient `/mariage/`. Ces
+   * règles restent donc **relatives** et sans condition de domaine : elles
+   * valent partout où le Worker répond.
+   *
+   * Une version précédente les restreignait à `dronezvous.com` et pointait vers
+   * `https://kevinmachy.fr`, du temps où le site devait déménager. Les deux
+   * tiennent ensemble ou pas du tout : une destination absolue vers un domaine
+   * qui ne sert pas encore le site enverrait les visiteurs dans le vide.
    *
    * `permanent` émet un 308 — un 301 qui préserve la méthode. C'est lui qui
    * transmet l'ancienneté et les liens entrants ; un 302 ne transmettrait rien.
-   *
-   * Tant que `dronezvous.com` ne désigne pas le Worker, aucune de ces règles ne
-   * se déclenche. Elles attendent la bascule sans rien faire.
    *
    * L'export statique n'a pas de serveur pour les appliquer : on les omet, ce
    * qui évite un avertissement à chaque construction de la vitrine figée.
@@ -48,9 +51,8 @@ const nextConfig: NextConfig = {
         async redirects() {
           return REDIRECTIONS.map(({ de, vers }) => ({
             source: de,
-            destination: `https://kevinmachy.fr${vers}`,
+            destination: vers,
             permanent: true,
-            has: [{ type: 'host' as const, value: 'dronezvous.com' }],
           }));
         },
       }),

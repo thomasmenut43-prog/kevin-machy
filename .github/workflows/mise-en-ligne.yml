@@ -46,17 +46,18 @@ jobs:
       # **À changer le jour du basculement DNS**, en même temps que
       # `wrangler.jsonc`, qui porte la même valeur pour l'exécution.
       NEXT_PUBLIC_BASE_MEDIAS: https://medias.dronezvous.com
-      NEXT_PUBLIC_URL_SITE: https://kevinmachy.fr
+      NEXT_PUBLIC_URL_SITE: https://dronezvous.com
 
       # Tant que cette variable ne vaut pas « ouverte », robots.txt refuse tout.
       #
-      # Le nouveau site vit à kevinmachy.fr pendant que l'ancien répond encore à
+      # Le nouveau site répond à kevinmachy.fr pendant que l'ancien tient encore
       # dronezvous.com. Laisser les deux s'indexer donnerait à Google deux sites
       # du même photographe, sur les mêmes sujets, et il répartirait entre eux ce
       # qui devrait aller à un seul.
       #
-      # À lever le jour de la mise en ligne, **en même temps** que dronezvous.com
-      # bascule en redirection. Les deux gestes vont ensemble.
+      # À lever le jour où dronezvous.com désignera le Worker — pas avant, pas
+      # après. Ce jour-là le site reprend son domaine, et kevinmachy.fr n'est
+      # plus qu'une redirection vers lui.
       INDEXATION: fermee
 
     steps:

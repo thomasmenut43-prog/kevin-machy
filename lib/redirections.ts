@@ -10,9 +10,22 @@
  * liens entrants vers la nouvelle adresse. C'est le seul mécanisme qui conserve
  * ce qui a été acquis.
  *
- * Elles ne s'appliquent qu'aux requêtes arrivant sur l'ancien domaine : tant
- * que `dronezvous.com` ne désigne pas le Worker, cette table ne fait rien.
- * Elle peut donc être écrite et relue longtemps avant la bascule.
+ * ---
+ *
+ * **Le domaine ne change pas ; les adresses, si.** Cette table a d'abord été
+ * écrite pour un déménagement vers `kevinmachy.fr` — chaque règle portait alors
+ * une condition sur le domaine d'arrivée et une destination absolue. Le
+ * déménagement est annulé : le site reste à `dronezvous.com`, et ces règles ne
+ * franchissent plus de frontière. Elles traduisent d'anciennes adresses en
+ * nouvelles, sur le même domaine.
+ *
+ * Deux entrées ont disparu à cette occasion : `/` et `/mentions-legales/`
+ * existent à l'identique des deux côtés. Les garder aurait fait boucler une
+ * page sur elle-même.
+ *
+ * Tant que `dronezvous.com` ne désigne pas le Worker, ces règles ne servent
+ * qu'au domaine provisoire — elles y sont inoffensives, aucune de ces adresses
+ * n'existe sur le nouveau site.
  *
  * ---
  *
@@ -26,8 +39,6 @@
  * `SANS_EQUIVALENT` plus bas.
  */
 export const REDIRECTIONS: ReadonlyArray<{ de: string; vers: string; note?: string }> = [
-  { de: '/', vers: '/' },
-
   // ——— Les trois univers que le nouveau site reprend
   { de: '/photographe-mariage-haute-loire/', vers: '/mariage/' },
   { de: '/photographe-portrait-haute-loire/', vers: '/portrait/' },
@@ -42,14 +53,9 @@ export const REDIRECTIONS: ReadonlyArray<{ de: string; vers: string; note?: stri
     de: '/cgv/',
     vers: '/conditions-generales-de-vente/',
   },
-  {
-    // L'ancienne page cumulait mentions légales **et** politique de
-    // confidentialité. Le nouveau site les sépare : on envoie vers les mentions,
-    // qui portent le même titre, et la page de confidentialité est accessible
-    // depuis le pied.
-    de: '/mentions-legales/',
-    vers: '/mentions-legales/',
-  },
+  // `/mentions-legales/` garde son adresse : l'ancienne page cumulait mentions
+  // **et** politique de confidentialité, et le nouveau site les sépare, mais
+  // c'est bien aux mentions que l'adresse mène. Rien à rediriger.
   {
     // Rapprochement le plus honnête : les deux parlent du traitement des
     // données. Ce n'est pas un équivalent exact, mais un visiteur qui cherche

@@ -7,15 +7,14 @@ export const dynamic = 'force-static';
  * Ce que les moteurs de recherche ont le droit de lire.
  *
  * **Tant que `INDEXATION` ne vaut pas `ouverte`, tout est refusé.** Le nouveau
- * site vit à `kevinmachy.fr` pendant que l'ancien répond encore à
- * `dronezvous.com` : laisser les deux s'indexer donnerait à Google deux sites du
- * même photographe, traitant des mêmes sujets, et il répartirait entre eux ce
- * qui devrait aller à un seul.
+ * site répond à `kevinmachy.fr`, une adresse provisoire, pendant que l'ancien
+ * tient encore `dronezvous.com` : laisser les deux s'indexer donnerait à Google
+ * deux sites du même photographe, traitant des mêmes sujets, et il répartirait
+ * entre eux ce qui devrait aller à un seul.
  *
- * L'interrupteur se lève le jour de la mise en ligne, dans
- * `.github/workflows/deploiement.yml` — en même temps que `dronezvous.com`
- * basculera en redirection. Les deux gestes vont ensemble : ouvrir
- * l'indexation avant que l'ancien site ne redirige recrée exactement le
+ * L'interrupteur se lève dans `.github/workflows/mise-en-ligne.yml`, le jour où
+ * `dronezvous.com` désignera le Worker. Les deux gestes vont ensemble : ouvrir
+ * l'indexation pendant que l'ancien site répond encore recrée exactement le
  * problème qu'on évite.
  *
  * Un `Disallow` n'est pas une serrure : il demande aux moteurs honnêtes de
