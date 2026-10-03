@@ -7,6 +7,7 @@
     "photos": "node scripts/fetch-photos.mjs",
     "images": "node scripts/build-images.mjs",
     "audit": "node scripts/audit.mjs",
+    "styles": "node scripts/verifier-styles.mjs",
     "shots": "node scripts/shots.mjs",
     "build:full": "npm run images && next build",
     "dev": "next dev",

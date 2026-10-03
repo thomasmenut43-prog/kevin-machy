@@ -70,6 +70,15 @@ jobs:
       - name: Types
         run: npx tsc --noEmit
 
+      # Une classe de module CSS référencée mais absente vaut `undefined` :
+      # React n'écrit aucun attribut, l'élément s'affiche sans style, et rien
+      # ne le signale — ni la construction, ni les types, ni la console.
+      #
+      # C'est ce qui est arrivé aux cartes du sommaire, restées sans mise en
+      # page pendant des semaines sur quatre sections du site.
+      - name: Classes de styles
+        run: node scripts/verifier-styles.mjs
+
       # Les images encodées sont versionnées dans public/img : rien à
       # régénérer ici. Relancer `npm run images` en local après toute
       # modification de scripts/build-images.mjs.
