@@ -241,18 +241,35 @@ qui comptait vraiment — la refonte des adresses de pages — reste entier : vo
 
 ## La bascule elle-même
 
-Elle n'a pas encore eu lieu. `dronezvous.com` sert toujours l'ancien site
-WordPress, et le jour où il désignera le Worker, cet ancien site disparaît.
+`dronezvous.com` a servi l'ancien site WordPress jusqu'au 3 octobre 2026. Le
+jour où il a désigné le Worker, cet ancien site a disparu.
 
-Trois gestes, le même jour et dans cet ordre :
+Quatre gestes, le même jour et dans cet ordre :
 
-1. ajouter `dronezvous.com` aux domaines du Worker, chez Cloudflare ;
-2. passer `INDEXATION` à `ouverte` dans `.github/workflows/mise-en-ligne.yml`,
-   et redéployer ;
-3. poser la règle de redirection `kevinmachy.fr` → `dronezvous.com`.
+1. **ajouter `dronezvous.com` aux domaines du Worker**, chez Cloudflare —
+   Workers & Pages → `kevin-machy` → Domaines et routes → Ajouter → Domaine
+   personnalisé. Cloudflare remplace de lui-même l'enregistrement `A` qui
+   pointait vers Hostinger ;
+2. **passer `INDEXATION` à `ouverte`** dans
+   `.github/workflows/mise-en-ligne.yml`, et redéployer. Entre ce geste et le
+   précédent, le vrai domaine sert un `robots.txt` qui refuse tout : quelques
+   minutes sont sans conséquence, quelques jours ne le seraient pas ;
+3. **proxifier `www.dronezvous.com`** (nuage orange) et poser la règle de
+   redirection vers la racine. Sans cela, `www` continuerait de servir
+   l'ancien WordPress chez Hostinger ;
+4. **poser la règle `kevinmachy.fr` → `dronezvous.com`**, sur l'autre zone.
 
-Ouvrir l'indexation avant le premier geste recréerait le problème qu'on évite
-depuis le début : deux sites du même photographe, sur les mêmes sujets.
+Ouvrir l'indexation avant le premier geste aurait recréé le problème qu'on
+évitait depuis le début : deux sites du même photographe, sur les mêmes sujets.
+
+### Ce à quoi on ne touche pas
+
+| | |
+|---|---|
+| `medias.dronezvous.com` | reste chez Hostinger, en DNS seul. Il sert les fichiers envoyés depuis la médiathèque. |
+| `MX`, `SPF`, `DMARC`, `autoconfig`, `autodiscover` | le courrier de Kevin. Y toucher le couperait. |
+| `ftp.dronezvous.com` | son accès aux fichiers de l'hébergement. |
+| le `TXT` `google-site-verification` | la Search Console le lit pour prouver la propriété du domaine. |
 
 **Ce que la bascule emporte avec elle :** cinq pages que l'ancien site vend et
 que le nouveau ne présente pas encore — entreprise, drone, photobooth,
