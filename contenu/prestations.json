@@ -1,0 +1,1566 @@
+{
+  "prestations": {
+    "titre": "Prestations",
+    "metaTitre": "Prestations — huit façons de travailler ensemble",
+    "metaDescription": "Mariage, portrait, Studio de l’Iris, photographie d’entreprise, drone, photobooth, formation et tirages d’art. Huit façons de travailler ensemble.",
+    "sections": [
+      {
+        "cle": "prestations-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "sobre",
+          "surtitres": [
+            {
+              "texte": "Photographe"
+            },
+            {
+              "texte": "Artisan d’Art"
+            },
+            {
+              "texte": "Le Puy-en-Velay"
+            }
+          ],
+          "titre": {
+            "texte": "Huit façons de travailler ensemble.",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Photographier des gens, surtout. Et puis quelques métiers voisins que je pratique depuis assez longtemps pour les faire bien : le drone, le photobooth, la formation, et des tirages à accrocher chez vous."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "prestations-2",
+        "type": "collections",
+        "valeurs": {
+          "entete": {
+            "numero": "01",
+            "surtitre": "Photographier des gens",
+            "texte": "Ce que je fais le plus souvent.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Quatre univers, une même façon de travailler : on parle avant de photographier, et personne n’a besoin de savoir poser."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "cartes": [
+            {
+              "numero": "01",
+              "titre": "Mariage",
+              "image": "@home-collection-mariage",
+              "texte": "Des préparatifs à la fête, je raconte votre journée telle qu’elle se vit : les émotions, les éclats de rire, et tout ce que vous n’aurez peut-être même pas vu passer.",
+              "href": "/mariage/"
+            },
+            {
+              "numero": "02",
+              "titre": "Portrait",
+              "image": "@home-collection-portrait",
+              "texte": "Vous pensez ne pas être photogénique ? Tant mieux. C’est exactement là que mon travail commence — seul, en couple ou à plusieurs.",
+              "href": "/portrait/"
+            },
+            {
+              "numero": "03",
+              "titre": "Studio de l’Iris",
+              "image": "@home-collection-iris",
+              "texte": "Votre regard, photographié en très haute définition, révèle des couleurs et des textures invisibles à l’œil nu. Et devient une œuvre.",
+              "href": "/studio-de-l-iris/"
+            },
+            {
+              "numero": "04",
+              "titre": "Entreprise",
+              "image": "@prestations-entreprise",
+              "texte": "Portraits de collaborateurs, gestes métier, locaux : une banque d’images qui vous ressemble et que vous aurez envie d’utiliser.",
+              "href": "/entreprise/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "prestations-3",
+        "type": "collections",
+        "valeurs": {
+          "entete": {
+            "numero": "02",
+            "surtitre": "Et aussi",
+            "texte": "Quatre métiers voisins.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Ils viennent de la même pratique, et parfois du même matériel. Ils se commandent séparément, ou avec une prestation photographique."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "cartes": [
+            {
+              "numero": "05",
+              "titre": "Drone",
+              "image": "@prestations-drone",
+              "texte": "Inspection de toitures, de pylônes, d’éoliennes ou de panneaux solaires, et suivi de chantier. Télépilote professionnel.",
+              "href": "/drone/"
+            },
+            {
+              "numero": "06",
+              "titre": "Photobooth",
+              "image": "@prestations-photobooth",
+              "texte": "Vos invités repartent avec leurs photos imprimées sur place. Avec, si vous voulez, un livre d’or audio pour garder aussi les voix.",
+              "href": "/photobooth/"
+            },
+            {
+              "numero": "07",
+              "titre": "Formation",
+              "image": "@prestations-formation",
+              "texte": "Comprendre son appareil et apprendre à construire une image. En petit groupe sur une journée, ou en individuel.",
+              "href": "/formation/"
+            },
+            {
+              "numero": "08",
+              "titre": "Tirages d’art",
+              "image": "@prestations-tirages",
+              "texte": "Une sélection de mes photographies de paysages, en série limitée à quinze exemplaires, sur papier ou sur aluminium.",
+              "href": "/tirages/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  },
+  "entreprise": {
+    "titre": "Photographie d’entreprise",
+    "metaTitre": "Photographe d’entreprise en Haute-Loire",
+    "metaDescription": "Portraits professionnels, photos d’équipes et de savoir-faire, reportages en entreprise. Au Puy-en-Velay, en Haute-Loire, dans la Loire et en Auvergne-Rhône-Alpes.",
+    "metaImage": "@ent-hero-wide",
+    "sections": [
+      {
+        "cle": "ent-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "titreDecale",
+          "image": "@ent-hero-wide",
+          "imageEtroite": "@ent-hero-tall",
+          "surtitres": [
+            {
+              "texte": "Entreprise"
+            },
+            {
+              "texte": "Haute-Loire"
+            }
+          ],
+          "titre": {
+            "texte": "Montrez qui vous êtes vraiment.",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Portraits professionnels, photos d’équipes, de savoir-faire et reportages en entreprise, pour donner un visage à votre activité. Basé au Puy-en-Velay, j’interviens en Haute-Loire, dans la Loire et partout en Auvergne-Rhône-Alpes selon les projets."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "boutons": [
+            {
+              "libelle": "Parler de mon projet",
+              "lien": "/contact/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-2",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageDroite",
+          "numero": "01",
+          "surtitre": "L’idée",
+          "titre": {
+            "texte": "Votre entreprise mérite mieux que des photos qui font « photo d’entreprise ».",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Vos clients ne découvrent pas seulement vos produits ou vos services. Ils découvrent aussi les personnes qui se cachent derrière."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Dirigeants, collaborateurs, artisans, indépendants : mon travail est de montrer votre entreprise telle qu’elle est vraiment. Professionnelle, bien sûr, mais surtout humaine."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Pas besoin que votre équipe sache poser. Je guide chacun pour obtenir des portraits naturels et cohérents avec votre image, et je photographie également votre savoir-faire, vos locaux et vos équipes en situation."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "L’objectif : une banque d’images qui vous ressemble et que vous aurez réellement envie d’utiliser sur votre site, LinkedIn, vos réseaux sociaux et vos supports de communication."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@ent-nb",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-3",
+        "type": "inclus",
+        "valeurs": {
+          "entete": {
+            "numero": "02",
+            "surtitre": "Ce que je photographie",
+            "texte": "Des images pour montrer votre entreprise, pas seulement vos visages.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "elements": [
+            {
+              "titre": "Portraits professionnels",
+              "texte": "Dirigeants, indépendants et collaborateurs. Des portraits naturels pour LinkedIn, votre site internet, votre communication et vos supports professionnels."
+            },
+            {
+              "titre": "Équipes et savoir-faire",
+              "texte": "Vos collaborateurs en situation, vos gestes métier, vos locaux et votre quotidien. L’idée : montrer concrètement ce qui fait votre entreprise."
+            },
+            {
+              "titre": "Reportages et événements",
+              "texte": "Séminaires, inaugurations, événements professionnels ou moments forts de votre entreprise, photographiés de manière naturelle et discrète."
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-4",
+        "type": "tarifs",
+        "valeurs": {
+          "entete": {
+            "numero": "03",
+            "surtitre": "Les tarifs",
+            "texte": "Un portrait, ou tout un reportage.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Le portrait seul a un prix fixe. Un reportage se construit autour de vos besoins, donc sur devis."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "barreDeRappel": false,
+          "formules": [
+            {
+              "nom": "Corporate Express",
+              "prix": "75 €",
+              "note": "Pour LinkedIn, votre site internet, votre CV ou vos supports professionnels.",
+              "inclus": [
+                {
+                  "texte": "20 minutes au studio"
+                },
+                {
+                  "texte": "Un portrait final retouché"
+                },
+                {
+                  "texte": "Accompagnement pendant toute la séance : posture, regard, expression"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Réserver mon portrait",
+                  "lien": "/contact/"
+                }
+              ]
+            },
+            {
+              "nom": "Reportage en entreprise",
+              "prix": "Sur devis",
+              "note": "Construit autour de vos besoins, et de l’usage que vous ferez des images.",
+              "inclus": [
+                {
+                  "texte": "Portraits de collaborateurs"
+                },
+                {
+                  "texte": "Photos d’équipe"
+                },
+                {
+                  "texte": "Gestes métier et savoir-faire"
+                },
+                {
+                  "texte": "Locaux et environnement de travail"
+                },
+                {
+                  "texte": "Banque d’images pour votre communication"
+                },
+                {
+                  "texte": "Reportage événementiel"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Parler de mon projet",
+                  "lien": "/contact/"
+                }
+              ]
+            }
+          ],
+          "legende": "L’objectif n’est pas de produire des centaines d’images inutiles, mais de vous livrer des photographies cohérentes, naturelles et réellement exploitables.",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-5",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageGauche",
+          "numero": "04",
+          "surtitre": "Une objection courante",
+          "titre": {
+            "texte": "« Je ne suis pas photogénique. »",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Je l’entends aussi en entreprise. Tout le monde n’est pas à l’aise devant un appareil photo, et quand il faut photographier toute une équipe, certains collaborateurs préféreraient clairement être ailleurs."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "C’est justement mon rôle de gérer ça. Je guide chacun simplement — posture, regard, position des mains, expression — sans demander à vos collaborateurs de devenir mannequins pendant cinq minutes."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Résultat : une équipe cohérente visuellement, sans effacer la personnalité de chacun. Et une séance qui ne devient pas une corvée."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@ent-equipe",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-6",
+        "type": "galerie",
+        "valeurs": {
+          "variante": "trio",
+          "entete": {
+            "numero": "05",
+            "surtitre": "Quelques images",
+            "texte": "Des entreprises m’ont déjà confié leur image.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "images": [
+            {
+              "image": "@ent-portrait"
+            },
+            {
+              "image": "@ent-magasin"
+            },
+            {
+              "image": "@ent-accueil"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "ent-7",
+        "type": "encadre",
+        "valeurs": {
+          "titre": {
+            "texte": "Des images faites pour être utilisées",
+            "niveau": "h3",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Site internet, LinkedIn, réseaux sociaux, communication interne, plaquettes ou relations presse : les images sont pensées dès la préparation en fonction de vos futurs usages."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Les droits d’utilisation sont définis clairement avec vous dans le devis. Pas de mauvaise surprise après la séance. Pour une campagne publicitaire ou un usage particulier, nous définissons simplement les droits nécessaires en amont."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  },
+  "drone": {
+    "titre": "Inspection et suivi de chantier par drone",
+    "metaTitre": "Inspection par drone en Haute-Loire et dans la Loire",
+    "metaDescription": "Inspection visuelle par drone : toitures, antennes et pylônes, éoliennes, panneaux solaires, sites industriels. Et suivi de chantier en vues aériennes.",
+    "metaImage": "@drone-hero-wide",
+    "sections": [
+      {
+        "cle": "drone-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "titreDecale",
+          "image": "@drone-hero-wide",
+          "surtitres": [
+            {
+              "texte": "Drone"
+            },
+            {
+              "texte": "Télépilote professionnel"
+            }
+          ],
+          "titre": {
+            "texte": "Voir ce qu’on ne peut pas atteindre.",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Inspection visuelle par drone en Haute-Loire, dans la Loire et dans les régions voisines. Un drone équipé d’un zoom puissant permet des prises de vue précises, rapides et sûres, sur une large variété de projets."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "boutons": [
+            {
+              "libelle": "Demander un devis",
+              "lien": "/contact/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "drone-2",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageDroite",
+          "numero": "01",
+          "surtitre": "Pourquoi le drone",
+          "titre": {
+            "texte": "Ni nacelle, ni échafaudage, ni personne en hauteur.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Le drone est une alternative aux méthodes d’inspection traditionnelles — la nacelle, l’accès manuel. Il atteint facilement des zones difficiles d’accès ou dangereuses, en réduisant les risques humains et les coûts associés."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Les images et vidéos haute définition capturées pendant le vol vous donnent une base de travail claire pour analyser l’état de vos structures."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@drone-chantier-01",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "drone-3",
+        "type": "inclus",
+        "valeurs": {
+          "entete": {
+            "numero": "02",
+            "surtitre": "Les applications",
+            "texte": "Ce qu’une inspection aérienne permet de contrôler.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "elements": [
+            {
+              "titre": "Toitures",
+              "texte": "Vérifier rapidement l’état d’une couverture, des tuiles, des gouttières ou des cheminées."
+            },
+            {
+              "titre": "Antennes et pylônes",
+              "texte": "Contrôler l’état des antennes relais ou des structures électriques, repérer les signes d’usure ou les dommages."
+            },
+            {
+              "titre": "Parcs éoliens",
+              "texte": "Analyser l’état des pales, des nacelles et des mâts, en accédant en sécurité à des zones inatteignables autrement."
+            },
+            {
+              "titre": "Panneaux solaires",
+              "texte": "Évaluer les dégâts sur une installation photovoltaïque — ceux de la grêle, par exemple — pour une estimation rapide et précise."
+            },
+            {
+              "titre": "Sites industriels",
+              "texte": "Examiner des façades, des cheminées ou des structures complexes sans interrompre l’activité du site."
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "drone-4",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageGauche",
+          "numero": "03",
+          "surtitre": "Suivi de chantier",
+          "titre": {
+            "texte": "Documenter l’avancement, depuis le ciel.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Pour suivre l’évolution d’un chantier ou répondre à une demande particulière, je réalise des photographies aériennes de haute précision."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Ces vues offrent une perspective claire et détaillée : planifier des livraisons, documenter l’avancement des travaux, analyser une réalisation avec exactitude. Chaque détail est visible."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@drone-chantier-02",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "drone-5",
+        "type": "encadre",
+        "valeurs": {
+          "titre": {
+            "texte": "Les tarifs",
+            "niveau": "h3",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Sur devis, à établir ensemble. Une inspection de toiture et le suivi d’un chantier sur plusieurs mois n’ont ni la même durée, ni les mêmes livrables : décrivez-moi ce que vous avez à contrôler."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  },
+  "photobooth": {
+    "titre": "Location de photobooth",
+    "metaTitre": "Location de photobooth en Haute-Loire",
+    "metaDescription": "Photobooth avec impression instantanée pour mariage, anniversaire ou soirée d’entreprise, en Haute-Loire et dans la Loire. Et un livre d’or audio pour garder les voix.",
+    "metaImage": "@photobooth-hero-wide",
+    "sections": [
+      {
+        "cle": "pb-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "titreDecale",
+          "image": "@photobooth-hero-wide",
+          "surtitres": [
+            {
+              "texte": "Photobooth"
+            },
+            {
+              "texte": "Livre d’or audio"
+            }
+          ],
+          "titre": {
+            "texte": "Vos invités repartent avec leurs photos.",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Mariage, anniversaire, soirée d’entreprise ou fête de famille : un photobooth qui imprime sur place, disponible en Haute-Loire et dans la Loire. Plusieurs formules, selon le nombre de tirages."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "boutons": [
+            {
+              "libelle": "Réserver un photobooth",
+              "lien": "/contact/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "pb-2",
+        "type": "inclus",
+        "valeurs": {
+          "entete": {
+            "numero": "01",
+            "surtitre": "Le photobooth",
+            "texte": "Ce qu’il fait, et ce qu’il demande.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "elements": [
+            {
+              "titre": "Simple à utiliser",
+              "texte": "Vos invités se prennent en photo en toute autonomie."
+            },
+            {
+              "titre": "Qualité professionnelle",
+              "texte": "Appareil photo Canon et éclairage intégré. Ce ne sont pas des images de borne."
+            },
+            {
+              "titre": "Impression instantanée",
+              "texte": "Les photos sont imprimées pendant votre événement."
+            },
+            {
+              "titre": "Galerie numérique",
+              "texte": "Vous retrouvez également les photos après l’événement."
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "pb-3",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageDroite",
+          "numero": "02",
+          "surtitre": "Le livre d’or audio",
+          "titre": {
+            "texte": "Garder aussi les voix.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Vos invités décrochent un téléphone rétro et laissent un message vocal. Tous les messages sont enregistrés et vous sont remis après l’événement."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Les plus jeunes adorent le photobooth ; le livre d’or audio, lui, séduit les invités de tous âges. Vous repartez avec des photos drôles et des messages touchants."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Les deux se louent ensemble ou séparément — pour un mariage, un anniversaire, un événement d’entreprise ou une fête de famille."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@photobooth-invites",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "pb-4",
+        "type": "tarifs",
+        "valeurs": {
+          "entete": {
+            "numero": "03",
+            "surtitre": "Les tarifs",
+            "texte": "Deux formules, adaptables.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Retrait la veille ou livraison, retour le lendemain de l’événement, et une prise en main avant de vous laisser avec."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "barreDeRappel": false,
+          "formules": [
+            {
+              "nom": "Photobooth",
+              "prix": "À partir de 170 €",
+              "note": "Le tarif dépend du nombre d’impressions.",
+              "inclus": [
+                {
+                  "texte": "Photos numériques illimitées"
+                },
+                {
+                  "texte": "Galerie en ligne à télécharger"
+                },
+                {
+                  "texte": "Retrait la veille ou livraison"
+                },
+                {
+                  "texte": "Retour le lendemain de l’événement"
+                },
+                {
+                  "texte": "Formation à l’utilisation"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Réserver mon photobooth",
+                  "lien": "/contact/"
+                }
+              ]
+            },
+            {
+              "nom": "Livre d’or audio",
+              "prix": "À partir de 50 €",
+              "note": "60 € seul, 50 € s’il accompagne un photobooth.",
+              "inclus": [
+                {
+                  "texte": "Messages audio illimités"
+                },
+                {
+                  "texte": "Enregistrement de votre annonce d’accueil"
+                },
+                {
+                  "texte": "Retrait la veille"
+                },
+                {
+                  "texte": "Retour le lendemain de l’événement"
+                },
+                {
+                  "texte": "Formation à l’utilisation"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Réserver mon livre d’or",
+                  "lien": "/contact/"
+                }
+              ]
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "pb-5",
+        "type": "options",
+        "valeurs": {
+          "entete": {
+            "texte": "Les forfaits d’impression",
+            "niveau": "h3",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Le photobooth seul livre les fichiers ; les forfaits ci-dessous ajoutent les tirages papier, imprimés pendant la soirée."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "options": [
+            {
+              "nom": "Numériques seulement",
+              "prix": "170 €",
+              "texte": "Photos illimitées, sans impression."
+            },
+            {
+              "nom": "200 impressions",
+              "prix": "250 €"
+            },
+            {
+              "nom": "300 impressions",
+              "prix": "350 €"
+            },
+            {
+              "nom": "400 impressions",
+              "prix": "400 €",
+              "texte": "Location du livre d’or audio offerte."
+            },
+            {
+              "nom": "Accessoires",
+              "prix": "30 €",
+              "texte": "La malle à déguisements."
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "pb-6",
+        "type": "texteLibre",
+        "valeurs": {
+          "entete": {
+            "texte": "Où j’interviens",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Basé en Haute-Loire, je propose la location de photobooth au Puy-en-Velay, à Yssingeaux, à Monistrol-sur-Loire, ainsi que dans la Loire et les environs."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Installation, prise en main et assistance sont prévues : l’idée est que vous profitiez de votre soirée, pas que vous dépanniez une imprimante."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "largeur": "mesure",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  },
+  "formation": {
+    "titre": "Formation photographie",
+    "metaTitre": "Formation photo en Haute-Loire et dans la Loire",
+    "metaDescription": "Apprendre à maîtriser son appareil et à construire ses images, avec un photographe professionnel. En petit groupe sur une journée, ou en individuel.",
+    "metaImage": "@formation-hero-wide",
+    "sections": [
+      {
+        "cle": "form-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "titreDecale",
+          "image": "@formation-hero-wide",
+          "surtitres": [
+            {
+              "texte": "Formation"
+            },
+            {
+              "texte": "Haute-Loire"
+            },
+            {
+              "texte": "Loire"
+            }
+          ],
+          "titre": {
+            "texte": "Votre appareil décide à votre place ?",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Des formations accessibles aux débutants et aux amateurs qui veulent comprendre leur matériel, maîtriser les réglages et surtout apprendre à construire une image. En individuel ou en petit groupe."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "boutons": [
+            {
+              "libelle": "Demander les prochaines dates",
+              "lien": "/contact/"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "form-2",
+        "type": "texteImage",
+        "valeurs": {
+          "variante": "imageDroite",
+          "numero": "01",
+          "surtitre": "La méthode",
+          "titre": {
+            "texte": "De la théorie, oui. Mais surtout de la pratique.",
+            "niveau": "h2",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Comprendre l’ouverture, la vitesse, les ISO ou la lumière est indispensable. Mais c’est en photographiant que tout devient vraiment clair."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Pendant les formations, nous alternons explications et exercices : utiliser son appareil, comprendre la lumière, construire une image. Je suis là pour vous expliquer, vous faire pratiquer, et corriger avec vous ce qui peut l’être."
+                  }
+                ]
+              },
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Le but n’est pas de vous apprendre une recette toute faite, mais de vous rendre progressivement autonome avec votre appareil. Moins de théorie inutile, davantage de conseils directement applicables à vos propres photos."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "image": "@formation-pratique",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "form-3",
+        "type": "tarifs",
+        "valeurs": {
+          "entete": {
+            "numero": "02",
+            "surtitre": "Les formations",
+            "texte": "Choisissez celle qui vous correspond.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Découvrir les bases, mieux maîtriser son appareil, ou progresser sur un point précis : en petit groupe, ou en tête à tête."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "barreDeRappel": false,
+          "formules": [
+            {
+              "nom": "Stage collectif",
+              "prix": "119 €",
+              "note": "Une journée complète.",
+              "inclus": [
+                {
+                  "texte": "Comprendre les bases"
+                },
+                {
+                  "texte": "Pratiquer sur le terrain"
+                },
+                {
+                  "texte": "Analyser vos images en groupe"
+                },
+                {
+                  "texte": "6 participants maximum"
+                },
+                {
+                  "texte": "Repas inclus"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Demander les prochaines dates",
+                  "lien": "/contact/"
+                }
+              ]
+            },
+            {
+              "nom": "Formation individuelle",
+              "prix": "320 €",
+              "note": "Une journée entièrement personnalisée.",
+              "inclus": [
+                {
+                  "texte": "Construite autour de votre niveau"
+                },
+                {
+                  "texte": "Avec votre propre matériel"
+                },
+                {
+                  "texte": "Sur ce que vous souhaitez apprendre"
+                }
+              ],
+              "boutons": [
+                {
+                  "libelle": "Organiser ma formation",
+                  "lien": "/contact/"
+                }
+              ]
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  },
+  "tirages": {
+    "titre": "Tirages d’art",
+    "metaTitre": "Photographies d’art en tirage limité",
+    "metaDescription": "Une sélection de photographies de paysages en série limitée à quinze exemplaires, sur papier ou sur aluminium. Du 20 × 30 au 60 × 90 cm.",
+    "metaImage": "@tirage-lac-bleu",
+    "sections": [
+      {
+        "cle": "tir-1",
+        "type": "heros",
+        "valeurs": {
+          "variante": "sobre",
+          "surtitres": [
+            {
+              "texte": "Tirages d’art"
+            },
+            {
+              "texte": "Série limitée"
+            }
+          ],
+          "titre": {
+            "texte": "Faire entrer une image chez vous.",
+            "niveau": "h1",
+            "apparence": {
+              "police": "titre",
+              "taille": "geant",
+              "couleur": "encre"
+            }
+          },
+          "chapo": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Une sélection de mes photographies de paysages, proposées en tirages d’art — pour celles et ceux qui préfèrent accrocher une image plutôt que la laisser vivre sur un écran."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "chapo",
+              "couleur": "encre"
+            }
+          },
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "tir-2",
+        "type": "jalons",
+        "valeurs": {
+          "entete": {
+            "numero": "01",
+            "surtitre": "La série",
+            "texte": "Des photographies pensées pour être imprimées.",
+            "niveau": "h2",
+            "chapo": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Chaque photographie est proposée en série limitée à quinze exemplaires, tous formats et supports confondus."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "titre",
+              "taille": "titre2",
+              "couleur": "encre"
+            }
+          },
+          "jalons": [
+            {
+              "image": "@tirage-lac-bleu",
+              "titre": "Lac Bleu d’Automne",
+              "texte": "Capturée en automne 2023 au-dessus du lac Bleu, en Haute-Loire. La lumière dorée souligne le contraste entre le lac et les teintes de la forêt."
+            },
+            {
+              "image": "@tirage-ocean",
+              "titre": "Océan d’Été",
+              "texte": "Été 2023, Portugal. Vue aérienne d’une plage où l’océan turquoise rejoint le sable doré ; les ombres humaines donnent l’échelle."
+            },
+            {
+              "image": "@tirage-coucher",
+              "titre": "Coucher d’Été"
+            },
+            {
+              "image": "@tirage-voiles",
+              "titre": "Toutes voiles dehors"
+            },
+            {
+              "image": "@tirage-pont-amours",
+              "titre": "Pont des Amours"
+            },
+            {
+              "image": "@tirage-pont-face",
+              "titre": "Pont d’en face"
+            }
+          ],
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "tir-3",
+        "type": "supports",
+        "valeurs": {
+          "titre": {
+            "texte": "Tirage sur aluminium",
+            "niveau": "h3",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "supports": [
+            {
+              "nom": "20 × 30 cm",
+              "prix": "100 €"
+            },
+            {
+              "nom": "30 × 45 cm",
+              "prix": "150 €"
+            },
+            {
+              "nom": "40 × 60 cm",
+              "prix": "240 €"
+            },
+            {
+              "nom": "60 × 90 cm",
+              "prix": "499 €"
+            }
+          ],
+          "legende": "Tirage contrecollé sur Alu Dibond, prêt à accrocher.",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "tir-4",
+        "type": "supports",
+        "valeurs": {
+          "titre": {
+            "texte": "Tirage papier",
+            "niveau": "h3",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "supports": [
+            {
+              "nom": "20 × 30 cm",
+              "prix": "70 €"
+            },
+            {
+              "nom": "30 × 45 cm",
+              "prix": "85 €"
+            },
+            {
+              "nom": "40 × 60 cm",
+              "prix": "120 €"
+            },
+            {
+              "nom": "60 × 90 cm",
+              "prix": "150 €"
+            }
+          ],
+          "legende": "Encadrement en sus, sur devis.",
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      },
+      {
+        "cle": "tir-5",
+        "type": "encadre",
+        "valeurs": {
+          "titre": {
+            "texte": "D’autres œuvres",
+            "niveau": "h3",
+            "apparence": {
+              "police": "titre",
+              "taille": "titre3",
+              "couleur": "encre"
+            }
+          },
+          "texte": {
+            "contenu": [
+              {
+                "type": "paragraphe",
+                "fragments": [
+                  {
+                    "texte": "Six photographies sont présentées ici. D’autres sont disponibles sur demande, et un format qui ne figure pas dans les grilles se fait sur devis."
+                  }
+                ]
+              }
+            ],
+            "apparence": {
+              "police": "texte",
+              "taille": "corps",
+              "couleur": "encreAttenuee"
+            }
+          },
+          "reglages": {
+            "fond": "noir",
+            "espacement": "normal"
+          }
+        }
+      }
+    ]
+  }
+}

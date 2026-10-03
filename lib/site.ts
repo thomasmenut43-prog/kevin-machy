@@ -62,10 +62,27 @@ export const LIENS = {
   cookies: '/politique-de-confidentialite/',
 } as const;
 
+/**
+ * La barre de navigation.
+ *
+ * Six entrées, et ce plafond n'est pas une coquetterie : au-delà, une barre
+ * cesse d'être un repère et devient une liste à lire.
+ *
+ * C'est pourquoi les cinq prestations reprises de l'ancien site en octobre 2026
+ * — entreprise, drone, photobooth, formation, tirages — n'y figurent pas une à
+ * une. Elles passent par `/prestations/`, qui les présente toutes les huit.
+ * Cette page remplace du même coup la page chapeau de l'ancien site,
+ * `/photographe-professionnel-haute-loire/`, qui n'avait jusque-là pas
+ * d'équivalent et retombait sur l'accueil.
+ *
+ * Ce n'est qu'un repli : la barre vit dans les réglages, voir
+ * `lib/navigation.ts`.
+ */
 export const NAV = [
   { href: '/mariage/', label: 'Mariage' },
   { href: '/portrait/', label: 'Portrait' },
   { href: '/studio-de-l-iris/', label: 'Studio de l’Iris' },
+  { href: '/prestations/', label: 'Prestations' },
   { href: '/a-propos/', label: 'À propos' },
   { href: '/contact/', label: 'Contact' },
 ] as const;

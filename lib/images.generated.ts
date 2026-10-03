@@ -826,6 +826,258 @@ export const IMAGES = {
     "missing": true,
     "widths": [],
     "base": null
+  },
+  "prestations-entreprise": {
+    "name": "prestations-entreprise",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/prestations-entreprise"
+  },
+  "prestations-drone": {
+    "name": "prestations-drone",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/prestations-drone"
+  },
+  "prestations-photobooth": {
+    "name": "prestations-photobooth",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720
+    ],
+    "base": "/img/prestations-photobooth"
+  },
+  "prestations-formation": {
+    "name": "prestations-formation",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960
+    ],
+    "base": "/img/prestations-formation"
+  },
+  "prestations-tirages": {
+    "name": "prestations-tirages",
+    "ratio": 0.8,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "ent-hero-wide": {
+    "name": "ent-hero-wide",
+    "ratio": 1.7777777777777777,
+    "missing": false,
+    "widths": [
+      960,
+      1440,
+      1920,
+      2560
+    ],
+    "base": "/img/ent-hero-wide"
+  },
+  "ent-hero-tall": {
+    "name": "ent-hero-tall",
+    "ratio": 0.75,
+    "missing": false,
+    "widths": [
+      640,
+      828,
+      1080,
+      1440
+    ],
+    "base": "/img/ent-hero-tall"
+  },
+  "ent-nb": {
+    "name": "ent-nb",
+    "ratio": 0.6666666666666666,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/ent-nb"
+  },
+  "ent-equipe": {
+    "name": "ent-equipe",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/ent-equipe"
+  },
+  "ent-portrait": {
+    "name": "ent-portrait",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/ent-portrait"
+  },
+  "ent-magasin": {
+    "name": "ent-magasin",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280,
+      1920
+    ],
+    "base": "/img/ent-magasin"
+  },
+  "ent-accueil": {
+    "name": "ent-accueil",
+    "ratio": 1,
+    "missing": false,
+    "widths": [
+      480,
+      720
+    ],
+    "base": "/img/ent-accueil"
+  },
+  "drone-hero-wide": {
+    "name": "drone-hero-wide",
+    "ratio": 1.7777777777777777,
+    "missing": false,
+    "widths": [
+      960,
+      1440,
+      1920
+    ],
+    "base": "/img/drone-hero-wide"
+  },
+  "drone-chantier-01": {
+    "name": "drone-chantier-01",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280
+    ],
+    "base": "/img/drone-chantier-01"
+  },
+  "drone-chantier-02": {
+    "name": "drone-chantier-02",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280
+    ],
+    "base": "/img/drone-chantier-02"
+  },
+  "photobooth-hero-wide": {
+    "name": "photobooth-hero-wide",
+    "ratio": 1.7777777777777777,
+    "missing": false,
+    "widths": [
+      960,
+      1440
+    ],
+    "base": "/img/photobooth-hero-wide"
+  },
+  "photobooth-invites": {
+    "name": "photobooth-invites",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960
+    ],
+    "base": "/img/photobooth-invites"
+  },
+  "formation-hero-wide": {
+    "name": "formation-hero-wide",
+    "ratio": 1.7777777777777777,
+    "missing": false,
+    "widths": [
+      960,
+      1440,
+      1920
+    ],
+    "base": "/img/formation-hero-wide"
+  },
+  "formation-pratique": {
+    "name": "formation-pratique",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280,
+      1920
+    ],
+    "base": "/img/formation-pratique"
+  },
+  "tirage-lac-bleu": {
+    "name": "tirage-lac-bleu",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "tirage-ocean": {
+    "name": "tirage-ocean",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "tirage-coucher": {
+    "name": "tirage-coucher",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "tirage-voiles": {
+    "name": "tirage-voiles",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "tirage-pont-amours": {
+    "name": "tirage-pont-amours",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
+  },
+  "tirage-pont-face": {
+    "name": "tirage-pont-face",
+    "ratio": 1,
+    "missing": true,
+    "widths": [],
+    "base": null
   }
 } as const satisfies Record<string, ImageRecord>;
 

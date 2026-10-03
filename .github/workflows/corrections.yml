@@ -48,6 +48,14 @@ jobs:
 
       - run: npm ci
 
+      # Les pages de prestations désignent leurs images par leur nom
+      # d'emplacement ; `poser-prestations.mjs` les traduit en identifiants de
+      # médiathèque, et s'arrête net si l'un d'eux manque. Cette étape garantit
+      # qu'ils sont là. Elle ne ré-encode rien : `public/img/` est versionné,
+      # elle ne fait qu'inscrire ces fichiers dans la médiathèque.
+      - name: La médiathèque connaît-elle toutes les images ?
+        run: node scripts/importer-images.mjs
+
       # Toujours commencé par là, même quand on applique : le relevé d'avant
       # dit ce qui va changer, et reste dans le journal si quelque chose se
       # passe mal ensuite.
@@ -57,8 +65,9 @@ jobs:
           npm run adresse -- --verifier || true
           npm run juridique -- --verifier || true
           npm run domaine -- --verifier || true
+          npm run prestations -- --verifier || true
 
-      # Les quatre scripts sont idempotents : relancés, ils ne refont rien.
+      # Les cinq scripts sont idempotents : relancés, ils ne refont rien.
       - name: Appliquer
         if: ${{ inputs.appliquer }}
         run: |
@@ -66,6 +75,7 @@ jobs:
           npm run adresse
           npm run juridique
           npm run domaine
+          npm run prestations
 
       - name: Ce qui reste, après
         if: ${{ inputs.appliquer }}
@@ -74,6 +84,7 @@ jobs:
           npm run adresse -- --verifier
           npm run juridique -- --verifier
           npm run domaine -- --verifier
+          npm run prestations -- --verifier
 
   # Écrire en base ne suffit pas : les pages sont en cache, et ce cache ne
   # s'invalide que par le bouton « Publier » du BackOffice, qui pose les
