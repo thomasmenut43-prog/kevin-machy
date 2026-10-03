@@ -334,17 +334,42 @@ export const IRIS_ETAPES = [
    actuel et le simulateur reste masqué. Il apparaît dès la première entrée.
    ————————————————————————————————————————————————————————————————————————— */
 
+/**
+ * Un barème dégressif : ce que coûte un iris, deux, trois…
+ *
+ * `totaux` donne le prix **cumulé** — `totaux[1]` est le prix de deux iris, pas
+ * celui du second. Au-delà du dernier palier, chaque iris de plus vaut
+ * `auDela`.
+ */
+export type BaremeIris = {
+  totaux: number[];
+  auDela: number;
+};
+
 export type GrilleIris = {
   /** Bornes des compteurs. Au-delà du dernier palier, la séance passe sur devis. */
   maxHumains: number;
   maxAnimaux: number;
   /**
-   * Le tarif dépend du NOMBRE TOTAL D'IRIS photographiés, pas de la répartition
-   * entre humains et animaux : la page de réservation ne vend que « 1 Iris »,
-   * « 2 Iris », etc. Les compteurs humains / animaux servent au visiteur à
-   * compter, pas au calcul.
+   * **Un iris d'animal ne coûte pas le prix d'un iris humain.**
+   *
+   * On a cru l'inverse, et le site l'a facturé ainsi jusqu'au 3 octobre 2026 :
+   * la page de réservation SumUp ne vend que « 1 Iris », « 2 Iris », etc., sans
+   * distinguer, et on en avait conclu que seul le nombre total comptait. Un
+   * client a appelé Kevin avec le mauvais prix — un animal seul s'affichait à
+   * 49 € au lieu de 100.
+   *
+   * Le calculateur de l'ancien site, lui, tenait deux barèmes séparés, et Kevin
+   * les a confirmés tous les deux. Les montants ci-dessous viennent de là.
    */
-  parIris: Record<number, { prix: number; duree: string }>;
+  humains: BaremeIris;
+  animaux: BaremeIris;
+  /**
+   * La durée de la séance, par nombre **total** d'iris — celle-ci ne dépend pas
+   * de l'espèce. C'est elle qui borne le simulateur : au-delà du dernier
+   * nombre listé, aucun montant n'est affiché et la séance passe sur devis.
+   */
+  durees: Record<number, string>;
 };
 
 /**
@@ -354,21 +379,43 @@ export type GrilleIris = {
 export const IRIS_GRILLE: GrilleIris = {
   maxHumains: 5,
   maxAnimaux: 5,
-  parIris: {
-    1: { prix: 49, duree: '30 min' },
-    2: { prix: 79, duree: '45 min' },
-    3: { prix: 99, duree: '1 h' },
-    4: { prix: 129, duree: '1 h 15' },
-    5: { prix: 159, duree: '1 h 30' },
+  humains: { totaux: [49, 79, 99], auDela: 30 },
+  animaux: { totaux: [100, 180, 240, 300], auDela: 60 },
+  durees: {
+    1: '30 min',
+    2: '45 min',
+    3: '1 h',
+    4: '1 h 15',
+    5: '1 h 30',
   },
 };
 
 /** `true` dès qu'au moins un palier est renseigné. */
-export const grilleIrisRenseignee = Object.keys(IRIS_GRILLE.parIris).length > 0;
+export const grilleIrisRenseignee =
+  IRIS_GRILLE.humains.totaux.length > 0 && Object.keys(IRIS_GRILLE.durees).length > 0;
 
-/** Tarif et durée pour une combinaison, ou `null` au-delà du dernier palier. */
+/** Ce que coûtent `nombre` iris sur un barème, paliers puis prix unitaire. */
+function sousTotal(nombre: number, bareme: BaremeIris): number {
+  if (nombre <= 0) return 0;
+  if (nombre <= bareme.totaux.length) return bareme.totaux[nombre - 1];
+  const dernier = bareme.totaux[bareme.totaux.length - 1];
+  return dernier + (nombre - bareme.totaux.length) * bareme.auDela;
+}
+
+/**
+ * Tarif et durée pour une combinaison, ou `null` au-delà du dernier palier.
+ *
+ * Les deux barèmes s'additionnent sans se mélanger : deux humains et un animal,
+ * c'est 79 € plus 100 €, pas le palier « trois iris ». C'est la règle du
+ * calculateur de l'ancien site, et celle que Kevin applique.
+ */
 export function tarifIris(humains: number, animaux: number) {
-  return IRIS_GRILLE.parIris[humains + animaux] ?? null;
+  const duree = IRIS_GRILLE.durees[humains + animaux];
+  if (!duree) return null;
+  return {
+    prix: sousTotal(humains, IRIS_GRILLE.humains) + sousTotal(animaux, IRIS_GRILLE.animaux),
+    duree,
+  };
 }
 
 /** Horaires du studio, relevés sur la page de réservation. */

@@ -149,10 +149,22 @@ for (const [nom, vp] of [['desktop', {width:1440,height:900}], ['mobile', {width
   await p.getByRole('button', {name:'Ajouter un humain'}).click();
   await p.getByRole('button', {name:'Ajouter un animal'}).click();
   await p.waitForTimeout(200);
-  ok('simulateur à 3 iris affiche 99 €', (await p.locator('#simulateur-iris').innerText()).includes('99'));
+  // Deux humains et un animal : 79 € plus 100 €, et non le palier « trois iris ».
+  // Ce contrôle attendait 99 € — il vérifiait le défaut qu'il aurait dû voir.
+  ok('simulateur à 2 humains + 1 animal affiche 179 €', (await p.locator('#simulateur-iris').innerText()).includes('179'));
   await depasser(p);
   t = await barre(p).innerText();
-  ok('barre iris reprend le même tarif', t.includes('99') && t.includes('3 iris'), t.replace(/\n/g,' | '));
+  ok('barre iris reprend le même tarif', t.includes('179') && t.includes('3 iris'), t.replace(/\n/g,' | '));
+
+  // Le cas qui a fait appeler un client : un animal seul vaut 100 €, pas 49.
+  await preparer(p);
+  await p.locator('#simulateur-iris').scrollIntoViewIfNeeded();
+  await p.waitForTimeout(300);
+  await p.getByRole('button', {name:'Ajouter un animal'}).click();
+  await p.getByRole('button', {name:'Retirer un humain'}).click();
+  await p.waitForTimeout(200);
+  t = await p.locator('#simulateur-iris').innerText();
+  ok('simulateur : un animal seul vaut 100 €', t.includes('100') && !t.includes('49'), t.replace(/\n/g,' | '));
 
   // Au-delà du dernier palier, aucun montant n'est deviné.
   await preparer(p);
