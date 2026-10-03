@@ -107,7 +107,7 @@ const SLOTS = [
   { name: 'portrait-galerie-10', profile: 'tall', src: R('km-por-fond-chaud.jpg') },
 
   // ————————————————————————————————— Studio de l'Iris
-  { name: 'iris-hero-wide', profile: 'heroWide', src: R('km-iris-trio-bleu.jpg'), pos: 'centre' },
+  { name: 'iris-hero-wide', profile: 'heroWide', src: R('km-iris-mathias.png'), pos: 'centre' },
   { name: 'iris-hero-tall', profile: 'heroTall', src: R('km-iris-seul-bleu-or.jpg'), pos: 'centre' },
   { name: 'iris-oeuvre', profile: 'square', src: R('km-iris-seul-bleu-or.jpg'), pos: 'centre' },
   // L'iris au prénom incrusté illustre littéralement ce que promet la page :
@@ -126,7 +126,7 @@ const SLOTS = [
   { name: 'iris-animal-01', profile: 'square', src: R('km-iris-humain-et-animal.jpeg'), pos: 'centre' },
   // Il en faudrait une seconde. Plutôt qu'un iris humain présenté pour ce qu'il
   // n'est pas, l'emplacement reste un cadre nommé. Voir assets.md.
-  { name: 'iris-animal-02', profile: 'square', src: null },
+  { name: 'iris-animal-02', profile: 'square', src: R('km-iris-animal-rond.jpg'), pos: 'centre' },
   // Les deux panoramiques sont précisément des tirages sur aluminium : ils
   // illustrent le support, pas l'iris.
   { name: 'iris-support-tableau', profile: 'wide', src: R('km-iris-quatuor-pano.jpg'), pos: 'centre' },
@@ -150,21 +150,21 @@ const SLOTS = [
   // Voir assets.md.
   { name: 'prestations-entreprise', profile: 'tall', src: R('km-ent-portrait-studio.jpg') },
   { name: 'prestations-drone', profile: 'tall', src: R('km-drone-inspection.jpg') },
-  { name: 'prestations-photobooth', profile: 'tall', src: R('km-photobooth-tirage.jpg') },
+  { name: 'prestations-photobooth', profile: 'tall', src: R('km-photobooth-groupe-01.jpg') },
   { name: 'prestations-formation', profile: 'tall', src: R('km-formation-stage.jpg') },
   { name: 'prestations-tirages', profile: 'tall', src: null },
 
   // ————————————————————————————————— Entreprise
-  { name: 'ent-hero-wide', profile: 'heroWide', src: R('km-ent-magasin-02.jpg') },
-  { name: 'ent-hero-tall', profile: 'heroTall', src: R('km-ent-situation.jpg') },
-  { name: 'ent-nb', profile: 'portraitBook', src: R('km-ent-portrait-nb.jpg') },
-  { name: 'ent-equipe', profile: 'tall', src: R('km-ent-duo.jpg') },
+  { name: 'ent-hero-wide', profile: 'heroWide', src: R('km-ent-hero-wide.jpg') },
+  { name: 'ent-hero-tall', profile: 'heroTall', src: R('km-ent-hero-tall.jpg') },
+  { name: 'ent-nb', profile: 'portraitBook', src: R('km-ent-nb.jpg') },
+  { name: 'ent-equipe', profile: 'wide', src: R('km-ent-equipe.jpg') },
   { name: 'ent-portrait', profile: 'tall', src: R('km-ent-portrait-studio.jpg') },
-  { name: 'ent-magasin', profile: 'wide', src: R('km-ent-magasin-01.jpg') },
-  // Source carrée de 768 px : l'emplacement ne portera que ses deux plus
-  // petites largeurs, et le script le dira. C'est le prix d'une image que
-  // WordPress n'a jamais stockée plus grande.
-  { name: 'ent-accueil', profile: 'square', src: R('km-ent-accueil.jpg') },
+  // Source verticale : un recadrage 3/2 coupait le vendeur et ne laissait que
+  // le lit. Le 4/5 garde la personne, qui est le sujet.
+  { name: 'ent-magasin', profile: 'tall', src: R('km-ent-magasin-01.jpg') },
+  { name: 'ent-accueil', profile: 'wide', src: R('km-ent-accueil.jpg') },
+  { name: 'ent-metier', profile: 'wide', src: R('km-ent-metier.jpg') },
 
   // ————————————————————————————————— Drone
   { name: 'drone-hero-wide', profile: 'heroWide', src: R('km-drone-inspection.jpg') },
@@ -172,8 +172,9 @@ const SLOTS = [
   { name: 'drone-chantier-02', profile: 'wide', src: R('km-drone-chantier-02.jpg') },
 
   // ————————————————————————————————— Photobooth
-  { name: 'photobooth-hero-wide', profile: 'heroWide', src: R('km-photobooth-tirage.jpg') },
-  { name: 'photobooth-invites', profile: 'wide', src: R('km-photobooth-invites.jpg') },
+  { name: 'photobooth-hero-wide', profile: 'heroWide', src: R('km-photobooth-groupe-01.jpg') },
+  { name: 'photobooth-invites', profile: 'wide', src: R('km-photobooth-groupe-02.jpg') },
+  { name: 'photobooth-tirage', profile: 'wide', src: R('km-photobooth-tirage.jpg') },
 
   // ————————————————————————————————— Formation
   { name: 'formation-hero-wide', profile: 'heroWide', src: R('km-formation-stage.jpg') },

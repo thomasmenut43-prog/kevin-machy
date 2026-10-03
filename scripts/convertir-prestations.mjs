@@ -311,9 +311,14 @@ const pages = {};
         image: '@ent-equipe',
       }),
       s('galerie', {
-        variante: 'trio',
+        variante: 'mosaique',
         entete: entete('05', 'Quelques images', 'Des entreprises m’ont déjà confié leur image.'),
-        images: [{ image: '@ent-portrait' }, { image: '@ent-magasin' }, { image: '@ent-accueil' }],
+        images: [
+          { image: '@ent-portrait' },
+          { image: '@ent-metier' },
+          { image: '@ent-magasin' },
+          { image: '@ent-accueil' },
+        ],
       }),
       s('encadre', {
         titre: { texte: 'Des images faites pour être utilisées', niveau: 'h3', apparence: APP_TITRE3 },
@@ -449,6 +454,7 @@ const pages = {};
         ),
         image: '@photobooth-invites',
       }),
+      s('bande', { variante: 'pleineLargeur', image: '@photobooth-tirage' }, 'aucun'),
       s('tarifs', {
         entete: entete(
           '03',

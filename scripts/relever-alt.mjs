@@ -40,27 +40,33 @@ const MOTIFS = [
 const SUPPLEMENTS = {
   'prestations-entreprise': 'Portrait d’une professionnelle réalisé en studio.',
   'prestations-drone': 'Vue aérienne d’un chantier prise au drone.',
-  'prestations-photobooth': 'Tirage sorti d’un photobooth lors d’un événement.',
+  'prestations-photobooth': 'Des invités posant dans le photobooth pendant une soirée.',
   'prestations-formation': 'Participants photographiant en extérieur pendant un stage.',
   'prestations-tirages': 'Un voilier toutes voiles dehors, tirage d’art en série limitée.',
 
-  'ent-hero-wide': 'Une collaboratrice dans son environnement de travail, en magasin.',
-  'ent-hero-tall': 'Une collaboratrice au travail dans son entreprise.',
-  'ent-nb': 'Portrait d’entreprise en noir et blanc.',
-  'ent-equipe': 'Deux collaboratrices photographiées ensemble pour leur entreprise.',
+  'ent-hero-wide': 'Une vendeuse conseillant une cliente au rayon literie d’un magasin.',
+  'ent-hero-tall': 'Une collaboratrice accueillant une cliente derrière son comptoir.',
+  'ent-nb': 'Portrait d’entreprise en noir et blanc : une professionnelle assise, carnet ouvert.',
+  'ent-equipe': 'Une équipe de six personnes photographiée ensemble dans ses locaux.',
+  'ent-metier': 'Un audioprothésiste procédant à un réglage sur une patiente.',
   'ent-portrait': 'Portrait d’une professionnelle réalisé en studio au Puy-en-Velay.',
-  'ent-magasin': 'Un collaborateur dans son environnement de travail.',
-  'ent-accueil': 'Une collaboratrice accueillant une cliente et son enfant.',
+  'ent-magasin': 'Un vendeur bondissant au-dessus d’un matelas, bras écartés, dans son magasin.',
+  'ent-accueil': 'Un collaborateur recevant une cliente à son poste de travail.',
 
   'drone-hero-wide': 'Vue aérienne d’un site photographié au drone pour inspection.',
   'drone-chantier-01': 'Vue aérienne d’un chantier en cours de travaux.',
   'drone-chantier-02': 'Vue aérienne des accès d’un chantier.',
 
-  'photobooth-hero-wide': 'Une photographie imprimée sur place par le photobooth.',
-  'photobooth-invites': 'Des invités utilisant le photobooth pendant un événement.',
+  'photobooth-hero-wide': 'Quatre invités posant dans le photobooth devant un rideau doré.',
+  'photobooth-invites': 'Un groupe d’invités posant ensemble dans le photobooth.',
+  'photobooth-tirage': 'Une photographie imprimée sur place par le photobooth.',
 
   'formation-hero-wide': 'Les participants d’un stage de photographie en extérieur.',
   'formation-pratique': 'Un participant règle son appareil pendant un exercice pratique.',
+
+  // Deux emplacements du Studio de l'Iris, comblés par la livraison d'octobre.
+  'iris-animal-02': 'L’iris d’un chien, rond et cuivré, à côté de celui de sa maîtresse.',
+  'iris-hero-wide': 'Un iris bleu photographié en très haute définition, sur fond noir.',
 
   'tirage-lac-bleu': 'Le lac Bleu en Haute-Loire vu du ciel, entouré de forêts d’automne.',
   'tirage-ocean': 'Vue aérienne d’une plage du Portugal, océan turquoise et sable doré.',
