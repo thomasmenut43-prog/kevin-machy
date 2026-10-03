@@ -48,17 +48,18 @@ jobs:
       NEXT_PUBLIC_BASE_MEDIAS: https://medias.dronezvous.com
       NEXT_PUBLIC_URL_SITE: https://dronezvous.com
 
-      # Tant que cette variable ne vaut pas « ouverte », robots.txt refuse tout.
+      # Ouverte depuis le 3 octobre 2026, le jour où dronezvous.com a désigné le
+      # Worker. Les deux gestes allaient ensemble, et c'est fait.
       #
-      # Le nouveau site répond à kevinmachy.fr pendant que l'ancien tient encore
-      # dronezvous.com. Laisser les deux s'indexer donnerait à Google deux sites
-      # du même photographe, sur les mêmes sujets, et il répartirait entre eux ce
-      # qui devrait aller à un seul.
+      # Pourquoi elle a été fermée jusque-là : le nouveau site répondait à
+      # kevinmachy.fr pendant que l'ancien tenait dronezvous.com. Laisser les
+      # deux s'indexer aurait donné à Google deux sites du même photographe,
+      # sur les mêmes sujets, et il aurait réparti entre eux ce qui devait
+      # aller à un seul.
       #
-      # À lever le jour où dronezvous.com désignera le Worker — pas avant, pas
-      # après. Ce jour-là le site reprend son domaine, et kevinmachy.fr n'est
-      # plus qu'une redirection vers lui.
-      INDEXATION: fermee
+      # Elle se referme en remettant « fermee » — par exemple pour une refonte
+      # qui vivrait de nouveau sur une adresse provisoire.
+      INDEXATION: ouverte
 
     steps:
       - uses: actions/checkout@v4
