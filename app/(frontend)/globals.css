@@ -308,6 +308,13 @@ button {
   margin-top: 1.5em;
 }
 
+/* La règle du dessus aère au-dessus d'une liste, jamais en dessous : un
+   paragraphe qui suivait une liste la touchait, à zéro pixel. */
+.corps ul + p,
+.corps ol + p {
+  margin-top: 1.5em;
+}
+
 .corps li + li {
   margin-top: 0.4em;
 }
@@ -681,11 +688,20 @@ html[data-js] [data-voile].est-visible > * {
   border-top: 1px solid var(--filet);
 }
 
+/*
+ * Le déroulé en filets : un numéro, un titre, puis le texte de l'étape.
+ *
+ * En deux colonnes (plus bas), titre et texte sont côte à côte et la gouttière
+ * les sépare. Empilés sur un téléphone, ils n'avaient que huit pixels entre
+ * eux, contre vingt-neuf d'interligne dans le texte : le titre se lisait comme
+ * la première ligne du paragraphe. Il lui faut plus d'air que le texte n'en a
+ * entre ses lignes.
+ */
 .liste-filets > li {
   border-bottom: 1px solid var(--filet);
   padding-block: clamp(20px, 2.4vw, 30px);
   display: grid;
-  gap: 0.5rem;
+  gap: clamp(22px, 2.6vw, 30px);
 }
 
 @media (min-width: 760px) {
