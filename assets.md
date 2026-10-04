@@ -13,14 +13,19 @@ Dernière mise à jour : 2026-10-04.
 | `kevin-machy-logo.svg` | viewBox 1773,82 × 547,4 | 12 Ko | Logo original récupéré sur le site actuel : monogramme **KM** (serif à contraste fort, fûts biseautés), bois de cerf, signature « KEVIN MACHY » en capitales très espacées. | Source de référence. Non utilisé tel quel : 16 de ses 24 tracés n'ont pas de classe et héritaient d'un noir par défaut. |
 | `logo-clair.svg` | idem | 12 Ko | **Variante claire dérivée du SVG original** : les formes noires passent en `#E9E5DE`, les reliefs blancs (œil du cerf, contre-forme du A, reflet du bois) en `#0A0A0B`. | En-tête et pied de page. |
 | `kevin-machy-logo.png` | 300 × 93 | 8 Ko | Logo bitmap, noir sur transparent. | Repli d'archive. Trop basse définition pour un affichage écran — non utilisé. |
-| `kevin-portrait.png` / `.webp` | 576 × 768 (3:4) | 221 / 16 Ko | **Vrai portrait de Kevin** : noir et blanc, très basse lumière, fond noir pur, bras croisés, casquette au bois de cerf. | Page À propos (`apropos-portrait`) et section « Le photographe » de l'accueil (`home-apropos`). Le fond noir se fond dans la page — l'image est posée sans cadre ni ombre. |
+| `kevin-portrait.png` / `.webp` | 576 × 768 (3:4) | 221 / 16 Ko | **Portrait de Kevin** récupéré sur son ancien site : noir et blanc, très basse lumière, fond noir pur, casquette au bois de cerf. | **Archive.** Il a servi `apropos-portrait`, `home-apropos` et `og-apropos` jusqu'au 4 octobre 2026, en les bridant à 480 px. Remplacé par `.cache/raw/km-kevin-portrait.jpg`, de la même séance, en 4178 × 6267. |
 | `app/icon.png`, `app/apple-icon.png` | 512 / 180 | — | **Favicon dérivé du monogramme KM**, détouré au pixel près depuis le SVG et centré sur `#0A0A0B`. | Onglet et écran d'accueil. |
 
 **Constat directeur** — l'autoportrait de Kevin est en noir et blanc basse lumière sur fond noir, et son monogramme est un didone à fort contraste. Les deux seuls actifs de marque existants pointaient déjà vers le registre retenu : sombre, contrasté, sobre. La direction « Chambre noire » ne fait que suivre ce que sa marque disait déjà d'elle-même.
 
 **À réclamer à Kevin**
-- Une version 2× de son portrait (1152 × 1536) — l'actuelle est juste pour un affichage plein cadre sur écran dense.
+- ~~Une version 2× de son portrait~~ — obtenue le 3 octobre 2026, et bien au-delà : 4178 × 6267.
 - Le logo en version vectorielle propre, avec un `fill` explicite sur tous les tracés.
+
+La livraison du 3 octobre contenait deux autres actifs de marque, laissés de
+côté pour l'instant : un **monogramme KM en pastille ronde** (1254 × 1254, PNG
+blanc sur noir) que le site n'utilise nulle part, et un `favicon-kevin-machy.svg`
+à comparer au favicon actuel, dérivé du monogramme, avant toute substitution.
 
 ---
 
@@ -54,8 +59,11 @@ il écarte les largeurs que la source ne porte pas et le dit à chaque passage.
 
 La livraison du 3 octobre a apporté les originaux de dix-neuf de ces
 photographies, et le second versement les a substituées (voir plus bas). Treize
-emplacements y ont gagné, dont les trois bandeaux de tête. Il en reste
-**quarante-six bridés** sur cent trois, faute d'original pour la source.
+emplacements y ont gagné, dont les trois bandeaux de tête.
+
+Sur les cent douze emplacements du site, neuf sont des cadres nommés, sans
+source. Des cent trois qui en ont une, **trente-sept restent bridés** faute
+d'original — contre cinquante avant ce versement.
 
 **La photographie d'entreprise n'a nulle part où aller.** Onze images fournies
 — Darty, Audiosolution, un cabinet médical, une équipe comptable — alors que le
@@ -169,6 +177,46 @@ photographié, ce qu'elle est.
 Le recadrage a été revérifié après coup : `attention` se recalcule sur la
 nouvelle source, et un cadrage pouvait glisser. Les vingt-neuf rendus distincts
 ont été comparés avant/après — aucun sujet déplacé, aucune coupe nouvelle.
+
+### Les photographies inédites — neuf retenues sur quarante et une
+
+Le même rapprochement a isolé **quarante et une photographies que le site ne
+montrait nulle part**. Aucune ne comble un cadre nommé : les neuf emplacements
+vides attendent exactement ce que cette livraison n'apporte pas.
+
+Elles ont donc servi à **allonger les galeries**, jamais à remplacer un choix
+déjà fait. Mariage passe de douze à dix-huit images, portrait de dix à treize.
+
+| Emplacement | Ce qu'il apporte à la galerie |
+|---|---|
+| `mariage-galerie-13` | La cérémonie elle-même, en noir et blanc — la galerie n'en montrait aucune. |
+| `mariage-galerie-14` | La mariée de dos devant une fenêtre, dos de dentelle ouvert. |
+| `mariage-galerie-15` | Un détail : la boutonnière du marié. La galerie en était pauvre. |
+| `mariage-galerie-16` | Un groupe au complet dans un pré — le seul groupe au sol, les autres sont au drone. |
+| `mariage-galerie-17` | Les mariés dans un escalier, en clair-obscur dur. |
+| `mariage-galerie-18` | Une enfant qui cache son visage pendant la cérémonie. |
+| `portrait-galerie-11` | Un visage encadré par deux mains, regard direct. |
+| `portrait-galerie-12` | Une femme assise sur fond gris — une lumière plus claire que le reste de la page. |
+| `portrait-galerie-13` | Un couple devant une porte bleue, en extérieur : la galerie n'avait aucun couple. |
+
+**Trois portraits seulement, et non quatre.** Le quatrième candidat montrait la
+femme en dentelle noire, qui tient déjà `portrait-galerie-02` et `-09`. Une
+troisième image d'elle aurait allongé la page sans l'élargir.
+
+Les galeries vivent en base : `scripts/poser-galeries.mjs` y inscrit ces
+identifiants, par ajout en fin de liste et sans jamais retirer. Il est
+idempotent et branché sur « Corrections de contenu ».
+
+**Ce qui reste inutilisé, et pourquoi :**
+
+| Laissé de côté | Nombre | Raison |
+|---|---|---|
+| Mariage et portrait | 13 | Bonnes, mais les galeries doublaient. Elles restent disponibles. |
+| Grossesse | 3 | Thème que le site ne vend pas — à cadrer avec Kevin. Deux des trois portent un filigrane KM visible. |
+| Famille | 1 | Même raison. |
+| Entreprise | 5 | Dont « Portes Ouvertes », déjà écartée en septembre. |
+| Iris | 3 | Exports web de 600 à 900 px : les emplacements iris réclament 1440 px, elles n'amélioreraient rien. |
+| Non-photographies | 3 | Le monogramme en pastille, un logo « Signature Mariage », l'attestation de formation. |
 
 ### Les sept tirages d'art — toujours à fournir
 

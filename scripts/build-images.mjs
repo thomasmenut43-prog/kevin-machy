@@ -44,7 +44,7 @@ const SLOTS = [
   { name: 'home-collection-mariage', profile: 'tall', src: R('km-wed-mains-bouquet.jpg') },
   { name: 'home-collection-portrait', profile: 'tall', src: R('km-por-studio-bordeaux.jpg') },
   { name: 'home-collection-iris', profile: 'tall', src: R('km-iris-seul-bleu-or.jpg'), pos: 'centre' },
-  { name: 'home-apropos', profile: 'tall', src: A('kevin-portrait.png'), pos: 'centre' },
+  { name: 'home-apropos', profile: 'tall', src: R('km-kevin-portrait.jpg'), pos: 'centre' },
 
   { name: 'home-selection-01', profile: 'wide', src: R('km-wed-couple-plage.jpg') },
   { name: 'home-selection-02', profile: 'tall', src: R('km-por-pois.jpg'), pos: 'centre' },
@@ -86,6 +86,15 @@ const SLOTS = [
   { name: 'mariage-galerie-11', profile: 'wide', src: R('km-wed-etincelles-nb.jpg') },
   { name: 'mariage-galerie-12', profile: 'square', src: R('km-wed-couple-plage-nb.jpg') },
 
+  // Six ajouts de la livraison du 3 octobre. Ils apportent ce que la galerie
+  // n'avait pas : la cérémonie, un groupe, un détail, et un enfant qui pleure.
+  { name: 'mariage-galerie-13', profile: 'wide', src: R('km-wed-ceremonie-nb.jpg') },
+  { name: 'mariage-galerie-14', profile: 'tall', src: R('km-wed-mariee-fenetre.jpg') },
+  { name: 'mariage-galerie-15', profile: 'square', src: R('km-wed-boutonniere.jpg'), pos: 'centre' },
+  { name: 'mariage-galerie-16', profile: 'wide', src: R('km-wed-groupe-champ.jpg') },
+  { name: 'mariage-galerie-17', profile: 'tall', src: R('km-wed-couple-escalier.jpg') },
+  { name: 'mariage-galerie-18', profile: 'tall', src: R('km-wed-enfant-mains.jpg') },
+
   // ————————————————————————————————— Portrait
   { name: 'portrait-hero-wide', profile: 'heroWide', src: R('km-por-studio-rire.jpg'), pos: 'centre' },
   { name: 'portrait-hero-tall', profile: 'heroTall', src: R('km-por-studio-bordeaux.jpg') },
@@ -105,6 +114,14 @@ const SLOTS = [
   { name: 'portrait-galerie-08', profile: 'wide', src: R('km-por-bebe.jpg'), pos: 'centre' },
   { name: 'portrait-galerie-09', profile: 'tall', src: R('km-por-studio-yeux-baisses.jpg') },
   { name: 'portrait-galerie-10', profile: 'tall', src: R('km-por-fond-chaud.jpg') },
+
+  // Trois ajouts de la livraison du 3 octobre. Trois seulement, et non quatre :
+  // les autres portraits du lot montrent des visages que la galerie affiche
+  // déjà — la femme en dentelle noire y tient à elle seule les emplacements 02
+  // et 09. Un troisième portrait d'elle allongerait la page sans l'élargir.
+  { name: 'portrait-galerie-11', profile: 'tall', src: R('km-por-mains-visage.jpg') },
+  { name: 'portrait-galerie-12', profile: 'tall', src: R('km-por-assise-gris.jpg') },
+  { name: 'portrait-galerie-13', profile: 'tall', src: R('km-por-couple-porte.jpg') },
 
   // ————————————————————————————————— Studio de l'Iris
   { name: 'iris-hero-wide', profile: 'heroWide', src: R('km-iris-mathias.png'), pos: 'centre' },
@@ -134,7 +151,13 @@ const SLOTS = [
   { name: 'iris-support-bijou', profile: 'square', src: null },
 
   // ————————————————————————————————— À propos
-  { name: 'apropos-portrait', profile: 'portraitBook', src: A('kevin-portrait.png'), pos: 'centre' },
+  // Le portrait de Kevin venait de `public/assets/`, où il avait été récupéré
+  // sur son ancien site : 576 × 768, ce qui bridait ses deux emplacements à
+  // 480 px — les deux pires du site. La livraison du 3 octobre contenait un
+  // fichier de la même séance en 4178 × 6267. Même casquette, même polo, même
+  // fond, même lumière ; il y a les bras croisés. Le PNG reste dans
+  // `public/assets/` : c'est une archive de marque, plus une source.
+  { name: 'apropos-portrait', profile: 'portraitBook', src: R('km-kevin-portrait.jpg'), pos: 'centre' },
   { name: 'apropos-travail', profile: 'wide', src: R('km-kevin-appareil.jpeg'), pos: 'centre' },
   { name: 'apropos-silence', profile: 'heroWide', src: R('km-kevin-groupe.jpg') },
 
@@ -208,7 +231,7 @@ const OG = [
   { name: 'og-mariage', src: R('km-wed-foret-dos.jpg') },
   { name: 'og-portrait', src: R('km-por-studio-rire.jpg') },
   { name: 'og-iris', src: R('km-iris-trio-bleu.jpg') },
-  { name: 'og-apropos', src: A('kevin-portrait.png') },
+  { name: 'og-apropos', src: R('km-kevin-portrait.jpg') },
   { name: 'og-contact', src: R('km-wed-chateau-jardin.jpg') },
 ];
 
