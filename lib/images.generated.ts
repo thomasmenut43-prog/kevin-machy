@@ -14,7 +14,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/home-hero-wide"
   },
@@ -82,7 +84,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/home-selection-01"
   },
@@ -126,7 +129,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/home-selection-05"
   },
@@ -207,7 +211,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/home-selection-12"
   },
@@ -251,7 +256,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/mariage-silence"
   },
@@ -303,7 +310,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       480,
-      720
+      720,
+      960,
+      1280
     ],
     "base": "/img/mariage-jour-05"
   },
@@ -335,7 +344,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/mariage-galerie-01"
   },
@@ -423,7 +433,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/mariage-galerie-09"
   },
@@ -455,7 +466,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       480,
-      720
+      720,
+      1080,
+      1440
     ],
     "base": "/img/mariage-galerie-12"
   },
@@ -465,7 +478,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/portrait-hero-wide"
   },
@@ -487,7 +502,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       960,
-      1440
+      1440,
+      1920,
+      2560
     ],
     "base": "/img/portrait-silence"
   },
@@ -581,7 +598,8 @@ export const IMAGES = {
     "widths": [
       640,
       960,
-      1280
+      1280,
+      1920
     ],
     "base": "/img/portrait-galerie-04"
   },
@@ -728,7 +746,9 @@ export const IMAGES = {
     "missing": false,
     "widths": [
       480,
-      720
+      720,
+      1080,
+      1440
     ],
     "base": "/img/iris-detail-04"
   },

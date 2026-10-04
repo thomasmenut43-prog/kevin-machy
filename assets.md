@@ -2,7 +2,7 @@
 
 Répertoire source des fichiers de marque : `/public/assets/`
 Images encodées pour le site : `/public/img/` — générées par `npm run images`, jamais éditées à la main.
-Dernière mise à jour : 2026-09-03.
+Dernière mise à jour : 2026-10-04.
 
 ---
 
@@ -42,20 +42,20 @@ emplacements ci-dessous dit laquelle va où.
 
 ### Ce qui manque encore
 
-**La définition, pour les formats couchés.** Aucun fichier fourni ne dépasse
-1600 px de large : ce sont les copies web de son site actuel, pas ses
-originaux — 63 sur 80 portent une marque de réduction dans leur nom
-(`-scaled` de WordPress, `_11zon` d'un compresseur en ligne, `_rw_1200`
-d'un constructeur de site).
+**La définition, pour les formats couchés — en partie réglée.** La première
+sélection ne dépassait pas 1600 px de large : c'étaient les copies web de son
+site actuel, pas ses originaux — 63 sur 80 portaient une marque de réduction
+dans leur nom (`-scaled` de WordPress, `_11zon` d'un compresseur en ligne,
+`_rw_1200` d'un constructeur de site).
 
-Les 57 emplacements verticaux et carrés s'en contentent. Les 25 emplacements
-couchés, non : `heroWide` réclame 2560 px et `wide` 1920 px. Le script
-**n'agrandit plus** — il écarte les largeurs que la source ne porte pas et le
-dit à chaque passage. La plus grande image du premier écran fait donc 1440 px
-au lieu de 2560.
+Les emplacements verticaux et carrés s'en contentaient. Les couchés, non :
+`heroWide` réclame 2560 px et `wide` 1920 px. Le script **n'agrandit plus** —
+il écarte les largeurs que la source ne porte pas et le dit à chaque passage.
 
-**Une vingtaine d'originaux en 2560 px de large** suffiraient à lever ça, pour
-les seuls bandeaux.
+La livraison du 3 octobre a apporté les originaux de dix-neuf de ces
+photographies, et le second versement les a substituées (voir plus bas). Treize
+emplacements y ont gagné, dont les trois bandeaux de tête. Il en reste
+**quarante-six bridés** sur cent trois, faute d'original pour la source.
 
 **La photographie d'entreprise n'a nulle part où aller.** Onze images fournies
 — Darty, Audiosolution, un cabinet médical, une équipe comptable — alors que le
@@ -130,6 +130,45 @@ Deux photographies livrées n'ont pas été retenues : « Portes Ouvertes », qu
 un reportage d'entreprise et aurait raconté quelque chose de faux sur la page
 drone, et « Ambrine et John — Vin d'honneur », qui n'est pas une prise de
 photobooth.
+
+### Le second versement — les originaux des photographies déjà en place
+
+La première passe n'avait lu cette livraison que comme une source d'images
+**nouvelles**. Elle contenait aussi, sans que leur nom le dise, les originaux de
+photographies déjà sur le site : les dossiers de Kevin portent des noms de
+séance (`Posing - Kevin-4`, `Cabinet Médical-14`, `Anais et Simon-17`), pas des
+noms d'emplacement.
+
+Les deux lots ont donc été rapprochés **par empreinte perceptuelle** — une
+signature de l'image elle-même, insensible au renommage, au recadrage léger et à
+la recompression. Trente-deux correspondances, dont douze identiques à l'octet.
+Chaque paire a ensuite été relue à l'œil, en planche de comparaison : même
+photographie dans tous les cas.
+
+Dix-neuf sources ont été remplacées par leur original. Les anciennes sont
+conservées dans `.cache/raw-avant-originaux/`, parce que `.cache` n'est pas
+versionné et que c'est le seul filet.
+
+| Ce qui a gagné en définition | Avant | Après |
+|---|---|---|
+| `home-hero-wide`, `mariage-silence` | 1440 px | **2560 px** |
+| `portrait-hero-wide`, `portrait-silence` | 1440 px | **2560 px** |
+| `home-selection-01/05/12`, `mariage-galerie-01/09`, `portrait-galerie-04` | 1280 px | 1920 px |
+| `mariage-galerie-12`, `iris-detail-04` | 720 px | 1440 px |
+| `mariage-jour-05` | 720 px | 1280 px |
+
+Les six autres sources remplacées alimentaient déjà des emplacements au plafond
+de leur profil : elles ne changent pas les largeurs produites, seulement la
+finesse du rééchantillonnage.
+
+Un point de vigilance tenu : « Ambrine et John — Vin d'honneur » reste écartée de
+la page photobooth, pour la raison dite plus haut. C'est son emplacement
+**mariage** qui reçoit l'original — `km-wed-vin-honneur`, un vin d'honneur
+photographié, ce qu'elle est.
+
+Le recadrage a été revérifié après coup : `attention` se recalcule sur la
+nouvelle source, et un cadrage pouvait glisser. Les vingt-neuf rendus distincts
+ont été comparés avant/après — aucun sujet déplacé, aucune coupe nouvelle.
 
 ### Les sept tirages d'art — toujours à fournir
 
