@@ -174,7 +174,7 @@ export const IMAGES = {
   },
   "home-selection-09": {
     "name": "home-selection-09",
-    "ratio": 0.8,
+    "ratio": 0.6666666666666666,
     "missing": false,
     "widths": [
       480,
@@ -704,7 +704,7 @@ export const IMAGES = {
   },
   "portrait-galerie-07": {
     "name": "portrait-galerie-07",
-    "ratio": 0.8,
+    "ratio": 0.6666666666666666,
     "missing": false,
     "widths": [
       480,
