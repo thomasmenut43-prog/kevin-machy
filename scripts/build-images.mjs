@@ -54,7 +54,12 @@ const SLOTS = [
   { name: 'home-selection-06', profile: 'tall', src: R('km-por-studio-nb.jpg') },
   { name: 'home-selection-07', profile: 'tall', src: R('km-wed-drone-escalier.jpg') },
   { name: 'home-selection-08', profile: 'wide', src: R('km-wed-chateau-jardin.jpg') },
-  { name: 'home-selection-09', profile: 'tall', src: R('km-por-homme-chapeau.jpg') },
+  // Un portrait en pied, de la casquette aux bottines. En 4/5 il fallait
+  // retrancher un sixième de la hauteur, et `attention` prenait la chemise à
+  // carreaux plutôt que le visage : la tête sortait du cadre. Aucun ancrage ne
+  // sauve ce cas — par le haut on perd les pieds, par le bas la tête. Le 2/3 de
+  // `portraitBook` est le format de la source : il ne recadre rien.
+  { name: 'home-selection-09', profile: 'portraitBook', src: R('km-por-homme-chapeau.jpg') },
   { name: 'home-selection-10', profile: 'wide', src: R('km-wed-etincelles-nb.jpg') },
   { name: 'home-selection-11', profile: 'tall', src: R('km-por-duo-femmes.jpg') },
   { name: 'home-selection-12', profile: 'wide', src: R('km-iris-trio-bleu.jpg'), pos: 'centre' },
@@ -110,7 +115,8 @@ const SLOTS = [
   { name: 'portrait-galerie-04', profile: 'wide', src: R('km-por-studio-rire.jpg'), pos: 'centre' },
   { name: 'portrait-galerie-05', profile: 'tall', src: R('km-por-homme-nb.jpg') },
   { name: 'portrait-galerie-06', profile: 'tall', src: R('km-por-pois.jpg') },
-  { name: 'portrait-galerie-07', profile: 'tall', src: R('km-por-homme-chapeau.jpg') },
+  // Même photographie, même raison qu'à `home-selection-09`.
+  { name: 'portrait-galerie-07', profile: 'portraitBook', src: R('km-por-homme-chapeau.jpg') },
   { name: 'portrait-galerie-08', profile: 'wide', src: R('km-por-bebe.jpg'), pos: 'centre' },
   { name: 'portrait-galerie-09', profile: 'tall', src: R('km-por-studio-yeux-baisses.jpg') },
   { name: 'portrait-galerie-10', profile: 'tall', src: R('km-por-fond-chaud.jpg') },
