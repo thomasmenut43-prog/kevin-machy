@@ -73,7 +73,10 @@ export const IMAGES = {
     "ratio": 0.8,
     "missing": false,
     "widths": [
-      480
+      480,
+      720,
+      960,
+      1280
     ],
     "base": "/img/home-apropos"
   },
@@ -472,6 +475,78 @@ export const IMAGES = {
     ],
     "base": "/img/mariage-galerie-12"
   },
+  "mariage-galerie-13": {
+    "name": "mariage-galerie-13",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280,
+      1920
+    ],
+    "base": "/img/mariage-galerie-13"
+  },
+  "mariage-galerie-14": {
+    "name": "mariage-galerie-14",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/mariage-galerie-14"
+  },
+  "mariage-galerie-15": {
+    "name": "mariage-galerie-15",
+    "ratio": 1,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      1080,
+      1440
+    ],
+    "base": "/img/mariage-galerie-15"
+  },
+  "mariage-galerie-16": {
+    "name": "mariage-galerie-16",
+    "ratio": 1.5,
+    "missing": false,
+    "widths": [
+      640,
+      960,
+      1280,
+      1920
+    ],
+    "base": "/img/mariage-galerie-16"
+  },
+  "mariage-galerie-17": {
+    "name": "mariage-galerie-17",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/mariage-galerie-17"
+  },
+  "mariage-galerie-18": {
+    "name": "mariage-galerie-18",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/mariage-galerie-18"
+  },
   "portrait-hero-wide": {
     "name": "portrait-hero-wide",
     "ratio": 1.7777777777777777,
@@ -674,6 +749,42 @@ export const IMAGES = {
     ],
     "base": "/img/portrait-galerie-10"
   },
+  "portrait-galerie-11": {
+    "name": "portrait-galerie-11",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/portrait-galerie-11"
+  },
+  "portrait-galerie-12": {
+    "name": "portrait-galerie-12",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/portrait-galerie-12"
+  },
+  "portrait-galerie-13": {
+    "name": "portrait-galerie-13",
+    "ratio": 0.8,
+    "missing": false,
+    "widths": [
+      480,
+      720,
+      960,
+      1280
+    ],
+    "base": "/img/portrait-galerie-13"
+  },
   "iris-hero-wide": {
     "name": "iris-hero-wide",
     "ratio": 1.7777777777777777,
@@ -819,7 +930,10 @@ export const IMAGES = {
     "ratio": 0.6666666666666666,
     "missing": false,
     "widths": [
-      480
+      480,
+      720,
+      960,
+      1280
     ],
     "base": "/img/apropos-portrait"
   },

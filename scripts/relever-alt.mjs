@@ -68,6 +68,19 @@ const SUPPLEMENTS = {
   'iris-animal-02': 'L’iris d’un chien, rond et cuivré, à côté de celui de sa maîtresse.',
   'iris-hero-wide': 'Un iris bleu photographié en très haute définition, sur fond noir.',
 
+  // Les neuf galeries ouvertes par le second versement de la livraison du
+  // 3 octobre. Elles naissent dans l'éditeur comme les prestations : aucun
+  // fichier à relever, les descriptions sont écrites ici.
+  'mariage-galerie-13': 'Les mariés debout devant l’assemblée pendant la cérémonie, en noir et blanc.',
+  'mariage-galerie-14': 'La mariée de dos devant une fenêtre, le dos de sa robe ouvert sur de la dentelle.',
+  'mariage-galerie-15': 'Le marié baisse les yeux vers sa boutonnière, en noir et blanc.',
+  'mariage-galerie-16': 'Les mariés et leurs invités assis dans un pré, l’un d’eux saute bras levés.',
+  'mariage-galerie-17': 'Les mariés assis dans un escalier, dans une lumière dure, en noir et blanc.',
+  'mariage-galerie-18': 'Une enfant cache son visage dans ses mains pendant la cérémonie, en noir et blanc.',
+  'portrait-galerie-11': 'Portrait de face, les deux mains encadrant le visage, sur fond sombre.',
+  'portrait-galerie-12': 'Une femme assise de trois quarts, veste noire et pantalon blanc, sur fond gris.',
+  'portrait-galerie-13': 'Un couple enlacé devant une grande porte de bois peinte en bleu.',
+
   'tirage-lac-bleu': 'Le lac Bleu en Haute-Loire vu du ciel, entouré de forêts d’automne.',
   'tirage-ocean': 'Vue aérienne d’une plage du Portugal, océan turquoise et sable doré.',
   'tirage-coucher': 'Un coucher de soleil d’été.',

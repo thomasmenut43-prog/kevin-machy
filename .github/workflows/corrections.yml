@@ -67,8 +67,9 @@ jobs:
           npm run domaine -- --verifier || true
           npm run prestations -- --verifier || true
           npm run liens -- --verifier || true
+          npm run galeries -- --verifier || true
 
-      # Les six scripts sont idempotents : relancés, ils ne refont rien.
+      # Les sept scripts sont idempotents : relancés, ils ne refont rien.
       - name: Appliquer
         if: ${{ inputs.appliquer }}
         run: |
@@ -78,6 +79,7 @@ jobs:
           npm run domaine
           npm run prestations
           npm run liens
+          npm run galeries
 
       - name: Ce qui reste, après
         if: ${{ inputs.appliquer }}
@@ -88,6 +90,7 @@ jobs:
           npm run domaine -- --verifier
           npm run prestations -- --verifier
           npm run liens -- --verifier
+          npm run galeries -- --verifier
 
   # Écrire en base ne suffit pas : les pages sont en cache, et ce cache ne
   # s'invalide que par le bouton « Publier » du BackOffice, qui pose les
