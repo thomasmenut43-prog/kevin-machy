@@ -71,7 +71,7 @@
 
 .offreTete {
   display: grid;
-  gap: 0.7rem;
+  gap: clamp(12px, 1.4vw, 17px);
   align-content: start;
 }
 
@@ -134,7 +134,7 @@
 
 .option {
   display: grid;
-  gap: 0.65rem;
+  gap: clamp(17px, 2vw, 23px);
   align-content: start;
   border-top: 1px solid var(--filet);
   padding-top: clamp(16px, 1.8vw, 22px);
@@ -171,9 +171,25 @@
   }
 }
 
+/*
+ * Règle de respiration, valable pour les cinq blocs qui suivent.
+ *
+ * Un titre suivi de son texte doit avoir sous lui **plus d'air que le texte
+ * n'a entre ses propres lignes**. En dessous, l'œil ne voit plus deux blocs
+ * mais un seul paragraphe dont la première ligne serait en gras.
+ *
+ * Mesuré à 375 px : huit pixels sous un titre, contre vingt-neuf d'interligne
+ * en dessous. Ces cartes ont été dessinées en trois colonnes, où les filets et
+ * les gouttières séparaient déjà les blocs ; empilées sur un téléphone, elles
+ * n'ont plus que cet écart pour se distinguer, et il ne suffisait pas.
+ *
+ * Quand une carte empile un titre, un prix et une note, la note reste collée
+ * au prix : elle le commente, elle n'ouvre pas un troisième bloc. C'est le
+ * `margin-top` sur le prix qui crée la hiérarchie, pas le `gap` du conteneur.
+ */
 .inclusItem {
   display: grid;
-  gap: 0.5rem;
+  gap: clamp(17px, 2vw, 23px);
   align-content: start;
   border-top: 1px solid var(--filet);
   padding-top: clamp(14px, 1.6vw, 20px);
@@ -218,7 +234,7 @@
 
 .coordonneesBloc {
   display: grid;
-  gap: 0.5rem;
+  gap: clamp(17px, 2vw, 23px);
   border-top: 1px solid var(--filet);
   padding-top: clamp(14px, 1.6vw, 20px);
 }
@@ -313,6 +329,7 @@
 }
 
 .supportPrix {
+  margin-top: clamp(7px, 0.9vw, 11px);
   color: var(--cuivre);
   font-size: var(--t-petit);
   letter-spacing: 0.08em;

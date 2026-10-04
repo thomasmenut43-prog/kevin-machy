@@ -593,8 +593,13 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
                   <h3 className="h4" style={{ marginTop: '0.7rem' }}>
                     {etape.titre}
                   </h3>
+                  {/* Le numéro et le titre forment un bloc, d'où leurs 0,7 rem.
+                      Le texte, lui, en est un second : il lui faut plus d'air
+                      que son propre interligne, sinon le titre se lit comme sa
+                      première ligne. Onze pixels contre vingt-neuf, c'était le
+                      cas. */}
                   {etape.texte ? (
-                    <p className="corps" style={{ marginTop: '0.7rem' }}>
+                    <p className="corps" style={{ marginTop: 'clamp(17px, 2vw, 23px)' }}>
                       {etape.texte}
                     </p>
                   ) : null}
@@ -647,11 +652,14 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
                     <SimulateurIris repli={f.prix} repliNote={f.note} hrefDevis="/contact/?projet=iris" />
                   ) : (
                     <>
-                      <p className="prix" style={{ marginTop: '0.6rem' }}>
+                      {/* Le prix s'écarte du nom de la formule ; la note reste
+                          près du prix, qu'elle commente. Les deux étaient à dix
+                          pixels, et la hiérarchie ne se lisait plus. */}
+                      <p className="prix" style={{ marginTop: 'clamp(13px, 1.5vw, 19px)' }}>
                         {f.prix}
                       </p>
                       {f.note ? (
-                        <p className={p.offreDuree} style={{ marginTop: '0.5rem' }}>
+                        <p className={p.offreDuree} style={{ marginTop: 'clamp(7px, 0.9vw, 11px)' }}>
                           {f.note}
                         </p>
                       ) : null}
