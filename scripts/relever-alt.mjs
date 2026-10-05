@@ -42,7 +42,7 @@ const SUPPLEMENTS = {
   'prestations-drone': 'Vue aérienne d’un chantier prise au drone.',
   'prestations-photobooth': 'Des invités posant dans le photobooth pendant une soirée.',
   'prestations-formation': 'Participants photographiant en extérieur pendant un stage.',
-  'prestations-tirages': 'Un voilier toutes voiles dehors, tirage d’art en série limitée.',
+  'prestations-tirages': 'Un tirage d’art encadré, accroché au mur d’un salon.',
 
   'ent-hero-wide': 'Une vendeuse conseillant une cliente au rayon literie d’un magasin.',
   'ent-hero-tall': 'Une collaboratrice accueillant une cliente derrière son comptoir.',

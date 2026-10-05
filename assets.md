@@ -242,12 +242,23 @@ cadres nommés, et Kevin a les originaux — ce sont ses photographies.
 | `tirage-voiles` | « Toutes voiles dehors ». |
 | `tirage-pont-amours` | « Pont des Amours ». |
 | `tirage-pont-face` | « Pont d'en face ». |
-| `prestations-tirages` | La carte du sommaire des prestations. L'une des six fait l'affaire, en 4/5. |
+| ~~`prestations-tirages`~~ | **Pourvu le 6 octobre 2026** — voir ci-dessous. |
 
 Format carré pour les six œuvres, 4/5 pour la carte. **L'œuvre seule, sans cadre
 ni mise en situation** — c'est la page qui l'encadre.
 
-### Les trois emplacements vides
+**La carte du sommaire, elle, est pourvue.** Elle illustre un *service* et non
+une œuvre : un tirage encadré au mur est exactement ce que le client reçoit.
+Une maquette recadrée en 4/5 donne 864 × 1080 px, dont le site sort 960 sans
+rien agrandir — c'est net.
+
+La règle du visuel générique n'est pas enfreinte : la photographie accrochée
+est celle de Kevin. Seul le décor ne l'est pas, et il ne paraît qu'une fois.
+Les six emplacements d'œuvres restent vides, eux : là il faut la photographie
+seule, et dans la maquette elle ne mesure que 476 × 320 px — mesuré, pas
+estimé. La recadrer obligerait à l'agrandir de moitié.
+
+### Les deux emplacements vides
 
 Un emplacement sans source n'est **jamais** comblé par un visuel générique : le
 composant `<Photo>` affiche un cadre nommé portant l'identifiant. Trois
