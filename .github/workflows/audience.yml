@@ -1,0 +1,67 @@
+# Audience : effacer les chiffres antérieurs à une date.
+#
+# Le tableau de bord compte des visites et des événements. Les premiers mois
+# n'en sont pas : ce sont les allers-retours du chantier, les pages rechargées
+# cent fois pour vérifier un espacement, les captures d'écran automatisées.
+# Laissés là, ils gonflent les chiffres de Kevin d'une audience qui n'a jamais
+# existé.
+#
+# Comme pour les corrections de contenu, le mot de passe de la base n'existe
+# en clair nulle part : ce workflow est le seul endroit depuis lequel on puisse
+# écrire dans la base en ligne.
+#
+# **Il compte par défaut et n'efface que si on coche.** Une ligne d'audience
+# effacée ne se retrouve pas : il n'y a pas de corbeille, et aucune sauvegarde
+# de cette base n'est tenue aujourd'hui. Lancer une première fois sans cocher,
+# lire les nombres, puis relancer en cochant.
+
+name: Audience
+
+on:
+  workflow_dispatch:
+    inputs:
+      avant:
+        description: "Effacer ce qui précède cette date — AAAA-MM-JJ"
+        type: string
+        required: true
+      appliquer:
+        description: "Effacer pour de bon (sinon, se contente de compter)"
+        type: boolean
+        default: false
+
+# Partagé avec le déploiement et les corrections : on n'écrit pas dans la base
+# pendant qu'une construction la lit.
+concurrency:
+  group: mise-en-ligne
+  cancel-in-progress: false
+
+jobs:
+  purger:
+    runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Toujours le relevé d'abord, même quand on applique : il dit ce qui va
+      # partir, et il reste dans le journal si quelque chose se passe mal
+      # ensuite.
+      - name: Ce qui partirait
+        run: node scripts/purger-audience.mjs --avant "${{ inputs.avant }}"
+
+      - name: Effacer
+        if: ${{ inputs.appliquer }}
+        run: node scripts/purger-audience.mjs --avant "${{ inputs.avant }}" --appliquer
+
+      - name: Ce qui reste
+        if: ${{ inputs.appliquer }}
+        run: node scripts/purger-audience.mjs --avant "${{ inputs.avant }}"

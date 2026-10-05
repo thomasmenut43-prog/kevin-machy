@@ -25,6 +25,7 @@
     "domaine": "node scripts/poser-domaine.mjs",
     "prestations": "node scripts/poser-prestations.mjs",
     "galeries": "node scripts/poser-galeries.mjs",
+    "audience": "node scripts/purger-audience.mjs",
     "liens": "node scripts/corriger-liens.mjs",
     "mot-de-passe": "node scripts/mot-de-passe.mjs",
     "importer-images": "node scripts/relever-alt.mjs && node scripts/importer-images.mjs",
