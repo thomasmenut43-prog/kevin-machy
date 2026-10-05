@@ -92,19 +92,39 @@ const vise = process.argv[2]?.trim().toLowerCase();
 
 if (!vise) {
   console.log('\nComptes du BackOffice :\n');
-  for (const c of comptes) {
+  for (const [i, c] of comptes.entries()) {
     const bloque = c.bloque_jusqua && c.bloque_jusqua > new Date() ? '  (bloqué)' : '';
-    console.log(`  ${masquer(c.email)}`.padEnd(42) + `${c.prenom} ${c.nom} — ${c.role}${bloque}`);
+    console.log(`  ${i + 1}. ${masquer(c.email)}`.padEnd(42) + `${c.prenom} ${c.nom} — ${c.role}${bloque}`);
   }
-  console.log('\nPour en redéfinir un :\n  npm run mot-de-passe -- <adresse>\n');
+  console.log('\nPour en redéfinir un :\n  npm run mot-de-passe -- <adresse ou numéro>\n');
   await connexion.end();
   process.exit(0);
 }
 
-const compte = comptes.find((c) => c.email.toLowerCase() === vise);
+/*
+ * Un numéro désigne aussi bien qu'une adresse, et c'est le seul des deux qui
+ * puisse traverser une Action sans fuiter.
+ *
+ * Le masquage posé plus haut protège ce que le script écrit ; il ne protège
+ * pas ce que GitHub écrit à sa place. Un `run:` est recopié tel quel dans le
+ * journal, entrées du workflow comprises — l'adresse visée s'y lisait en
+ * clair. Constaté le 5 octobre 2026, sur un dépôt public.
+ *
+ * Le numéro renvoie à la liste ci-dessus, dont les adresses sont masquées. Il
+ * ne dit rien à qui lit le journal, et tout à qui vient de lancer la liste.
+ */
+const estNumero = /^\d+$/.test(vise);
+const compte = estNumero
+  ? comptes[Number(vise) - 1]
+  : comptes.find((c) => c.email.toLowerCase() === vise);
+
 if (!compte) {
-  console.error(`\n  Aucun compte à l'adresse ${masquer(vise)}.`);
-  console.error('  Lancer la commande sans adresse pour voir la liste.\n');
+  console.error(
+    estNumero
+      ? `\n  Il n'y a pas de compte numéro ${vise} — la liste en compte ${comptes.length}.`
+      : `\n  Aucun compte à l'adresse ${masquer(vise)}.`,
+  );
+  console.error('  Lancer la commande sans rien pour voir la liste numérotée.\n');
   await connexion.end();
   process.exit(1);
 }

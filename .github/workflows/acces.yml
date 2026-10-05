@@ -19,17 +19,23 @@
 # Douze caractères au minimum. Il n'est lisible nulle part après l'avoir posé,
 # donc le garder de côté le temps de le transmettre.
 #
-# **Ce dépôt est public**, et ses journaux d'Actions avec lui. D'où deux
+# **Ce dépôt est public**, et ses journaux d'Actions avec lui. D'où trois
 # précautions : le mot de passe ne passe ni par les entrées du workflow ni par
-# la ligne de commande, et les adresses sont masquées à l'affichage.
+# la ligne de commande, les adresses sont masquées à l'affichage, et le compte
+# se désigne par son **numéro** dans la liste.
+#
+# Ce dernier point a été appris en marchant. GitHub recopie chaque `run:` dans
+# le journal, entrées comprises : une adresse passée en entrée s'y lisait en
+# clair, par-dessus le masquage du script. Un numéro ne dit rien à qui lit le
+# journal, et tout à qui vient de lancer la liste.
 
 name: Accès au BackOffice
 
 on:
   workflow_dispatch:
     inputs:
-      adresse:
-        description: "Adresse du compte à rouvrir — vide pour lister les comptes"
+      numero:
+        description: "Numéro du compte, tel que la liste l'affiche — vide pour lister"
         type: string
         required: false
         default: ''
@@ -52,16 +58,16 @@ jobs:
 
       - run: npm ci
 
-      # Sans adresse, on ne fait que regarder : aucune écriture, et de quoi
+      # Sans numéro, on ne fait que regarder : aucune écriture, et de quoi
       # retrouver l'orthographe exacte d'un compte avant de viser.
       - name: Les comptes qui existent
-        if: ${{ inputs.adresse == '' }}
+        if: ${{ inputs.numero == '' }}
         run: node scripts/mot-de-passe.mjs
 
       # Le script refuserait de lui-même un mot de passe trop court, mais il le
       # ferait après s'être connecté à la base. Autant s'arrêter avant.
       - name: Le secret est-il posé ?
-        if: ${{ inputs.adresse != '' }}
+        if: ${{ inputs.numero != '' }}
         env:
           MOT_DE_PASSE: ${{ secrets.MDP_PROVISOIRE }}
         run: |
@@ -76,13 +82,13 @@ jobs:
           echo "Secret présent, longueur suffisante."
 
       - name: Redéfinir le mot de passe
-        if: ${{ inputs.adresse != '' }}
+        if: ${{ inputs.numero != '' }}
         env:
           MOT_DE_PASSE: ${{ secrets.MDP_PROVISOIRE }}
-        run: node scripts/mot-de-passe.mjs "${{ inputs.adresse }}"
+        run: node scripts/mot-de-passe.mjs "${{ inputs.numero }}"
 
       - name: Et ensuite
-        if: ${{ inputs.adresse != '' }}
+        if: ${{ inputs.numero != '' }}
         run: |
           echo "Les sessions ouvertes de ce compte ont été fermées."
           echo "Se connecter sur /admin, puis changer ce mot de passe depuis Utilisateurs → Mon mot de passe."
