@@ -678,15 +678,63 @@
   background: var(--bo-danger-doux) !important;
 }
 
-/* Le fil d'Ariane : la racine, puis chaque dossier traversé. */
+/*
+ * Le fil d'Ariane : la racine, puis chaque dossier traversé.
+ *
+ * Ses `span` étaient habillés, ses `button` ne l'étaient pas — ils tombaient
+ * donc sur le style natif du navigateur, c'est-à-dire des boîtes grises en
+ * relief `outset`. Rien ne l'avait signalé : le contrôle des styles cherche
+ * les classes citées et jamais définies, pas les éléments qui n'en citent
+ * aucune.
+ */
+.chemin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8125rem;
+}
+
 .chemin span {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 2px;
 }
 
 .chemin span[aria-hidden] {
   color: var(--bo-texte-3);
+  padding-inline: 4px;
+}
+
+.chemin button {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--bo-texte-2);
+  padding: 4px 8px;
+  border-radius: var(--bo-rayon-s);
+  cursor: pointer;
+  transition: background var(--bo-vitesse), color var(--bo-vitesse);
+}
+
+.chemin button:hover {
+  background: var(--bo-surface-2);
+  color: var(--bo-texte);
+}
+
+.chemin button:focus-visible {
+  outline: 2px solid var(--bo-accent);
+  outline-offset: 1px;
+}
+
+/* Le dossier courant ne se clique pas : il se distingue par l'encre, pas par
+   un cadre — un fil d'Ariane où tout a l'air cliquable ne dit plus où l'on
+   est. */
+.chemin strong {
+  padding: 4px 8px;
+  font-weight: 600;
+  color: var(--bo-texte);
 }
 
 /* ————————————————————— En-têtes de section ————————————————————— */
