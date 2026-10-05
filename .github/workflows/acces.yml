@@ -1,0 +1,89 @@
+# Accès au BackOffice, quand plus personne ne peut entrer.
+#
+# Le BackOffice n'a pas de « mot de passe oublié », et c'est délibéré : voir
+# l'en-tête de `scripts/mot-de-passe.mjs`. Le secours prévu était de lancer ce
+# script à la main contre la base.
+#
+# Sauf que le mot de passe de la base en ligne n'existe en clair nulle part :
+# il est posé en secret ici, en secret chez Hyperdrive, et Hostinger ne le
+# réaffiche pas. Un administrateur enfermé dehors ne peut donc pas se servir de
+# son propre secours. C'est arrivé le 4 octobre 2026.
+#
+# Ce workflow est le seul endroit où les deux morceaux se rencontrent : la base
+# et un mot de passe choisi, tous deux en secrets du dépôt.
+#
+# ———
+#
+# **Avant de lancer**, poser le mot de passe voulu dans
+# Settings → Secrets and variables → Actions → `MDP_PROVISOIRE`.
+# Douze caractères au minimum. Il n'est lisible nulle part après l'avoir posé,
+# donc le garder de côté le temps de le transmettre.
+#
+# **Ce dépôt est public**, et ses journaux d'Actions avec lui. D'où deux
+# précautions : le mot de passe ne passe ni par les entrées du workflow ni par
+# la ligne de commande, et les adresses sont masquées à l'affichage.
+
+name: Accès au BackOffice
+
+on:
+  workflow_dispatch:
+    inputs:
+      adresse:
+        description: "Adresse du compte à rouvrir — vide pour lister les comptes"
+        type: string
+        required: false
+        default: ''
+
+jobs:
+  rouvrir:
+    runs-on: ubuntu-latest
+
+    env:
+      # Le même secret que le déploiement et les corrections de contenu.
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Sans adresse, on ne fait que regarder : aucune écriture, et de quoi
+      # retrouver l'orthographe exacte d'un compte avant de viser.
+      - name: Les comptes qui existent
+        if: ${{ inputs.adresse == '' }}
+        run: node scripts/mot-de-passe.mjs
+
+      # Le script refuserait de lui-même un mot de passe trop court, mais il le
+      # ferait après s'être connecté à la base. Autant s'arrêter avant.
+      - name: Le secret est-il posé ?
+        if: ${{ inputs.adresse != '' }}
+        env:
+          MOT_DE_PASSE: ${{ secrets.MDP_PROVISOIRE }}
+        run: |
+          if [ -z "${MOT_DE_PASSE}" ]; then
+            echo "::error::Le secret MDP_PROVISOIRE est absent. Le poser dans Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          if [ "${#MOT_DE_PASSE}" -lt 12 ]; then
+            echo "::error::MDP_PROVISOIRE fait moins de douze caractères."
+            exit 1
+          fi
+          echo "Secret présent, longueur suffisante."
+
+      - name: Redéfinir le mot de passe
+        if: ${{ inputs.adresse != '' }}
+        env:
+          MOT_DE_PASSE: ${{ secrets.MDP_PROVISOIRE }}
+        run: node scripts/mot-de-passe.mjs "${{ inputs.adresse }}"
+
+      - name: Et ensuite
+        if: ${{ inputs.adresse != '' }}
+        run: |
+          echo "Les sessions ouvertes de ce compte ont été fermées."
+          echo "Se connecter sur /admin, puis changer ce mot de passe depuis Utilisateurs → Mon mot de passe."
+          echo "Enfin, SUPPRIMER le secret MDP_PROVISOIRE : il n'a plus de raison d'exister."

@@ -17,6 +17,22 @@
  * Il vise la base de `DATABASE_URI`. En développement c'est celle du
  * docker-compose ; pour la base en ligne, poser la variable le temps de la
  * commande — voir docs/cloudflare.md.
+ *
+ * ———
+ *
+ * **Quand personne n'a la base.** Le mot de passe de la base en ligne n'existe
+ * en clair nulle part : il est posé en secret sur le dépôt et chez Hyperdrive,
+ * et Hostinger ne le réaffiche pas. Un administrateur qui perd son mot de passe
+ * ne peut donc pas lancer ce script lui-même — c'est arrivé.
+ *
+ * D'où le second chemin : `MOT_DE_PASSE` dans l'environnement remplace la
+ * saisie au clavier, et le workflow « Accès au BackOffice » s'en sert pour
+ * tourner là où le secret de la base existe. Le nouveau mot de passe y est lui
+ * aussi un secret du dépôt : il ne traverse ni la ligne de commande, ni les
+ * entrées du workflow, ni ses journaux.
+ *
+ * Corollaire : hors d'un terminal, les adresses sont masquées à l'affichage.
+ * Les journaux d'Actions d'un dépôt public se lisent sans compte.
  */
 import { readFileSync } from 'node:fs';
 import { randomBytes, scrypt } from 'node:crypto';
@@ -52,6 +68,16 @@ const connexion = await mysql.createConnection({
   disableEval: false,
 });
 
+// Hors terminal, on est dans un journal d'Actions — public, comme le dépôt.
+// Assez de l'adresse pour reconnaître le compte, pas assez pour la récolter.
+const auClavier = Boolean(process.stdin.isTTY);
+const masquer = (email) => {
+  if (auClavier) return email;
+  const [local, domaine] = String(email).split('@');
+  const fin = local.length > 4 ? local.slice(-1) : '';
+  return `${local.slice(0, 3)}…${fin}@${domaine}`;
+};
+
 const [comptes] = await connexion.query(
   'SELECT email, prenom, nom, role, bloque_jusqua FROM utilisateurs ORDER BY email',
 );
@@ -68,7 +94,7 @@ if (!vise) {
   console.log('\nComptes du BackOffice :\n');
   for (const c of comptes) {
     const bloque = c.bloque_jusqua && c.bloque_jusqua > new Date() ? '  (bloqué)' : '';
-    console.log(`  ${c.email}`.padEnd(42) + `${c.prenom} ${c.nom} — ${c.role}${bloque}`);
+    console.log(`  ${masquer(c.email)}`.padEnd(42) + `${c.prenom} ${c.nom} — ${c.role}${bloque}`);
   }
   console.log('\nPour en redéfinir un :\n  npm run mot-de-passe -- <adresse>\n');
   await connexion.end();
@@ -77,20 +103,28 @@ if (!vise) {
 
 const compte = comptes.find((c) => c.email.toLowerCase() === vise);
 if (!compte) {
-  console.error(`\n  Aucun compte à l'adresse ${vise}.`);
+  console.error(`\n  Aucun compte à l'adresse ${masquer(vise)}.`);
   console.error('  Lancer la commande sans adresse pour voir la liste.\n');
   await connexion.end();
   process.exit(1);
 }
 
-const clavier = createInterface({ input: process.stdin, output: process.stdout });
-console.log(`\nNouveau mot de passe pour ${compte.email} (${compte.prenom} ${compte.nom}).`);
-// Il s'affiche pendant la saisie : masquer le retour d'un terminal demande une
-// API privée de Node, qui se comporte mal sous Windows. Le dire vaut mieux que
-// de promettre un masque qui sauterait au mauvais moment.
-console.log('Il restera visible à l\'écran — il n\'est enregistré nulle part ailleurs.\n');
-const motDePasse = (await clavier.question('  > ')).trim();
-clavier.close();
+let motDePasse = process.env.MOT_DE_PASSE?.trim();
+
+if (motDePasse) {
+  // Chemin non interactif : le mot de passe vient d'un secret, et rien ne
+  // l'écrit à l'écran. Voir l'en-tête de ce fichier.
+  console.log(`\nNouveau mot de passe pour ${masquer(compte.email)} — repris de l'environnement.`);
+} else {
+  const clavier = createInterface({ input: process.stdin, output: process.stdout });
+  console.log(`\nNouveau mot de passe pour ${compte.email} (${compte.prenom} ${compte.nom}).`);
+  // Il s'affiche pendant la saisie : masquer le retour d'un terminal demande une
+  // API privée de Node, qui se comporte mal sous Windows. Le dire vaut mieux que
+  // de promettre un masque qui sauterait au mauvais moment.
+  console.log('Il restera visible à l\'écran — il n\'est enregistré nulle part ailleurs.\n');
+  motDePasse = (await clavier.question('  > ')).trim();
+  clavier.close();
+}
 
 // Même règle que `motDePasseAcceptable` dans lib/auth.ts : la longueur protège
 // mieux que les caractères exotiques. Dupliquée ici parce que ce script ne
@@ -122,6 +156,6 @@ const [sessions] = await connexion.query(
 
 await connexion.end();
 
-console.log(`\n  Mot de passe redéfini pour ${compte.email}.`);
+console.log(`\n  Mot de passe redéfini pour ${masquer(compte.email)}.`);
 if (sessions.affectedRows) console.log(`  ${sessions.affectedRows} session(s) ouverte(s) fermée(s).`);
 console.log('  Le compte n\'est plus bloqué, les essais ratés sont remis à zéro.\n');
