@@ -65,7 +65,92 @@ export async function lireSmtp(): Promise<ReglagesSmtp> {
  */
 export async function lireSmtpAffichable() {
   const { motDePasse, ...reste } = await lireSmtp();
-  return { ...reste, motDePasseEnregistre: Boolean(motDePasse) };
+  return {
+    ...reste,
+    motDePasseEnregistre: Boolean(motDePasse),
+    // Ce que le garde-fou refuserait aujourd'hui peut déjà être en base : il
+    // est né après. La page le dit donc d'elle-même, sans attendre qu'on
+    // enregistre pour découvrir que rien ne part.
+    problemes: verifierSmtp(reste),
+  };
+}
+
+/**
+ * Ce qu'une configuration e-mail ne peut pas être, en ligne.
+ *
+ * Le 3 octobre 2026, une demande de photobooth est restée trois jours dans le
+ * BackOffice sans que personne le sache : le serveur d'envoi enregistré en
+ * production était `localhost:1025`, c'est-à-dire le Mailpit du
+ * docker-compose. L'identifiant et la boîte de réception étaient sur
+ * `exemple.fr`. La base de production avait été peuplée depuis celle de
+ * développement, et ces valeurs n'avaient jamais été refaites.
+ *
+ * Rien ne les en empêchait. C'est ce que ces contrôles corrigent.
+ *
+ * Ils refusent seulement ce qui **ne peut pas marcher** — pas ce qui est
+ * discutable. Un Worker ne joint jamais `localhost` : la machine qui exécute
+ * la requête n'est pas celle qui tient la boîte. Et les domaines réservés par
+ * la RFC 2606 ne reçoivent, par construction, aucun courrier. Le reste — un
+ * port inhabituel, un chiffrement désactivé — regarde l'hébergeur, pas nous.
+ */
+const HOTES_LOCAUX = /^(localhost|127(\.\d+){3}|0\.0\.0\.0|\[?::1\]?)$/i;
+/**
+ * `.test`, `.example`, `.invalid`, `.localhost` (RFC 2606 et 6761), `.local`
+ * (mDNS, qui ne sort pas du réseau local), et le `exemple.fr` que ce projet
+ * emploie partout comme marque-place.
+ *
+ * Le `(^|\.)` compte : `smtp.exemple.fr` est le marque-place affiché sous le
+ * champ « Serveur SMTP », et une première version ne reconnaissait que
+ * `exemple.fr` tout seul — elle laissait donc passer exactement la valeur
+ * qu'elle était censée arrêter.
+ */
+const DOMAINES_RESERVES =
+  /(^|\.)(test|example|invalid|localhost|local)$|(^|\.)(exemple\.fr|example\.(com|net|org))$/i;
+
+const domaineDe = (adresse: string) => adresse.split('@')[1]?.trim().toLowerCase() ?? '';
+
+/**
+ * Les raisons pour lesquelles cette configuration ne peut pas fonctionner.
+ *
+ * Rien en développement : `localhost:1025` y est la **bonne** valeur, celle du
+ * Mailpit lancé par le docker-compose. Ce qui est cassé en ligne est la
+ * configuration normale en local, et un garde-fou qui l'ignorerait rendrait le
+ * formulaire inutilisable sur la machine de celui qui développe.
+ *
+ * Ce n'est donc pas `localhost` qui est fautif en soi : c'est `localhost` sur
+ * un Worker, qui n'est pas la machine qui tient la boîte.
+ */
+export function verifierSmtp(
+  r: Omit<ReglagesSmtp, 'motDePasse'>,
+  enLigne = process.env.NODE_ENV === 'production',
+): string[] {
+  if (!enLigne) return [];
+
+  const problemes: string[] = [];
+  const serveur = r.serveur.trim().toLowerCase();
+
+  if (serveur && HOTES_LOCAUX.test(serveur)) {
+    problemes.push(
+      `« ${r.serveur} » désigne la machine qui exécute le site, pas un serveur d’envoi. ` +
+        'Indiquez celui de votre hébergeur — chez Hostinger, « smtp.hostinger.com ».',
+    );
+  } else if (serveur && DOMAINES_RESERVES.test(serveur)) {
+    problemes.push(`« ${r.serveur} » est un nom d’exemple : aucun serveur ne répond derrière.`);
+  }
+
+  for (const [libelle, adresse] of [
+    ['L’identifiant', r.identifiant],
+    ['L’adresse d’expédition', r.expediteurEmail],
+    ['L’adresse de réponse', r.reponseEmail],
+    ['La boîte où recevoir les demandes', r.destinataire],
+  ] as const) {
+    const domaine = domaineDe(adresse);
+    if (domaine && DOMAINES_RESERVES.test(domaine)) {
+      problemes.push(`${libelle} est sur « ${domaine} », un domaine d’exemple : rien n’y arrive.`);
+    }
+  }
+
+  return problemes;
 }
 
 export async function ecrireSmtp(
@@ -146,17 +231,31 @@ export async function envoyer(courriel: {
 function messageLisible(erreur: unknown): string {
   const e = erreur as { code?: string; responseCode?: number; message?: string };
 
-  if (e.code === 'EAUTH' || e.responseCode === 535) {
+  /*
+   * Le code d'erreur ne survit pas toujours au Worker.
+   *
+   * Ces traductions se fiaient à `e.code` seul. Sur Cloudflare, une erreur de
+   * résolution DNS remonte sans lui : Kevin lisait « queryA ENOTFOUND
+   * localhost » là où « Serveur introuvable » lui aurait dit quoi faire.
+   * Constaté le 6 octobre 2026, sur un vrai échec.
+   *
+   * On regarde donc aussi le texte, que `nodejs_compat` laisse passer.
+   */
+  const texte = e.message ?? '';
+  const porte = (...marqueurs: string[]) =>
+    marqueurs.some((m) => e.code === m || texte.includes(m));
+
+  if (porte('EAUTH') || e.responseCode === 535) {
     return 'Identifiant ou mot de passe refusé par le serveur.';
   }
-  if (e.code === 'ENOTFOUND' || e.code === 'EAI_AGAIN') {
+  if (porte('ENOTFOUND', 'EAI_AGAIN')) {
     return 'Serveur introuvable. Vérifiez son adresse.';
   }
-  if (e.code === 'ETIMEDOUT' || e.code === 'ECONNECTION') {
+  if (porte('ETIMEDOUT', 'ECONNECTION', 'ECONNREFUSED')) {
     return 'Pas de réponse du serveur. Vérifiez le port et le chiffrement.';
   }
-  if (e.code === 'ESOCKET') {
+  if (porte('ESOCKET')) {
     return 'Échec de la connexion sécurisée. Le port et le chiffrement ne vont sans doute pas ensemble.';
   }
-  return e.message?.slice(0, 240) ?? 'Échec de l’envoi.';
+  return texte.slice(0, 240) || 'Échec de l’envoi.';
 }
