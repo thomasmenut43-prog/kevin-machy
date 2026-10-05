@@ -1015,9 +1015,12 @@ export const IMAGES = {
   "prestations-tirages": {
     "name": "prestations-tirages",
     "ratio": 0.8,
-    "missing": true,
-    "widths": [],
-    "base": null
+    "missing": false,
+    "widths": [
+      480,
+      720
+    ],
+    "base": "/img/prestations-tirages"
   },
   "ent-hero-wide": {
     "name": "ent-hero-wide",

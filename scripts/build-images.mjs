@@ -181,7 +181,16 @@ const SLOTS = [
   { name: 'prestations-drone', profile: 'tall', src: R('km-drone-inspection.jpg') },
   { name: 'prestations-photobooth', profile: 'tall', src: R('km-photobooth-groupe-01.jpg') },
   { name: 'prestations-formation', profile: 'tall', src: R('km-formation-stage.jpg') },
-  { name: 'prestations-tirages', profile: 'tall', src: null },
+  // La seule des sept que la maquette de salon peut servir, et c'est réfléchi.
+  //
+  // Cette carte illustre un **service** sur le sommaire des prestations, pas
+  // une œuvre : un tirage encadré au mur est exactement ce que le client
+  // reçoit. Et le 4/5 d'une source de 1080 px donne 864 × 1080 — le site en
+  // sort 960 sans rien agrandir.
+  //
+  // Les six emplacements d'œuvres ci-dessous restent vides, eux : là il faut
+  // la photographie seule, et dans la maquette elle ne fait que 476 × 320 px.
+  { name: 'prestations-tirages', profile: 'tall', src: R('km-tirage-au-mur.jpg') },
 
   // ————————————————————————————————— Entreprise
   { name: 'ent-hero-wide', profile: 'heroWide', src: R('km-ent-hero-wide.jpg') },
