@@ -10,7 +10,14 @@ import {
   deconnecterGoogle,
   lireIntegrations,
 } from '@/lib/integrations';
-import { ecrireSmtp, effacerMotDePasseSmtp, envoyer, lireSmtp, lireSmtpAffichable } from '@/lib/courrier';
+import {
+  ecrireSmtp,
+  effacerMotDePasseSmtp,
+  envoyer,
+  lireSmtp,
+  lireSmtpAffichable,
+  verifierSmtp,
+} from '@/lib/courrier';
 
 /** Les réglages d'envoi touchent tout le site : réservés aux administrateurs. */
 async function exigerAdministrateur() {
@@ -90,14 +97,11 @@ export async function actionEnregistrerSmtp(
     return { erreur: 'L’adresse d’expédition ne semble pas valide.' };
   }
 
-  await ecrireSmtp({
+  const futur = {
     serveur,
     port: port || 465,
     chiffrement: (String(donnees.get('chiffrement') ?? 'tls') as 'tls' | 'starttls' | 'aucun'),
     identifiant: String(donnees.get('identifiant') ?? '').trim(),
-    // Un champ laissé vide veut dire « ne change rien », pas « efface » : le
-    // formulaire ne peut pas réafficher le mot de passe enregistré.
-    motDePasse: String(donnees.get('motDePasse') ?? ''),
     expediteurNom: String(donnees.get('expediteurNom') ?? '').trim(),
     expediteurEmail,
     reponseEmail: String(donnees.get('reponseEmail') ?? '').trim(),
@@ -105,6 +109,20 @@ export async function actionEnregistrerSmtp(
     accuseActif: donnees.get('accuseActif') === 'on',
     accuseObjet: String(donnees.get('accuseObjet') ?? '').trim(),
     accuseTexte: String(donnees.get('accuseTexte') ?? ''),
+  };
+
+  // Une configuration qui ne peut pas marcher ne s'enregistre pas. Voir
+  // `verifierSmtp` : ce garde-fou existe parce qu'une demande de photobooth
+  // est restée trois jours sans notification, le serveur d'envoi étant resté
+  // sur le `localhost` du développement.
+  const problemes = verifierSmtp(futur);
+  if (problemes.length) return { erreur: problemes.join(' ') };
+
+  await ecrireSmtp({
+    ...futur,
+    // Un champ laissé vide veut dire « ne change rien », pas « efface » : le
+    // formulaire ne peut pas réafficher le mot de passe enregistré.
+    motDePasse: String(donnees.get('motDePasse') ?? ''),
   });
 
   revalidatePath('/admin/reglages');

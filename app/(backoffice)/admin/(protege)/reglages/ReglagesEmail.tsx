@@ -25,6 +25,8 @@ type Affichable = {
   accuseActif: boolean;
   accuseObjet: string;
   accuseTexte: string;
+  /** Ce qui, dans ces réglages, empêche toute notification de partir. */
+  problemes: string[];
 };
 
 function BoutonEnregistrer() {
@@ -50,6 +52,17 @@ export function ReglagesEmail({ reglages }: { reglages: Affichable }) {
           Ces valeurs viennent de votre hébergeur d’e-mails. Elles figurent dans la fiche de
           configuration de votre boîte, à la rubrique « SMTP » ou « envoi ».
         </p>
+
+        {/* Ce qui est déjà en base et ne peut pas fonctionner. Affiché à
+            l'ouverture, sans attendre un enregistrement : c'est précisément
+            parce que personne n'enregistrait que la configuration de
+            développement est restée en ligne sans que ça se voie. */}
+        {!etat.erreur && !etat.succes && reglages.problemes.length ? (
+          <p className="bo-erreur" role="alert">
+            Aucune notification ne peut partir avec ces réglages.{' '}
+            {reglages.problemes.join(' ')}
+          </p>
+        ) : null}
 
         {etat.erreur ? (
           <p className="bo-erreur" role="alert">
