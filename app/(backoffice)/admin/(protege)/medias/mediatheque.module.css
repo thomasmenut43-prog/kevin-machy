@@ -46,13 +46,18 @@
   position: relative;
 }
 
-.vignette img {
+/* `.enAttente` tient la place d'une image absente : même boîte, même fond, mais
+   aucune requête — voir Mediatheque.tsx. Le cadre uni suffit, la marque « à
+   remplacer » posée dessus dit déjà ce qu'il faut. */
+.vignette img,
+.vignette .enAttente {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background: var(--bo-surface-2);
   display: block;
 }
+
 
 /* La case de sélection se pose sur l'image, dans un pastille claire : sans
    fond, une coche blanche sur une photographie claire disparaît. */

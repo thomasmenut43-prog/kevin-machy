@@ -7,6 +7,17 @@ import {
   sourceDepuis,
 } from '@/lib/audience';
 
+/*
+ * Les robots qui exécutent du JavaScript.
+ *
+ * Les autres ne déclenchent pas cette route : elle n'est appelée que depuis le
+ * navigateur. Restent les navigateurs pilotés — Playwright, Puppeteer — et les
+ * quelques moissonneurs qui rendent les pages. Ils se déclarent, et c'est la
+ * seule chose qu'on ait sur eux.
+ */
+const ROBOT =
+  /bot|crawler|spider|crawling|headless|playwright|puppeteer|phantom|slurp|curl|wget|lighthouse|pagespeed|preview|monitor|uptime|scrapy/i;
+
 /**
  * Point de collecte de la mesure d'audience.
  *
@@ -32,6 +43,31 @@ export async function POST(requete: Request) {
 
     const entetes = await headers();
     const navigateur = entetes.get('user-agent') ?? '';
+
+    /*
+     * Ni les robots, ni les gens qui tiennent le site.
+     *
+     * Kevin se comptait lui-même : rien ne distinguait sa visite de celle d'un
+     * client. Son tableau de bord additionnait donc son propre travail à son
+     * audience, et plus il relisait ses pages, plus ses chiffres montaient.
+     *
+     * On ne peut pas démêler ça après coup — l'empreinte d'un visiteur est un
+     * condensat de l'adresse et du navigateur, changé chaque jour, qui ne se
+     * remonte pas. La seule réponse est de ne plus les compter.
+     *
+     * Le cookie de session suffit à reconnaître quelqu'un du BackOffice, et
+     * suffit sans interroger la base : on ne vérifie pas que la session est
+     * valide, seulement qu'elle est revendiquée. Un visiteur ordinaire n'a
+     * aucune raison de porter ce cookie, et un faussaire qui s'en poserait un
+     * se retirerait des statistiques — ce qui n'intéresse personne.
+     */
+    if (entetes.get('cookie')?.includes('km_session=')) {
+      return new Response(null, { status: 204 });
+    }
+    if (ROBOT.test(navigateur)) {
+      return new Response(null, { status: 204 });
+    }
+
     const adresse = (entetes.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'inconnue';
     const visiteur = empreinteVisiteur(adresse, navigateur);
 
