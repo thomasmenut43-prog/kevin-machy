@@ -204,7 +204,17 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
               </label>
 
               <button type="button" className={m.vignette} onClick={() => setOuverte(media)}>
-                <img src={urlMedia(media.tailles[0]?.fichier ?? media.fichier)} alt="" loading="lazy" />
+                {/* Un emplacement en attente n'a aucun fichier : sa ligne existe
+                    pour que le manque se voie, et elle pointe vers un nom qui
+                    n'a jamais été écrit. Lui demander une vignette rendait
+                    l'icône d'image cassée du navigateur — ce qui donnait à
+                    croire que l'image était abîmée, alors qu'elle n'existe pas
+                    encore. On dessine le cadre nous-mêmes. */}
+                {media.tailles.length ? (
+                  <img src={urlMedia(media.tailles[0].fichier)} alt="" loading="lazy" />
+                ) : (
+                  <span className={m.enAttente} aria-hidden="true" />
+                )}
                 <span className={m.legende}>{media.alt}</span>
                 {media.aRemplacer ? <span className={m.marque}>à remplacer</span> : null}
               </button>

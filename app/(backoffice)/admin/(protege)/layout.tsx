@@ -4,6 +4,7 @@ import { utilisateurConnecte } from '@/lib/auth';
 import { lireEntreprise } from '@/lib/entreprise';
 import { MenuBackOffice } from '../Menu';
 import { actionDeconnexion } from '../actions';
+import { SynchroOnglets } from './SynchroOnglets';
 
 /**
  * Ossature des écrans protégés.
@@ -26,6 +27,7 @@ export default async function DispositionProtegee({ children }: { children: Reac
 
   return (
     <div className="bo bo-cadre">
+      <SynchroOnglets />
       <MenuBackOffice utilisateur={utilisateur} nomEntreprise={nom} deconnexion={actionDeconnexion} />
       <main className="bo-contenu">{children}</main>
     </div>
