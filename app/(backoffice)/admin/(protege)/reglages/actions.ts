@@ -71,13 +71,22 @@ export async function actionParametres(): Promise<Parametres> {
     administrateur,
     moiId: moi.id,
     moi: { prenom: moi.prenom, nom: moi.nom, email: moi.email, avatar: moi.avatar },
+    // La liste des comptes ne part qu'aux administrateurs, comme les réglages
+    // d'envoi juste au-dessus. Elle sortait pour tout le monde : un éditeur
+    // recevait les adresses, les rôles et les dernières connexions de chacun —
+    // sans les voir à l'écran, l'interface les lui cachant déjà, mais la
+    // réponse les portait. Une restriction qui ne vit que dans l'affichage
+    // n'en est pas une.
+    //
     // Les dates traversent la frontière serveur/client : en chaîne, sinon
     // elles arrivent en objets que React refuse de sérialiser.
-    comptes: comptes.map((c) => ({
-      ...c,
-      creeLe: c.creeLe.toISOString(),
-      derniereConnexion: c.derniereConnexion?.toISOString() ?? null,
-    })),
+    comptes: administrateur
+      ? comptes.map((c) => ({
+          ...c,
+          creeLe: c.creeLe.toISOString(),
+          derniereConnexion: c.derniereConnexion?.toISOString() ?? null,
+        }))
+      : [],
   };
 }
 
