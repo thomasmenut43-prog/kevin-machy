@@ -365,10 +365,31 @@ export async function changerMotDePasse(
   options?: { garderSessionCourante?: boolean },
 ) {
   const { sel, empreinte } = await chiffrerMotDePasse(nouveau);
-  await requete(
+
+  /*
+   * L'ordre des paramètres suit celui des `?`, et il avait glissé.
+   *
+   * La liste était `[id, empreinte, sel]` contre des emplacements attendant
+   * `empreinte, sel, id` : la requête écrivait l'identifiant dans l'empreinte,
+   * l'empreinte dans le sel, et cherchait la ligne dont l'identifiant valait le
+   * sel. Aucune ligne ne correspond — zéro mise à jour, aucune erreur, et
+   * l'appelant annonçait « Mot de passe remplacé ».
+   *
+   * Changer son mot de passe ne faisait donc rien depuis le passage de
+   * PostgreSQL à MySQL, où les paramètres nommés sont devenus positionnels. Le
+   * compte gardait l'ancien, et son propriétaire croyait l'avoir changé.
+   *
+   * D'où le contrôle qui suit : une écriture qui ne touche aucune ligne est une
+   * panne, pas un succès. Se taire ici coûte une journée à comprendre pourquoi
+   * « le bon mot de passe ne marche pas ».
+   */
+  const { touchees } = await ecrire(
     'UPDATE utilisateurs SET empreinte = ?, sel = ?, essais_rates = 0, bloque_jusqua = NULL, modifie_le = now() WHERE id = ?',
-    [id, empreinte, sel],
+    [empreinte, sel, id],
   );
+  if (!touchees) {
+    throw new Error(`Aucun compte numéro ${id} : le mot de passe n'a pas été changé.`);
+  }
 
   const jetonCourant = options?.garderSessionCourante
     ? (await cookies()).get(COOKIE)?.value
