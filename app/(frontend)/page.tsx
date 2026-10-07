@@ -18,7 +18,7 @@ import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteInd
  *
  * ———
  *
- * **Pourquoi une heure et non cinq minutes.** Chaque revérification écrit dans
+ * **Pourquoi une journée.** Chaque revérification écrit dans
  * Workers KV, et le forfait gratuit en autorise mille par jour. Quinze pages
  * revérifiées toutes les cinq minutes, c'est jusqu'à quatre mille trois cents
  * écritures — le plafond pouvait tomber sur le seul trafic du site, sans
@@ -28,12 +28,23 @@ import { METADONNEES_INDISPONIBLE, SiteIndisponible } from '@/components/SiteInd
  * des correctifs. Les déploiements n'y étaient pour presque rien : ils coûtent
  * quinze écritures chacun.
  *
- * À l'heure, le pire des cas tombe à trois cent soixante. Et rien n'est perdu :
+ * À l'heure, le pire des cas tombait à trois cent soixante. Ça n'a pas suffi :
+ * le 7 octobre 2026 le plafond est retombé, et cette fois les conséquences se
+ * sont vues depuis l'extérieur. Un cache qui ne peut plus s'écrire est un cache
+ * qui ne se renouvelle jamais : chaque visite tente alors de reconstruire la
+ * page, et un Worker gratuit n'a que dix millisecondes de calcul pour le faire.
+ * D'où des erreurs 1102 sur un site qui marchait la veille.
+ *
+ * La raison du dépassement est qu'une page ne coûte pas une écriture mais
+ * plusieurs — l'en-tête `Vary` du site annonce quatre variantes. Vingt pages
+ * toutes les heures, et on dépasse le millier sans rien faire.
+ *
+ * À la journée, le pire des cas tombe sous la centaine. Et rien n'est perdu :
  * le contenu ne bouge que quand Kevin publie, ce qui invalide immédiatement.
  * Ce délai ne rattrape qu'une écriture faite directement en base — ce que seuls
  * les scripts de correction font, et ils redéploient derrière.
  */
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 /**
  * La page d'accueil, servie depuis la base.

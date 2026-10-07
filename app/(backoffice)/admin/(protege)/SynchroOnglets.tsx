@@ -12,17 +12,28 @@ import { useRouter } from 'next/navigation';
  * l'un ouvre un message, l'autre affiche encore « 1 non lu » tant qu'on ne le
  * recharge pas.
  *
- * Deux déclencheurs, et aucun n'essaie d'être malin.
+ * Un seul déclencheur, et il n’essaie pas d’être malin.
  *
  * **Le retour sur l'onglet.** C'est le cas courant, et de loin : on ne tape que
  * dans un onglet à la fois, puis on revient dans l'autre. Le rafraîchir à ce
  * moment-là suffit, et ne coûte rien quand rien n'a bougé.
  *
- * **Un battement pendant qu'il est visible.** Pour les écrans posés côte à
- * côte, où personne ne reprend le focus. Trente secondes : assez pour que deux
- * personnes ne se marchent pas dessus, assez peu pour ne rien peser. Les pages
- * du BackOffice sont `force-dynamic`, donc ce battement n'écrit pas dans le
- * cache de Cloudflare — il ne consomme que la base, et rien du forfait KV.
+ * **Et c'est tout.** Il y avait un battement de trente secondes, pour les
+ * écrans posés côte à côte. Il est retiré, et la raison vaut d'être écrite.
+ *
+ * J'avais vérifié qu'il n'écrivait pas dans le cache de Cloudflare — les pages
+ * du BackOffice sont `force-dynamic` — et j'en avais conclu qu'il ne coûtait
+ * rien. C'était regarder la mauvaise ressource. Un forfait Workers gratuit
+ * accorde **dix millisecondes de calcul par requête**, et `force-dynamic` veut
+ * précisément dire « reconstruire la page entière à chaque fois ». La
+ * médiathèque, elle, crée plus de mille éléments.
+ *
+ * Le battement refaisait donc ce travail toutes les trente secondes, par
+ * onglet ouvert, pendant des heures — deux cent quarante fois de quoi dépasser
+ * la limite au lieu d'une. Kevin est tombé sur une erreur 1102 le lendemain.
+ *
+ * Le retour sur l'onglet suffit : il ne coûte rien tant que personne ne
+ * revient, et c'est le seul moment où quelqu'un regarde l'écran.
  *
  * ———
  *
@@ -35,42 +46,18 @@ import { useRouter } from 'next/navigation';
  * enveloppe posée ensuite n'atteint. Vérifié en comptant les requêtes vues par
  * l'enveloppe pendant une action : zéro.
  *
- * Un battement régulier fait le même travail sans rien détourner.
+ * Un battement régulier aurait fait le même travail sans rien détourner — c'est
+ * ce qui avait été posé, puis retiré pour la raison dite plus haut.
  */
-const BATTEMENT = 30_000;
-
 export function SynchroOnglets() {
   const router = useRouter();
 
   useEffect(() => {
-    let minuteur: ReturnType<typeof setInterval> | null = null;
-
-    const battre = () => {
-      if (minuteur) return;
-      minuteur = setInterval(() => router.refresh(), BATTEMENT);
+    const auRetour = () => {
+      if (document.visibilityState === 'visible') router.refresh();
     };
-    const cesser = () => {
-      if (!minuteur) return;
-      clearInterval(minuteur);
-      minuteur = null;
-    };
-
-    const auChangement = () => {
-      if (document.visibilityState === 'visible') {
-        // Au retour, on ne fait pas attendre le prochain battement.
-        router.refresh();
-        battre();
-      } else {
-        cesser();
-      }
-    };
-
-    auChangement();
-    document.addEventListener('visibilitychange', auChangement);
-    return () => {
-      document.removeEventListener('visibilitychange', auChangement);
-      cesser();
-    };
+    document.addEventListener('visibilitychange', auRetour);
+    return () => document.removeEventListener('visibilitychange', auRetour);
   }, [router]);
 
   return null;
