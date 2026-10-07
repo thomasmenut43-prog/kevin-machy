@@ -59,8 +59,28 @@ type LigneUtilisateur = Utilisateur & {
 
 // ————————————————————————— Mots de passe —————————————————————————
 
+/**
+ * Les espaces de bord sont retirés, à l'enregistrement comme à la vérification.
+ *
+ * Un mot de passe collé depuis une conversation emporte souvent un espace
+ * final, et rien ne le montre : le champ affiche des points. Il est alors
+ * enregistré **avec** cet espace. Le navigateur, lui, retient exactement ce
+ * qui a été soumis — donc il ouvre. Mais le même mot de passe tapé à la main
+ * est refusé, et personne ne comprend pourquoi.
+ *
+ * C'est arrivé le 7 octobre 2026, sur le compte de Kevin : l'enregistrement
+ * automatique ouvrait, la frappe non.
+ *
+ * Retirer ces espaces coûte une poignée de combinaisons sur un mot de passe
+ * d'au moins douze caractères. Les rendre significatifs coûte un compte
+ * inaccessible dont le propriétaire jure qu'il tape le bon mot de passe.
+ *
+ * Les deux chemins — `chiffrerMotDePasse` et `motDePasseValide` — passent par
+ * ici : il n'y a donc aucun endroit où l'un pourrait traiter la saisie
+ * autrement que l'autre.
+ */
 async function empreinteDe(motDePasse: string, sel: string) {
-  const brut = (await scryptAsync(motDePasse.normalize('NFKC'), sel, 64)) as Buffer;
+  const brut = (await scryptAsync(motDePasse.trim().normalize('NFKC'), sel, 64)) as Buffer;
   return brut.toString('hex');
 }
 
@@ -80,10 +100,17 @@ async function motDePasseValide(motDePasse: string, empreinte: string, sel: stri
   return timingSafeEqual(candidat, attendu);
 }
 
-/** Au moins douze caractères. La longueur protège mieux que les caractères exotiques. */
+/**
+ * Au moins douze caractères. La longueur protège mieux que les caractères
+ * exotiques.
+ *
+ * Mesuré sur la chaîne sans ses espaces de bord, puisque c'est elle qui sera
+ * enregistrée : sinon « onze ␣ » passerait pour douze.
+ */
 export function motDePasseAcceptable(motDePasse: string) {
-  if (motDePasse.length < 12) return 'Douze caractères au minimum.';
-  if (motDePasse.length > 200) return 'Deux cents caractères au maximum.';
+  const net = motDePasse.trim();
+  if (net.length < 12) return 'Douze caractères au minimum.';
+  if (net.length > 200) return 'Deux cents caractères au maximum.';
   return null;
 }
 
