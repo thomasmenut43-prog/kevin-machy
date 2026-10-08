@@ -140,7 +140,7 @@ export function ModaleParametres({ onFermer }: { onFermer: () => void }) {
             )
           ) : onglet === 'emails' ? (
             donnees.administrateur && donnees.smtp ? (
-              <ReglagesEmail reglages={donnees.smtp} />
+              <ReglagesEmail reglages={donnees.smtp} onEnregistre={recharger} />
             ) : (
               <p className="bo-aide">
                 Ces réglages touchent tout le site. Seul un administrateur peut les modifier.
