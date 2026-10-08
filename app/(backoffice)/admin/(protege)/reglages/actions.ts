@@ -26,7 +26,12 @@ async function exigerAdministrateur() {
   return utilisateur;
 }
 
-export type EtatReglages = { erreur?: string; succes?: string };
+export type EtatReglages = {
+  erreur?: string;
+  succes?: string;
+  /** Le texte d'origine du serveur, pour qui doit réparer. Jamais traduit. */
+  detail?: string;
+};
 
 export type CompteAffichable = Omit<
   Awaited<ReturnType<typeof listerUtilisateurs>>[number],
@@ -162,7 +167,7 @@ export async function actionTesterSmtp(destination: string) {
 
   return resultat.ok
     ? { succes: `Message envoyé à ${a}. Vérifiez la réception, y compris les indésirables.` }
-    : { erreur: resultat.message };
+    : { erreur: resultat.message, detail: resultat.detail };
 }
 
 export async function actionEffacerMotDePasse() {
