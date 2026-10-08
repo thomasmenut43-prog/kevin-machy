@@ -199,6 +199,73 @@ aurait laissé passer en développement des requêtes refusées en ligne.
 La protection contre l'injection SQL est inchangée — c'est `mysql2` qui
 échappe les valeurs, et il le fait pour le dialecte qu'il a en face.
 
+## Les dix millisecondes, mesurées
+
+Relevé du 8 octobre 2026, sur vingt-quatre heures :
+
+```
+Invocations                              6 670
+Erreurs                                    819   soit 26,5 %
+  dont « temps processeur dépassé »        819   ← la totalité
+  dont mémoire, exception, interne           0
+Temps processeur médian                 109 ms   pour une limite de 10 ms
+```
+
+Les 819 échecs ont tous la même cause, et c'est la seule bonne nouvelle du
+relevé : il n'y a qu'un problème à régler, pas cinq.
+
+**L'attente ne compte pas.** La documentation de Cloudflare est explicite : le
+temps passé à attendre le réseau, le stockage ou la base est exclu du décompte.
+Les 109 ms sont donc du calcul pur — React qui fabrique du HTML. Changer de
+base de données n'y changerait rien.
+
+### Ce qui coûte, et ce qui ne coûte pas
+
+Les quinze pages publiques, visitées une à une cache chaud : **aucun échec**,
+137 ms de réponse moyenne à la première passe, 74 ms à la seconde. Elles ne
+sont pas le problème tant qu'elles sont en cache.
+
+Les chemins les plus demandés sur la même journée :
+
+```
+/                     530        /contact/              84
+/admin/               188        /portrait/             75
+/admin/pages/         177        /robots.txt            64
+/admin/messages/      142        /tag/wedding-awards/   57
+/admin/medias/        117        /api/mesure            54
+```
+
+Six cent vingt-quatre requêtes vers le BackOffice, dont **toutes les pages sont
+`force-dynamic`** : aucune n'est mise en cache, chacune est reconstruite
+entièrement. C'est la piste la plus sérieuse pour expliquer les dépassements —
+et elle colle à ce qu'a vécu Kevin, qui est tombé sur une erreur 1102 **en
+cliquant sur un onglet du BackOffice**, pas en visitant le site.
+
+Ce n'est pas démontré pour autant : il faudrait les journaux requête par
+requête pour attribuer chaque échec à un chemin.
+
+### Le trafic n'est pas celui qu'on croit
+
+```
+Hong Kong 2,46k    France 2k    États-Unis 1,11k    Inde 744    Australie 501
+```
+
+Une seule adresse IP, dans une plage Azure, pèse 1,75k requêtes en vingt-quatre
+heures. L'audience réelle de Kevin tourne autour de soixante-dix pages vues par
+jour : l'essentiel des invocations n'est pas humain.
+
+### Le chauffage du cache
+
+`scripts/chauffer-cache.mjs`, appelé à la fin de chaque mise en ligne. Il lit
+`/sitemap.xml` et visite chaque page deux fois.
+
+Il ne corrige rien — il **déplace la dépense**. Après un déploiement, le cache
+est vide : quelqu'un doit payer la reconstruction de chaque page. Autant que ce
+soit le workflow plutôt que le premier visiteur.
+
+Et `deploiement.yml` ignore désormais les fichiers `.md` : déployer pour une
+correction de documentation vidait le cache sans rien changer au site.
+
 ## Un Worker ne joint pas une adresse de Cloudflare
 
 C'est ce qui a condamné l'envoi par SMTP, et il faut le savoir avant de

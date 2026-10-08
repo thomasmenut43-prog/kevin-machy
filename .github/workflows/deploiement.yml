@@ -8,6 +8,17 @@ name: Déploiement
 on:
   push:
     branches: [main]
+    # La documentation ne change pas le site, et déployer n'est pas gratuit :
+    # chaque mise en ligne change l'identifiant de compilation et vide donc le
+    # cache de toutes les pages. Trente déploiements en huit jours, début
+    # octobre 2026, c'est trente remises à zéro — dont plusieurs pour des
+    # fichiers que le site ne lit même pas.
+    #
+    # Vérifié avant de l'écrire : aucun `.md` du dépôt n'est lu par le code ni
+    # par la construction. Un envoi qui mêle de la documentation et du code
+    # déclenche quand même le déploiement, comme il se doit.
+    paths-ignore:
+      - '**/*.md'
   # Pour renvoyer la dernière version sans rien fusionner — après avoir changé
   # un secret, par exemple.
   workflow_dispatch:
