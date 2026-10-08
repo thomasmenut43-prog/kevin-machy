@@ -772,3 +772,18 @@
   font-weight: 400;
   color: var(--bo-texte-3);
 }
+
+/* Le bouton qui déplie la suite de la médiathèque. Il dit où l'on en est :
+   sans le compte, on ne sait pas s'il reste trois images ou soixante. */
+.voirPlus {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.reste {
+  font-size: 0.8125rem;
+  color: var(--bo-texte-3);
+  font-variant-numeric: tabular-nums;
+}

@@ -25,10 +25,14 @@ import m from './mediatheque.module.css';
 
 const VIDE: EtatMedia = {};
 
+/** Combien de vignettes le serveur dessine avant qu'on en demande plus. */
+const PAR_FOURNEE = 48;
+
 export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: Dossier[] }) {
   const [ouverte, setOuverte] = useState<Media | null>(null);
   // null : toutes les images. 0 : celles qui ne sont rangées nulle part.
   const [filtre, setFiltre] = useState<number | null>(null);
+  const [montrees, setMontrees] = useState(PAR_FOURNEE);
   const [choisies, setChoisies] = useState<Set<number>>(new Set());
   const [aSupprimer, setASupprimer] = useState(false);
   const [ajout, setAjout] = useState(false);
@@ -59,6 +63,29 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
     filtre === null
       ? medias
       : medias.filter((x) => (filtre === 0 ? !x.dossierId : x.dossierId === filtre));
+
+  /*
+   * On ne dessine pas tout d'un coup.
+   *
+   * Cette page est reconstruite entièrement à chaque visite — elle est
+   * `force-dynamic`, et pour cause : une médiathèque en cache montrerait l'état
+   * d'hier. Avec cent quinze images, elle créait plus de mille éléments, trois
+   * fois les autres écrans du BackOffice.
+   *
+   * Or un Worker gratuit dispose de dix millisecondes de calcul par requête.
+   * Kevin a reçu une erreur 1102 — « ressources dépassées » — en ouvrant un
+   * onglet, là où la même page s'affichait sans broncher pour quelqu'un
+   * d'autre. Ce n'était pas aléatoire : c'était une marge trop fine, et elle
+   * se resserre à chaque photographie ajoutée.
+   *
+   * Quarante-huit vignettes remplissent déjà plus d'un écran. Le reste vient à
+   * la demande, rendu par le navigateur du visiteur et non par le Worker.
+   */
+  const affichees = visibles.slice(0, montrees);
+
+  // Changer de dossier remet le compteur à zéro : sans ça, revenir sur « toutes
+  // les images » après avoir tout déplié redessinerait tout.
+  useEffect(() => setMontrees(PAR_FOURNEE), [filtre]);
   const aRemplacer = visibles.filter((x) => x.aRemplacer).length;
   const sansDossier = medias.filter((x) => !x.dossierId).length;
 
@@ -180,7 +207,7 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
         </p>
       ) : (
         <ul className={m.grille}>
-          {visibles.map((media) => (
+          {affichees.map((media) => (
             <li
               key={media.id}
               data-choisie={choisies.has(media.id) ? '' : undefined}
@@ -222,6 +249,19 @@ export function Mediatheque({ medias, dossiers }: { medias: Media[]; dossiers: D
           ))}
         </ul>
       )}
+
+      {affichees.length < visibles.length ? (
+        <button
+          type="button"
+          className={`bo-bouton bo-bouton-discret ${m.voirPlus}`}
+          onClick={() => setMontrees((n) => n + PAR_FOURNEE)}
+        >
+          Voir les {Math.min(PAR_FOURNEE, visibles.length - affichees.length)} suivantes
+          <span className={m.reste}>
+            {affichees.length} sur {visibles.length}
+          </span>
+        </button>
+      ) : null}
 
       {/* La barre n'apparaît que s'il y a quelque chose à faire : une barre
           vide en permanence occupe l'écran sans rien dire. */}
