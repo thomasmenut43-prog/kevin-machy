@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   actionMarquerLu,
   actionRenvoyerNotification,
@@ -35,6 +35,40 @@ type Message = {
  * la liste, puis le message, avec un retour. D'où `data-vue`, que le CSS lit —
  * plutôt que deux arbres de composants à maintenir en parallèle.
  */
+/**
+ * Copier une adresse, sans dépendre des permissions du navigateur.
+ *
+ * `navigator.clipboard` exige un contexte sûr et une activation récente de la
+ * page ; il refuse dans les cas limites, et il refuse en silence. Le vieux
+ * `execCommand` ne demande rien à personne : il reste là en second rideau,
+ * déprécié mais fonctionnel partout.
+ *
+ * Rend `false` si aucun des deux n'a abouti, pour que l'interface n'annonce
+ * jamais une copie qui n'a pas eu lieu. L'adresse reste de toute façon lisible
+ * et cliquable en tête du message.
+ */
+async function copierAdresse(adresse: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(adresse);
+    return true;
+  } catch {
+    try {
+      const zone = document.createElement('textarea');
+      zone.value = adresse;
+      zone.setAttribute('readonly', '');
+      zone.style.position = 'fixed';
+      zone.style.opacity = '0';
+      document.body.appendChild(zone);
+      zone.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(zone);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
 export function BoiteMessages({
   messages,
   nonLus,
@@ -60,6 +94,8 @@ export function BoiteMessages({
    * s'affiche pas, et c'est tout.
    */
   const [renvoye, setRenvoye] = useState<{ id: number; ok: boolean } | null>(null);
+  const [adresseCopiee, setAdresseCopiee] = useState<number | null>(null);
+  const lecture = useRef<HTMLDivElement>(null);
 
   const visibles = useMemo(
     () => (filtre === 'nonlus' ? messages.filter((m) => !m.lu) : messages),
@@ -67,6 +103,32 @@ export function BoiteMessages({
   );
   const actif = messages.find((m) => m.id === choisi) ?? null;
   const echecs = messages.filter((m) => m.envoi === 'echec').length;
+
+  /*
+   * Marquer lu ce qui est réellement sous les yeux.
+   *
+   * Le premier message non lu est choisi au chargement, sans passer par
+   * `ouvrir` : il s'affichait donc en restant « non lu », et le compteur ne
+   * bougeait pas tant qu'on ne cliquait pas dessus — alors qu'on venait de le
+   * lire. C'est exactement l'inverse de ce qu'un compteur de non-lus doit
+   * faire : il doit dire ce qui reste à voir, pas ce qui n'a pas été cliqué.
+   *
+   * La condition n'est pas « un message est choisi » mais « le panneau de
+   * lecture est visible ». Sous 900 px les deux panneaux ne tiennent pas côte
+   * à côte, la feuille de styles masque celui-ci par `display: none`, et la
+   * liste occupe seule le cadre : `offsetParent` vaut alors `null`. Lire la
+   * mise en page plutôt que redire le point de rupture en JavaScript évite de
+   * les laisser diverger un jour.
+   *
+   * `vue` est dans les dépendances en plus de `actif` : sur téléphone, ouvrir
+   * le message déjà choisi ne change que la vue, et sans cela rien ne se
+   * déclencherait.
+   */
+  useEffect(() => {
+    if (!actif || actif.lu) return;
+    if (!lecture.current?.offsetParent) return;
+    demarrer(() => actionMarquerLu(actif.id, true));
+  }, [actif, vue, demarrer]);
 
   if (!messages.length) {
     return (
@@ -82,7 +144,6 @@ export function BoiteMessages({
   const ouvrir = (m: Message) => {
     setChoisi(m.id);
     setVue('message');
-    if (!m.lu) demarrer(() => actionMarquerLu(m.id, true));
   };
 
   return (
@@ -157,7 +218,7 @@ export function BoiteMessages({
           </ul>
         </div>
 
-        <div className={b.lecture}>
+        <div className={b.lecture} ref={lecture}>
           {actif ? (
             <article className={b.lu} key={actif.id}>
               <button type="button" className={b.retour} onClick={() => setVue('liste')}>
@@ -262,6 +323,22 @@ export function BoiteMessages({
                 >
                   Répondre
                 </a>
+                {/* Le lien ci-dessus ouvre le logiciel de courrier de la
+                    machine. Quand il n'y en a pas — et il n'y en a pas quand on
+                    relève son courrier sur le web — cliquer ne fait
+                    strictement rien, sans le moindre message. D'où ce second
+                    bouton : il ne dépend d'aucun réglage du poste. */}
+                <button
+                  type="button"
+                  className="bo-bouton bo-bouton-discret"
+                  onClick={() => {
+                    copierAdresse(actif.email).then((ok) =>
+                      setAdresseCopiee(ok ? actif.id : null),
+                    );
+                  }}
+                >
+                  {adresseCopiee === actif.id ? 'Adresse copiée' : 'Copier l’adresse'}
+                </button>
                 <button
                   type="button"
                   className="bo-bouton bo-bouton-discret"
