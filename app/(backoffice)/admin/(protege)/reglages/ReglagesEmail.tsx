@@ -44,21 +44,26 @@ function BoutonEnregistrer() {
  * Sert de `key` : quand la fenêtre a relu la base et que ces valeurs ont
  * changé, le formulaire est remonté, et ses `defaultValue` reprennent. Sans
  * cela React garde les champs tels quels — c'est la moitié du bug corrigé ici.
+ *
+ * Le paramètre ne s'appelle pas `r` : dans ce fichier, `r` est la feuille de
+ * styles. Chaque champ lu devenait donc, pour `verifier-styles.mjs`, une
+ * classe CSS introuvable — et il avait raison de se plaindre : personne ne
+ * doit avoir à deviner lequel des deux `r` il est en train de lire.
  */
-function empreinteDe(r: Affichable) {
+function empreinteAffichee(v: Affichable) {
   return [
-    r.serveur,
-    r.port,
-    r.chiffrement,
-    r.identifiant,
-    r.motDePasseEnregistre,
-    r.expediteurNom,
-    r.expediteurEmail,
-    r.reponseEmail,
-    r.destinataire,
-    r.accuseActif,
-    r.accuseObjet,
-    r.accuseTexte,
+    v.serveur,
+    v.port,
+    v.chiffrement,
+    v.identifiant,
+    v.motDePasseEnregistre,
+    v.expediteurNom,
+    v.expediteurEmail,
+    v.reponseEmail,
+    v.destinataire,
+    v.accuseActif,
+    v.accuseObjet,
+    v.accuseTexte,
   ].join('\u0000');
 }
 
@@ -104,7 +109,7 @@ export function ReglagesEmail({
 
   return (
     <>
-      <form key={empreinteDe(reglages)} className="bo-form bo-encadre" action={action}>
+      <form key={empreinteAffichee(reglages)} className="bo-form bo-encadre" action={action}>
         <h2 className={r.titre}>Serveur d’envoi</h2>
         <p className="bo-aide">
           Ces valeurs viennent de votre hébergeur d’e-mails. Elles figurent dans la fiche de
