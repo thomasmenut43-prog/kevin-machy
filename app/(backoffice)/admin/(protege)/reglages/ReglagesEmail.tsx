@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useState, useTransition } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   actionEffacerMotDePasse,
@@ -38,15 +38,73 @@ function BoutonEnregistrer() {
   );
 }
 
-export function ReglagesEmail({ reglages }: { reglages: Affichable }) {
+/**
+ * Ce que le formulaire affiche réellement, en une chaîne.
+ *
+ * Sert de `key` : quand la fenêtre a relu la base et que ces valeurs ont
+ * changé, le formulaire est remonté, et ses `defaultValue` reprennent. Sans
+ * cela React garde les champs tels quels — c'est la moitié du bug corrigé ici.
+ */
+function empreinteDe(r: Affichable) {
+  return [
+    r.serveur,
+    r.port,
+    r.chiffrement,
+    r.identifiant,
+    r.motDePasseEnregistre,
+    r.expediteurNom,
+    r.expediteurEmail,
+    r.reponseEmail,
+    r.destinataire,
+    r.accuseActif,
+    r.accuseObjet,
+    r.accuseTexte,
+  ].join('\u0000');
+}
+
+export function ReglagesEmail({
+  reglages,
+  onEnregistre,
+}: {
+  reglages: Affichable;
+  /** Prévient la fenêtre qu'elle doit relire la base. */
+  onEnregistre?: () => void;
+}) {
   const [etat, action] = useActionState(actionEnregistrerSmtp, VIDE);
   const [destination, setDestination] = useState(reglages.destinataire || reglages.expediteurEmail);
   const [test, setTest] = useState<EtatReglages>({});
   const [enCours, demarrer] = useTransition();
 
+  /*
+   * Redemander à la base ce qu'elle a retenu.
+   *
+   * Sans cela, le formulaire mentait après chaque enregistrement. React remet
+   * à zéro un formulaire soumis par une action : les champs retombent sur leur
+   * `defaultValue`, c'est-à-dire sur ce qui avait été lu **à l'ouverture de la
+   * fenêtre**. Thomas a donc enregistré `smtp.hostinger.com`, vu
+   * « Réglages enregistrés. », puis relu `localhost` dans les champs — alors
+   * que la base, elle, avait bien le bon serveur.
+   *
+   * C'est la même famille de panne que celle d'hier : une écriture qui marche
+   * et un écran qui raconte autre chose. L'écran décide de ce que l'on croit.
+   *
+   * La dépendance porte sur `etat` et non sur `etat.succes` : deux
+   * enregistrements de suite rendent le même texte, et la comparaison par
+   * valeur ne verrait pas le second.
+   */
+  useEffect(() => {
+    if (etat.succes) onEnregistre?.();
+  }, [etat, onEnregistre]);
+
+  // L'adresse d'essai suit la boîte enregistrée : tester ailleurs que là où
+  // les demandes arrivent ne prouve rien.
+  useEffect(() => {
+    setDestination(reglages.destinataire || reglages.expediteurEmail);
+  }, [reglages.destinataire, reglages.expediteurEmail]);
+
   return (
     <>
-      <form className="bo-form bo-encadre" action={action}>
+      <form key={empreinteDe(reglages)} className="bo-form bo-encadre" action={action}>
         <h2 className={r.titre}>Serveur d’envoi</h2>
         <p className="bo-aide">
           Ces valeurs viennent de votre hébergeur d’e-mails. Elles figurent dans la fiche de
@@ -56,8 +114,13 @@ export function ReglagesEmail({ reglages }: { reglages: Affichable }) {
         {/* Ce qui est déjà en base et ne peut pas fonctionner. Affiché à
             l'ouverture, sans attendre un enregistrement : c'est précisément
             parce que personne n'enregistrait que la configuration de
-            développement est restée en ligne sans que ça se voie. */}
-        {!etat.erreur && !etat.succes && reglages.problemes.length ? (
+            développement est restée en ligne sans que ça se voie.
+
+            Et affiché **même après un enregistrement réussi** : il décrit la
+            base, pas le dernier clic. Le masquer dès qu'un « Réglages
+            enregistrés. » s'affichait rendait l'avertissement muet au seul
+            moment où quelqu'un regardait l'écran. */}
+        {!etat.erreur && reglages.problemes.length ? (
           <p className="bo-erreur" role="alert">
             Aucune notification ne peut partir avec ces réglages.{' '}
             {reglages.problemes.join(' ')}
