@@ -199,6 +199,49 @@ aurait laissé passer en développement des requêtes refusées en ligne.
 La protection contre l'injection SQL est inchangée — c'est `mysql2` qui
 échappe les valeurs, et il le fait pour le dialecte qu'il a en face.
 
+## Un Worker ne joint pas une adresse de Cloudflare
+
+C'est ce qui a condamné l'envoi par SMTP, et il faut le savoir avant de
+chercher ailleurs.
+
+Le 8 octobre 2026, le formulaire de contact n'arrivait pas dans la boîte de
+Kevin. Les réglages étaient bons, le mot de passe aussi. L'erreur, une fois
+remontée telle quelle :
+
+```
+ESOCKET · étape CONN · proxy request failed,
+cannot connect to the specified address
+```
+
+`étape CONN` : la connexion n'a jamais abouti. Ni TLS, ni authentification.
+
+La cause tient en une résolution DNS :
+
+```
+smtp.hostinger.com   →  172.65.255.143
+smtp.hostinger.fr    →  172.65.255.143
+mx1/mx2.hostinger.fr →  172.65.182.103
+
+172.64.0.0/13  —  CLOUDFLARENET, Cloudflare, Inc.
+```
+
+**Toute l'infrastructure mail de Hostinger est derrière Cloudflare.** Or un
+Worker refuse d'ouvrir une socket vers une adresse appartenant à Cloudflare —
+comme il refuse `localhost` et les réseaux privés. Le site et le serveur de
+courrier sont tous deux chez Cloudflare, et les deux ne se parlent pas.
+
+Vérifié sur le port 465 en TLS **et** sur le 587 en STARTTLS. Le port n'avait
+aucune importance. Le serveur, lui, était sain : interrogé depuis une machine
+ordinaire, il répondait en TLS 1.3 avec un dialogue SMTP complet jusqu'au 221.
+
+Aucun réglage ne corrige ça. Le site émet donc par une requête HTTP — voir
+`envoyerParApi` dans `lib/courrier.ts`. Le chemin SMTP reste en place et
+redeviendra le bon le jour où la vitrine sera servie depuis Hostinger.
+
+**La leçon vaut au-delà du courrier :** avant de supposer qu'un service distant
+est injoignable depuis un Worker, résoudre son nom et regarder à qui appartient
+l'adresse. Un `connect()` refusé ne dit pas pourquoi.
+
 ## Pour lire une erreur en ligne
 
 Le Worker n'envoie qu'un 500 nu. Le message est dans ses journaux :
