@@ -1,7 +1,11 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { actionMarquerLu, actionSupprimerMessage } from './actions';
+import {
+  actionMarquerLu,
+  actionRenvoyerNotification,
+  actionSupprimerMessage,
+} from './actions';
 import b from './messages.module.css';
 
 type Message = {
@@ -47,6 +51,15 @@ export function BoiteMessages({
     messages.find((m) => !m.lu)?.id ?? messages[0]?.id ?? null,
   );
   const [enCours, demarrer] = useTransition();
+
+  /*
+   * Le résultat du dernier renvoi, attaché au message concerné.
+   *
+   * Porter l'identifiant évite d'avoir à remettre l'état à zéro en changeant
+   * de message : un résultat qui n'est pas celui du message affiché ne
+   * s'affiche pas, et c'est tout.
+   */
+  const [renvoye, setRenvoye] = useState<{ id: number; ok: boolean } | null>(null);
 
   const visibles = useMemo(
     () => (filtre === 'nonlus' ? messages.filter((m) => !m.lu) : messages),
@@ -192,9 +205,51 @@ export function BoiteMessages({
 
               <p className={b.texte}>{actif.message}</p>
 
-              {actif.envoi === 'echec' && actif.envoiDetail ? (
-                <p className={b.alerte}>
-                  <strong>La notification n’est pas partie.</strong> {actif.envoiDetail}
+              {actif.envoi === 'echec' ? (
+                <div className={b.alerte}>
+                  <strong>La notification n’est pas partie.</strong>{' '}
+                  {actif.envoiDetail ?? 'Aucune raison n’a été enregistrée.'}
+
+                  <div className={b.remede}>
+                    <button
+                      type="button"
+                      className="bo-bouton bo-bouton-discret"
+                      disabled={enCours}
+                      onClick={() =>
+                        demarrer(async () => {
+                          setRenvoye(null);
+                          const ok = await actionRenvoyerNotification(actif.id);
+                          setRenvoye({ id: actif.id, ok });
+                        })
+                      }
+                    >
+                      {enCours ? 'Envoi…' : 'Renvoyer la notification'}
+                    </button>
+
+                    {renvoye?.id === actif.id && !renvoye.ok ? (
+                      <span role="status">
+                        Toujours pas. La raison vient d’être mise à jour ci-dessus.
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Dit avant de cliquer, pas après : quelqu'un pourrait
+                      croire que le visiteur va recevoir un accusé, et s'abstenir
+                      de lui répondre lui-même. */}
+                  <p className={b.remedeNote}>
+                    Ce bouton vous prévient, vous. Le visiteur ne reçoit rien : son accusé de
+                    réception annonçait une réponse sous deux jours, et le lui envoyer maintenant
+                    ferait repartir un délai déjà passé. C’est une vraie réponse qu’il attend.
+                  </p>
+                </div>
+              ) : renvoye?.id === actif.id && renvoye.ok ? (
+                /* Hors de l'encadré rouge, et c'est tout l'intérêt : quand le
+                   renvoi réussit, cet encadré disparaît — la demande n'est plus
+                   en échec. La confirmation serait partie avec lui, et le seul
+                   retour aurait été la disparition d'un avertissement. */
+                <p className={b.reussite} role="status">
+                  Notification renvoyée. Vous devriez l’avoir reçue dans la boîte indiquée dans
+                  Réglages → E-mails.
                 </p>
               ) : null}
 

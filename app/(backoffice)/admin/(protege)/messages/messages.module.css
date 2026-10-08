@@ -8,6 +8,35 @@
  * faire remonter celle qu'on est en train de lire.
  */
 
+/*
+ * Le remède, dans l'encadré qui annonce la panne.
+ *
+ * Un bouton rangé plus bas avec les autres actions aurait obligé à faire le
+ * lien soi-même. Celui-ci est sous la phrase qui le rend utile.
+ */
+.remede {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.reussite {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.remedeNote {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  opacity: 0.85;
+}
+
 .alerte {
   margin-bottom: 14px;
   padding: 12px 14px;
