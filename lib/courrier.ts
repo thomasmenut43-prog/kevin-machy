@@ -196,7 +196,18 @@ function transporteur(r: ReglagesSmtp) {
   });
 }
 
-export type Resultat = { ok: true } | { ok: false; message: string };
+export type Resultat =
+  | { ok: true }
+  /**
+   * `message` est pour Kevin, `detail` est pour celui qui répare.
+   *
+   * La traduction en français dit quoi corriger quand la cause est ordinaire —
+   * mot de passe, adresse du serveur. Elle ne sert à rien quand elle ne l'est
+   * pas : « Échec de la connexion sécurisée » a été affiché trois fois de suite
+   * sur deux ports différents sans jamais dire ce que la machine avait vu.
+   * Le texte d'origine est donc conservé à côté.
+   */
+  | { ok: false; message: string; detail?: string };
 
 export async function envoyer(courriel: {
   a: string;
@@ -224,8 +235,37 @@ export async function envoyer(courriel: {
     // Le message du serveur SMTP est remonté tel quel : « authentification
     // refusée » ou « nom d'hôte introuvable » disent à Kevin quoi corriger,
     // là où « échec de l'envoi » ne dit rien.
-    return { ok: false, message: messageLisible(erreur) };
+    return { ok: false, message: messageLisible(erreur), detail: detailTechnique(erreur) };
   }
+}
+
+/**
+ * Ce que la machine a vu, sans interprétation.
+ *
+ * Rassemble le code, l'étape SMTP où ça a cassé (`command` : `CONN`, `EHLO`,
+ * `STARTTLS`, `AUTH`…) et le texte d'origine. C'est `command` qui vaut le
+ * détour : il distingue une connexion qui n'aboutit pas d'une poignée de main
+ * qui échoue, là où le code seul laisse les deux sous `ESOCKET`.
+ */
+function detailTechnique(erreur: unknown): string {
+  const e = erreur as {
+    code?: string;
+    command?: string;
+    responseCode?: number;
+    message?: string;
+    cause?: { message?: string };
+  };
+
+  return [
+    e.code,
+    e.command ? `étape ${e.command}` : null,
+    e.responseCode ? `réponse ${e.responseCode}` : null,
+    e.message,
+    e.cause?.message && e.cause.message !== e.message ? `cause : ${e.cause.message}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+    .slice(0, 400);
 }
 
 function messageLisible(erreur: unknown): string {

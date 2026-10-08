@@ -136,7 +136,7 @@ async function notifier(id: number, d: Demande) {
 
   await requete('UPDATE messages SET envoi = ?, envoi_detail = ? WHERE id = ?', [
     resultat.ok ? 'envoye' : 'echec',
-    resultat.ok ? null : resultat.message,
+    resultat.ok ? null : [resultat.message, resultat.detail].filter(Boolean).join(' — '),
     id,
   ]);
 

@@ -287,9 +287,29 @@ export function ReglagesEmail({
         </p>
 
         {test.erreur ? (
-          <p className="bo-erreur" role="alert" style={{ marginTop: 14 }}>
-            {test.erreur}
-          </p>
+          <>
+            <p className="bo-erreur" role="alert" style={{ marginTop: 14 }}>
+              {test.erreur}
+            </p>
+            {/* Ce que le serveur a répondu, mot pour mot. Illisible pour
+                Kevin, et c'est assumé : il n'a pas à le lire, il a à pouvoir
+                le recopier à qui saura. Une phrase rassurante en français
+                n'aide personne quand la panne sort de l'ordinaire. */}
+            {test.detail ? (
+              <p
+                style={{
+                  marginTop: 8,
+                  fontFamily: 'ui-monospace, monospace',
+                  fontSize: 12,
+                  lineHeight: 1.5,
+                  opacity: 0.75,
+                  wordBreak: 'break-word',
+                }}
+              >
+                {test.detail}
+              </p>
+            ) : null}
+          </>
         ) : null}
         {test.succes ? (
           <p className={r.succes} role="status" style={{ marginTop: 14 }}>
