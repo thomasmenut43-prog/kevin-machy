@@ -14,6 +14,16 @@ import { chiffrer, dechiffrer } from './secret';
  */
 
 export type ReglagesSmtp = {
+  /**
+   * Par où sortent les messages.
+   *
+   * `api` passe par une requête HTTP chez un service d'envoi. `smtp` ouvre une
+   * connexion directe vers un serveur de courrier — ce que l'hébergement
+   * actuel ne permet pas. Voir `envoyerParApi` pour le détail.
+   */
+  methode: 'api' | 'smtp';
+  /** Clé du service d'envoi. Toujours chiffrée en base, jamais réaffichée. */
+  cleApi: string | null;
   serveur: string;
   port: number;
   chiffrement: 'tls' | 'starttls' | 'aucun';
@@ -32,6 +42,8 @@ export type ReglagesSmtp = {
 };
 
 export const SMTP_PAR_DEFAUT: ReglagesSmtp = {
+  methode: 'api',
+  cleApi: null,
   serveur: '',
   port: 465,
   chiffrement: 'tls',
@@ -54,7 +66,25 @@ export async function lireSmtp(): Promise<ReglagesSmtp> {
     'SELECT valeur FROM reglages WHERE cle = ?',
     [CLE],
   );
-  return { ...SMTP_PAR_DEFAUT, ...(jsonDeLaBase(l?.valeur) ?? {}) };
+  const enregistre = jsonDeLaBase(l?.valeur) ?? {};
+  const reglages = { ...SMTP_PAR_DEFAUT, ...enregistre };
+
+  /*
+   * Les réglages écrits avant le 8 octobre 2026 ne portent pas de méthode.
+   *
+   * Leur en imposer une casserait silencieusement les installations qui
+   * marchent : le docker-compose de développement envoie vers le Mailpit en
+   * `localhost:1025`, et basculer son chemin sans le lui dire lui couperait
+   * l'envoi sans qu'aucun réglage ait bougé à l'écran.
+   *
+   * On la déduit donc de ce qui est renseigné. Une clé l'emporte sur un
+   * serveur : on ne garde le SMTP que si c'est la seule chose configurée.
+   */
+  if (!enregistre.methode) {
+    reglages.methode = reglages.cleApi ? 'api' : reglages.serveur ? 'smtp' : 'api';
+  }
+
+  return reglages;
 }
 
 /**
@@ -64,14 +94,15 @@ export async function lireSmtp(): Promise<ReglagesSmtp> {
  * a un. Il se remplace, il ne se relit pas.
  */
 export async function lireSmtpAffichable() {
-  const { motDePasse, ...reste } = await lireSmtp();
+  const { motDePasse, cleApi, ...reste } = await lireSmtp();
+  const affichable = { ...reste, cleApiEnregistree: Boolean(cleApi) };
   return {
-    ...reste,
+    ...affichable,
     motDePasseEnregistre: Boolean(motDePasse),
     // Ce que le garde-fou refuserait aujourd'hui peut déjà être en base : il
     // est né après. La page le dit donc d'elle-même, sans attendre qu'on
     // enregistre pour découvrir que rien ne part.
-    problemes: verifierSmtp(reste),
+    problemes: verifierSmtp(affichable),
   };
 }
 
@@ -120,13 +151,38 @@ const domaineDe = (adresse: string) => adresse.split('@')[1]?.trim().toLowerCase
  * Ce n'est donc pas `localhost` qui est fautif en soi : c'est `localhost` sur
  * un Worker, qui n'est pas la machine qui tient la boîte.
  */
+export type ReglagesVerifiables = Omit<ReglagesSmtp, 'motDePasse' | 'cleApi'> & {
+  cleApiEnregistree: boolean;
+};
+
 export function verifierSmtp(
-  r: Omit<ReglagesSmtp, 'motDePasse'>,
+  r: ReglagesVerifiables,
   enLigne = process.env.NODE_ENV === 'production',
 ): string[] {
   if (!enLigne) return [];
 
   const problemes: string[] = [];
+
+  if (r.methode === 'api') {
+    if (!r.cleApiEnregistree) {
+      problemes.push('Aucune clé d’envoi enregistrée.');
+    }
+    if (!r.expediteurEmail.trim()) {
+      problemes.push('Aucune adresse d’expédition : le service d’envoi en exige une.');
+    }
+    for (const [libelle, adresse] of [
+      ['L’adresse d’expédition', r.expediteurEmail],
+      ['L’adresse de réponse', r.reponseEmail],
+      ['La boîte où recevoir les demandes', r.destinataire],
+    ] as const) {
+      const domaine = domaineDe(adresse);
+      if (domaine && DOMAINES_RESERVES.test(domaine)) {
+        problemes.push(`${libelle} est sur « ${domaine} », un domaine d’exemple : rien n’y arrive.`);
+      }
+    }
+    return problemes;
+  }
+
   const serveur = r.serveur.trim().toLowerCase();
 
   if (serveur && HOTES_LOCAUX.test(serveur)) {
@@ -154,7 +210,10 @@ export function verifierSmtp(
 }
 
 export async function ecrireSmtp(
-  reglages: Omit<ReglagesSmtp, 'motDePasse'> & { motDePasse?: string },
+  reglages: Omit<ReglagesSmtp, 'motDePasse' | 'cleApi'> & {
+    motDePasse?: string;
+    cleApi?: string;
+  },
 ) {
   const actuel = await lireSmtp();
 
@@ -165,7 +224,11 @@ export async function ecrireSmtp(
     ? chiffrer(reglages.motDePasse)
     : actuel.motDePasse;
 
-  await poserReglage(CLE, { ...reglages, motDePasse });
+  // Même règle pour la clé du service d'envoi : un champ vide veut dire
+  // « garde celle d'avant ». Elle ne se réaffiche pas davantage.
+  const cleApi = reglages.cleApi ? chiffrer(reglages.cleApi) : actuel.cleApi;
+
+  await poserReglage(CLE, { ...reglages, motDePasse, cleApi });
 }
 
 export async function effacerMotDePasseSmtp() {
@@ -216,6 +279,9 @@ export async function envoyer(courriel: {
   repondreA?: string;
 }): Promise<Resultat> {
   const r = await lireSmtp();
+
+  if (r.methode === 'api') return envoyerParApi(r, courriel);
+
   const envoyeur = transporteur(r);
 
   if (!envoyeur) {
@@ -237,6 +303,108 @@ export async function envoyer(courriel: {
     // là où « échec de l'envoi » ne dit rien.
     return { ok: false, message: messageLisible(erreur), detail: detailTechnique(erreur) };
   }
+}
+
+/**
+ * L'envoi par requête HTTP, et pourquoi il a remplacé le SMTP.
+ *
+ * Le site tourne sur un Worker Cloudflare. Or **toute l'infrastructure mail de
+ * Hostinger est derrière Cloudflare** : `smtp.hostinger.com`,
+ * `smtp.hostinger.fr` et les MX du domaine résolvent tous dans
+ * `172.64.0.0/13`, enregistré au nom de Cloudflare. Et un Worker refuse
+ * d'ouvrir une socket vers une adresse appartenant à Cloudflare.
+ *
+ * Mesuré le 8 octobre 2026 :
+ *
+ *     ESOCKET · étape CONN · proxy request failed,
+ *     cannot connect to the specified address
+ *
+ * sur 465 en TLS **puis** sur 587 en STARTTLS, alors que le même serveur
+ * répondait parfaitement depuis une machine ordinaire — TLS 1.3, dialogue
+ * complet jusqu'au 221. Le serveur n'était pas en cause : deux services
+ * Cloudflare refusaient de se parler, et aucun réglage ne corrige ça. Ni le
+ * port, ni le chiffrement, ni le mot de passe n'avaient d'importance.
+ *
+ * Une requête HTTP, elle, sort sans difficulté. D'où ce chemin.
+ *
+ * Le SMTP reste en place et reste utilisable : il redeviendra le bon choix le
+ * jour où la vitrine sera servie depuis Hostinger, où le serveur d'envoi est
+ * joignable sans passer par Cloudflare.
+ */
+const API_ENVOI = 'https://api.resend.com/emails';
+
+async function envoyerParApi(
+  r: ReglagesSmtp,
+  courriel: { a: string; objet: string; texte: string; repondreA?: string },
+): Promise<Resultat> {
+  const cle = r.cleApi ? dechiffrer(r.cleApi) : null;
+  if (!cle || !r.expediteurEmail) {
+    return { ok: false, message: 'Configuration e-mail incomplète. Voir Réglages → E-mails.' };
+  }
+
+  const repondre = courriel.repondreA || r.reponseEmail;
+
+  try {
+    const reponse = await fetch(API_ENVOI, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${cle}`, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        from: `"${r.expediteurNom.replace(/"/g, '')}" <${r.expediteurEmail}>`,
+        to: [courriel.a],
+        subject: courriel.objet,
+        text: courriel.texte,
+        ...(repondre ? { reply_to: repondre } : {}),
+      }),
+    });
+
+    if (reponse.ok) return { ok: true };
+
+    const brut = (await reponse.text()).slice(0, 400);
+    return {
+      ok: false,
+      message: messageApiLisible(reponse.status, brut),
+      detail: `HTTP ${reponse.status} · ${brut}`,
+    };
+  } catch (erreur) {
+    // Le réseau, pas le service : une coupure, un délai dépassé.
+    return {
+      ok: false,
+      message: 'Le service d’envoi n’a pas répondu. Réessayez dans un instant.',
+      detail: detailTechnique(erreur),
+    };
+  }
+}
+
+/**
+ * Traduire ce que le service d'envoi refuse.
+ *
+ * Deux cas valent d'être nommés, parce qu'ils se corrigent et que leur message
+ * d'origine est en anglais : la clé refusée, et le domaine d'expédition pas
+ * encore vérifié. Le reste est remonté tel quel — mieux vaut une phrase
+ * obscure que fausse.
+ */
+function messageApiLisible(statut: number, corps: string): string {
+  if (statut === 401 || statut === 403) {
+    return 'Clé d’envoi refusée. Vérifiez-la dans Réglages → E-mails.';
+  }
+  if (statut === 429) {
+    return 'Trop d’envois d’un coup. Réessayez dans un instant.';
+  }
+  if (/domain is not verified|not verified/i.test(corps)) {
+    return (
+      'Le domaine de l’adresse d’expédition n’est pas encore vérifié chez le ' +
+      'service d’envoi. Terminez la vérification, puis réessayez.'
+    );
+  }
+
+  try {
+    const j = JSON.parse(corps) as { message?: string; error?: { message?: string } };
+    const m = j.message ?? j.error?.message;
+    if (m) return m.slice(0, 240);
+  } catch {
+    // Pas du JSON : on retombe sur la phrase générique.
+  }
+  return `Le service d’envoi a refusé la demande (code ${statut}).`;
 }
 
 /**
