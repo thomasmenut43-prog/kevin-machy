@@ -10,6 +10,20 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
+	// Le temps processeur, requête par requête.
+	//
+	// Sans ça, le tableau de bord ne donne qu'une médiane pour tout le Worker —
+	// 109 ms le 8 octobre 2026, pour une limite de 10 ms sur le forfait gratuit.
+	// Utile pour savoir qu'il y a un problème, inutile pour savoir **quelle
+	// page** le cause : mesuré de l'extérieur, le temps de réponse mêle le
+	// calcul et l'attente de la base, et seul le calcul compte dans la limite.
+	//
+	// Gratuit à ce volume : la part offerte est de 200 000 événements par jour,
+	// le site en produit environ 6 700. Trois jours de conservation suffisent
+	// largement à l'enquête.
+	"observability": {
+		"enabled": true
+	},
 	"vars": {
 		// Les images restent chez Hostinger : cent gigaoctets déjà payés contre
 		// dix chez Cloudflare, servies par Apache sans passer par le Worker, et

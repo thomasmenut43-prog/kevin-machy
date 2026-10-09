@@ -97,3 +97,16 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Chaque déploiement change l'identifiant de compilation, donc la clé
+      # sous laquelle les pages sont gardées : tout le cache devient
+      # inatteignable d'un coup, et la première personne qui demande une page
+      # la fait reconstruire. Reconstruire coûte dix fois le budget accordé par
+      # le forfait gratuit, et la requête est tuée en route.
+      #
+      # Ce passage fait payer cette reconstruction au workflow plutôt qu'au
+      # visiteur suivant. Il ne corrige pas la cause — voir `docs/cloudflare.md`
+      # — et il ne fait jamais échouer la mise en ligne : un cache froid ralentit
+      # le site, il ne le casse pas.
+      - name: Chauffer le cache
+        run: node scripts/chauffer-cache.mjs
