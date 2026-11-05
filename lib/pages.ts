@@ -200,6 +200,17 @@ export async function publier(id: number, auteurId: number) {
   });
 }
 
+/**
+ * Jette le brouillon : l'éditeur rouvre la page telle qu'elle est en ligne.
+ *
+ * C'est aussi le geste que réclament les scripts de correction quand ils
+ * tombent sur une page en cours de modification (« publier ou abandonner le
+ * brouillon ») — il n'existait pas dans le BackOffice jusqu'ici.
+ */
+export async function abandonnerBrouillon(id: number) {
+  await requete('UPDATE pages SET brouillon = NULL, modifie_le = now() WHERE id = ?', [id]);
+}
+
 export async function depublier(id: number) {
   await requete(`UPDATE pages SET statut = 'brouillon', modifie_le = now() WHERE id = ?`, [id]);
 }
@@ -254,7 +265,7 @@ export async function listerVersions(pageId: number) {
        FROM versions v
        LEFT JOIN utilisateurs u ON u.id = v.auteur_id
       WHERE v.page_id = ?
-      ORDER BY v.cree_le DESC`,
+      ORDER BY v.cree_le DESC, v.id DESC`,
     [pageId],
   );
 }

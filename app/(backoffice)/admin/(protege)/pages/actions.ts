@@ -6,6 +6,7 @@ import { utilisateurConnecte } from '@/lib/auth';
 import { ecrireNavigation } from '@/lib/navigation';
 import { ecrirePied } from '@/lib/piedDePage';
 import {
+  abandonnerBrouillon,
   creerPage,
   depublier,
   enregistrerBrouillon,
@@ -204,4 +205,20 @@ export async function actionRestaurerVersion(
   }
   const page = await pageParId(pageId);
   return { sections: page?.brouillon ?? [] };
+}
+
+/**
+ * Abandonne le brouillon et rend les sections en ligne.
+ *
+ * La sortie de secours d'une restauration ratée : la version en ligne n'est
+ * dans aucune ligne de l'historique, qui ne garde que les états d'avant.
+ */
+export async function actionRevenirEnLigne(
+  pageId: number,
+): Promise<{ sections: unknown[] } | { erreur: string }> {
+  await exigerConnexion();
+  await abandonnerBrouillon(pageId);
+  const page = await pageParId(pageId);
+  if (!page) return { erreur: 'Page introuvable.' };
+  return { sections: page.sections };
 }
