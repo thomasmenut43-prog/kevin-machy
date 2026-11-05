@@ -21,6 +21,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
+import { avecHistorique } from './historique.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -85,10 +86,12 @@ for (const page of pages) {
 
   for (const c of trouvees) json = json.split(c.de).join(c.vers);
 
-  await connexion.query('UPDATE pages SET sections = ?, modifie_le = now() WHERE id = ?', [
-    json,
-    page.id,
-  ]);
+  await avecHistorique(connexion, page.id, () =>
+    connexion.query('UPDATE pages SET sections = ?, modifie_le = now() WHERE id = ?', [
+      json,
+      page.id,
+    ]),
+  );
   for (const c of trouvees) {
     console.log(`  corrigé        /${page.chemin}/  ${c.de}\n                 → ${c.vers}`);
   }

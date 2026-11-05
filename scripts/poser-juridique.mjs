@@ -23,6 +23,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
+import { avecHistorique } from './historique.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -112,11 +113,13 @@ for (const [chemin, { titre, sections }] of Object.entries(juridique)) {
   aFaire.push(`/${chemin}/ ${sections.length} sections`);
   if (verifier) continue;
 
-  await connexion.query(
-    `UPDATE pages SET titre = ?, sections = ?, brouillon = NULL, statut = 'publie',
-                      publie_le = now(), modifie_le = now()
-       WHERE id = ?`,
-    [titre, attendu, page.id],
+  await avecHistorique(connexion, page.id, () =>
+    connexion.query(
+      `UPDATE pages SET titre = ?, sections = ?, brouillon = NULL, statut = 'publie',
+                        publie_le = now(), modifie_le = now()
+         WHERE id = ?`,
+      [titre, attendu, page.id],
+    ),
   );
   console.log(`  posée          /${chemin}/  ${sections.length} sections`);
   posees += 1;

@@ -18,6 +18,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
+import { avecHistorique } from './historique.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -58,10 +59,12 @@ for (const p of pages) {
   // dans n'importe quel champ de n'importe quelle section, et parcourir
   // l'arbre pour la chercher coûterait plus cher que ça ne rapporte.
   const corrige = brut.replace(ANCIENNE, NOUVELLE);
-  await connexion.query('UPDATE pages SET sections = ?, modifie_le = now() WHERE id = ?', [
-    corrige,
-    p.id,
-  ]);
+  await avecHistorique(connexion, p.id, () =>
+    connexion.query('UPDATE pages SET sections = ?, modifie_le = now() WHERE id = ?', [
+      corrige,
+      p.id,
+    ]),
+  );
   console.log(`  corrigée  /${p.chemin}/  — ${n} occurrence(s)`);
   touchees += 1;
 }

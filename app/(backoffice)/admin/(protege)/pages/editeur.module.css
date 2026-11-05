@@ -910,6 +910,13 @@
   color: var(--bo-accent);
 }
 
+/* La version en ligne, au-dessus de l'historique : à part, parce qu'elle n'en
+   fait pas partie — c'est l'état présent, pas un état d'avant. */
+.enLigne {
+  margin-bottom: 14px;
+  border-left: 2px solid var(--bo-accent);
+}
+
 
 .modaleEtroite {
   width: min(520px, 100%);
