@@ -218,6 +218,7 @@ export function Versions({
   onRestaurer: (sections: Section[]) => void;
 }) {
   const [versions, setVersions] = useState<Version[] | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
 
   useEffect(() => {
@@ -242,6 +243,12 @@ export function Versions({
         brouillon sans rien remettre en ligne.
       </p>
 
+      {erreur ? (
+        <p className="bo-erreur" role="alert">
+          {erreur}
+        </p>
+      ) : null}
+
       <ol className={e.versions}>
         {versions.map((v) => (
           <li key={v.id}>
@@ -254,7 +261,12 @@ export function Versions({
               disabled={enCours}
               onClick={() =>
                 demarrer(async () => {
+                  setErreur(null);
                   const r = await actionRestaurerVersion(pageId, v.id);
+                  if ('erreur' in r) {
+                    setErreur(r.erreur);
+                    return;
+                  }
                   onRestaurer(r.sections as Section[]);
                 })
               }

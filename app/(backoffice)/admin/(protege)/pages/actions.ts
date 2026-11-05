@@ -189,9 +189,19 @@ export async function actionListerVersions(pageId: number) {
  * regarde, et décide. Restaurer d'un clic sur le site en ligne serait le
  * meilleur moyen de remplacer une erreur par une autre.
  */
-export async function actionRestaurerVersion(pageId: number, versionId: number) {
+export async function actionRestaurerVersion(
+  pageId: number,
+  versionId: number,
+): Promise<{ sections: unknown[] } | { erreur: string }> {
   await exigerConnexion();
-  await restaurerVersion(pageId, versionId);
+  try {
+    await restaurerVersion(pageId, versionId);
+  } catch (erreur) {
+    // Le message est rendu, pas levé : en production Next remplace le texte
+    // d'une erreur levée par un message générique, et Kevin ne saurait pas
+    // que sa page, elle, est restée intacte.
+    return { erreur: erreur instanceof Error ? erreur.message : 'La restauration a échoué.' };
+  }
   const page = await pageParId(pageId);
   return { sections: page?.brouillon ?? [] };
 }
