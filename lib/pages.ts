@@ -162,9 +162,13 @@ export async function publier(id: number, auteurId: number) {
 
     // On archive l'état qui part, pas celui qui arrive : revenir en arrière
     // doit ramener ce qui était en ligne avant cette publication.
+    //
+    // La colonne revient en texte (voir `jsonDeLaBase`). La repasser telle
+    // quelle dans `JSON.stringify` rangeait un texte de texte : c'est ce qui a
+    // rendu les versions illisibles à la restauration.
     await q(
       'INSERT INTO versions (page_id, titre, sections, auteur_id) VALUES (?, ?, ?, ?)',
-      [id, avant.titre, JSON.stringify(avant.sections ?? []), auteurId],
+      [id, avant.titre, JSON.stringify(jsonDeLaBase(avant.sections) ?? []), auteurId],
     );
 
     await q(
@@ -194,6 +198,17 @@ export async function publier(id: number, auteurId: number) {
       [id, id],
     );
   });
+}
+
+/**
+ * Jette le brouillon : l'éditeur rouvre la page telle qu'elle est en ligne.
+ *
+ * C'est aussi le geste que réclament les scripts de correction quand ils
+ * tombent sur une page en cours de modification (« publier ou abandonner le
+ * brouillon ») — il n'existait pas dans le BackOffice jusqu'ici.
+ */
+export async function abandonnerBrouillon(id: number) {
+  await requete('UPDATE pages SET brouillon = NULL, modifie_le = now() WHERE id = ?', [id]);
 }
 
 export async function depublier(id: number) {
@@ -250,19 +265,55 @@ export async function listerVersions(pageId: number) {
        FROM versions v
        LEFT JOIN utilisateurs u ON u.id = v.auteur_id
       WHERE v.page_id = ?
-      ORDER BY v.cree_le DESC`,
+      ORDER BY v.cree_le DESC, v.id DESC`,
     [pageId],
   );
 }
 
-/** Remet une version d'avant dans le brouillon, sans rien publier. */
+/**
+ * Remet une version d'avant dans le brouillon, sans rien publier.
+ *
+ * Constaté le 5 novembre 2026 sur la page du Studio de l'Iris : restaurer
+ * vidait le brouillon. La colonne revenait en texte, `nettoyerSections` n'y
+ * voyait pas de tableau et rendait `[]` — enregistré sans un mot, et l'éditeur
+ * montrait une page blanche. Le site en ligne, lui, n'avait pas bougé.
+ *
+ * Deux règles depuis : on décode, y compris les versions encodées deux fois
+ * par l'ancien `publier()`, et une version qui contenait des sections ne
+ * devient **jamais** un brouillon vide. Dans le doute, on refuse et on ne
+ * touche à rien.
+ */
 export async function restaurerVersion(pageId: number, versionId: number) {
-  const v = await ligne<{ sections: Section[] }>(
+  const v = await ligne<{ sections: unknown }>(
     'SELECT sections FROM versions WHERE id = ? AND page_id = ?',
     [versionId, pageId],
   );
   if (!v) throw new Error('Version introuvable.');
-  await enregistrerBrouillon(pageId, v.sections);
+
+  const brutes = sectionsDeLaVersion(v.sections);
+  const sections = nettoyerSections(brutes);
+  if (brutes.length > 0 && sections.length === 0) {
+    throw new Error('Cette version ne se relit pas. Rien n’a été modifié.');
+  }
+
+  await enregistrerBrouillon(pageId, sections);
+}
+
+/**
+ * Déballe la colonne jusqu'à trouver un tableau.
+ *
+ * Les versions archivées en ligne avant le correctif sont du JSON dont le
+ * contenu est lui-même du JSON : un tour de décodage ne suffit pas. Trois
+ * tours au plus — au-delà, ce n'est plus un double encodage, c'est autre chose.
+ */
+function sectionsDeLaVersion(brut: unknown): unknown[] {
+  let valeur: unknown = brut;
+  for (let tour = 0; tour < 3 && !Array.isArray(valeur); tour++) {
+    if (typeof valeur !== 'string' && !(valeur instanceof Uint8Array)) break;
+    valeur = jsonDeLaBase(valeur);
+  }
+  if (!Array.isArray(valeur)) throw new Error('Cette version ne se relit pas. Rien n’a été modifié.');
+  return valeur;
 }
 
 // ———————————————————————————— Validation ————————————————————————————

@@ -32,6 +32,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
+import { avecHistorique } from './historique.mjs';
 
 const racine = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -147,12 +148,14 @@ for (const [chemin, p] of Object.entries(resolues)) {
   aFaire.push(`/${chemin}/ à mettre à jour — ${p.sections.length} sections`);
   if (verifier) continue;
 
-  await connexion.query(
-    `UPDATE pages SET titre = ?, sections = ?, brouillon = NULL, statut = 'publie',
-                      meta_titre = ?, meta_description = ?, meta_image = ?,
-                      publie_le = now(), modifie_le = now()
-       WHERE id = ?`,
-    [p.titre, attendu, p.metaTitre ?? null, p.metaDescription ?? null, metaImage, page.id],
+  await avecHistorique(connexion, page.id, () =>
+    connexion.query(
+      `UPDATE pages SET titre = ?, sections = ?, brouillon = NULL, statut = 'publie',
+                        meta_titre = ?, meta_description = ?, meta_image = ?,
+                        publie_le = now(), modifie_le = now()
+         WHERE id = ?`,
+      [p.titre, attendu, p.metaTitre ?? null, p.metaDescription ?? null, metaImage, page.id],
+    ),
   );
   console.log(`  posée          /${chemin}/  ${p.sections.length} sections`);
   posees += 1;

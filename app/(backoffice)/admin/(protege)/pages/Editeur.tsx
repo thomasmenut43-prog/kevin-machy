@@ -370,6 +370,15 @@ export function Editeur({
                 setChoisie(null);
                 setVue('sections');
               }}
+              onRevenirEnLigne={(enLigne) => {
+                // Pas `changer` : le brouillon vient d'être jeté côté serveur,
+                // il ne faut pas le recréer à la prochaine sauvegarde au repos.
+                setSections(enLigne);
+                setModifie(false);
+                setEtat('repos');
+                setChoisie(null);
+                setVue('sections');
+              }}
             />
           ) : (
             <ListeSections

@@ -16,6 +16,7 @@
  *   npm run galeries -- --verifier  dit ce qui manque, sans rien écrire
  */
 import mysql from 'mysql2/promise';
+import { avecHistorique } from './historique.mjs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -127,10 +128,12 @@ for (const { chemin, emplacements } of AJOUTS) {
   }
 
   if (touchee && !verifier) {
-    await connexion.query('UPDATE pages SET sections = ? WHERE id = ?', [
-      JSON.stringify(sections),
-      page.id,
-    ]);
+    await avecHistorique(connexion, page.id, () =>
+      connexion.query('UPDATE pages SET sections = ? WHERE id = ?', [
+        JSON.stringify(sections),
+        page.id,
+      ]),
+    );
     console.log(`  /${chemin} : ${galerie.valeurs.images.length} images au total`);
   }
 }

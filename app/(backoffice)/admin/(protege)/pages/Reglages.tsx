@@ -9,6 +9,7 @@ import {
   actionListerVersions,
   actionReglagesPage,
   actionRestaurerVersion,
+  actionRevenirEnLigne,
   actionSupprimerPage,
   type EtatPage,
 } from './actions';
@@ -206,18 +207,27 @@ type Version = { id: number; titre: string; auteur: string | null; date: string 
 /**
  * L'historique des publications.
  *
- * Chaque ligne est l'état du site **avant** une publication. Restaurer ne
- * remet rien en ligne : cela ramène l'ancienne version dans le brouillon, où
- * Kevin la regarde avant de décider.
+ * Chaque ligne est l'état du site **avant** une publication, ou avant une mise
+ * à jour faite par script. Restaurer ne remet rien en ligne : cela ramène
+ * l'ancienne version dans le brouillon, où Kevin la regarde avant de décider.
+ *
+ * Et s'il se trompe de ligne, il doit pouvoir revenir à ce que voient les
+ * visiteurs. Ce chemin manquait : le 5 novembre 2026, une restauration a vidé
+ * la page du Studio de l'Iris, et rien dans l'éditeur ne permettait de
+ * retrouver la page en ligne — elle n'est dans aucune ligne de l'historique,
+ * puisque chaque ligne est l'état d'**avant**.
  */
 export function Versions({
   pageId,
   onRestaurer,
+  onRevenirEnLigne,
 }: {
   pageId: number;
   onRestaurer: (sections: Section[]) => void;
+  onRevenirEnLigne: (sections: Section[]) => void;
 }) {
   const [versions, setVersions] = useState<Version[] | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
 
   useEffect(() => {
@@ -226,35 +236,95 @@ export function Versions({
 
   if (versions === null) return <p className={e.aide}>Chargement…</p>;
 
+  // Toujours là, même sans historique : c'est la sortie de secours quand une
+  // restauration ne donne pas ce qu'on attendait.
+  const enLigne = (
+    <ul className={`${e.versions} ${e.enLigne}`}>
+      <li>
+        <div>
+          <strong>Version en ligne</strong>
+          <span>Ce que voient les visiteurs en ce moment</span>
+        </div>
+        <button
+          type="button"
+          disabled={enCours}
+          onClick={() => {
+            if (
+              !window.confirm(
+                'Le brouillon en cours sera abandonné, et l’éditeur rouvrira la page telle que les visiteurs la voient. Continuer ?',
+              )
+            ) {
+              return;
+            }
+            demarrer(async () => {
+              setErreur(null);
+              const r = await actionRevenirEnLigne(pageId);
+              if ('erreur' in r) {
+                setErreur(r.erreur);
+                return;
+              }
+              onRevenirEnLigne(r.sections as Section[]);
+            });
+          }}
+        >
+          Y revenir
+        </button>
+      </li>
+    </ul>
+  );
+
+  const alerte = erreur ? (
+    <p className="bo-erreur" role="alert">
+      {erreur}
+    </p>
+  ) : null;
+
   if (!versions.length) {
     return (
-      <p className={e.aide}>
-        Aucune version pour l’instant. L’historique se remplit à chaque publication : il garde
-        l’état du site juste avant, pour permettre d’y revenir.
-      </p>
+      <>
+        <p className={e.aide}>
+          Aucune version pour l’instant. L’historique se remplit à chaque publication : il garde
+          l’état du site juste avant, pour permettre d’y revenir.
+        </p>
+        {alerte}
+        {enLigne}
+      </>
     );
   }
 
   return (
     <>
       <p className={e.aide}>
-        Chaque ligne est l’état du site avant une publication. Restaurer la ramène dans le
-        brouillon sans rien remettre en ligne.
+        Chaque ligne est l’état de la page juste avant une publication, ou avant une mise à
+        jour technique. Restaurer la ramène dans le brouillon sans rien remettre en ligne :
+        regardez l’aperçu avant d’enregistrer — une ligne ancienne peut ramener la page loin en
+        arrière. En cas d’erreur, « Y revenir » rouvre la version en ligne.
       </p>
+
+      {alerte}
+      {enLigne}
 
       <ol className={e.versions}>
         {versions.map((v) => (
           <li key={v.id}>
             <div>
               <strong>{dateLisible(v.date)}</strong>
-              <span>{v.auteur ?? 'Auteur supprimé'}</span>
+              {/* Sans auteur : un script l'a archivée avant de réécrire la
+                  page — ou son auteur a été supprimé depuis. La base ne
+                  distingue pas les deux, l'écran ne prétend donc pas le faire. */}
+              <span>{v.auteur ?? 'Mise à jour technique ou compte supprimé'}</span>
             </div>
             <button
               type="button"
               disabled={enCours}
               onClick={() =>
                 demarrer(async () => {
+                  setErreur(null);
                   const r = await actionRestaurerVersion(pageId, v.id);
+                  if ('erreur' in r) {
+                    setErreur(r.erreur);
+                    return;
+                  }
                   onRestaurer(r.sections as Section[]);
                 })
               }

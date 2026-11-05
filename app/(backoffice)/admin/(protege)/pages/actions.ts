@@ -6,6 +6,7 @@ import { utilisateurConnecte } from '@/lib/auth';
 import { ecrireNavigation } from '@/lib/navigation';
 import { ecrirePied } from '@/lib/piedDePage';
 import {
+  abandonnerBrouillon,
   creerPage,
   depublier,
   enregistrerBrouillon,
@@ -189,9 +190,35 @@ export async function actionListerVersions(pageId: number) {
  * regarde, et décide. Restaurer d'un clic sur le site en ligne serait le
  * meilleur moyen de remplacer une erreur par une autre.
  */
-export async function actionRestaurerVersion(pageId: number, versionId: number) {
+export async function actionRestaurerVersion(
+  pageId: number,
+  versionId: number,
+): Promise<{ sections: unknown[] } | { erreur: string }> {
   await exigerConnexion();
-  await restaurerVersion(pageId, versionId);
+  try {
+    await restaurerVersion(pageId, versionId);
+  } catch (erreur) {
+    // Le message est rendu, pas levé : en production Next remplace le texte
+    // d'une erreur levée par un message générique, et Kevin ne saurait pas
+    // que sa page, elle, est restée intacte.
+    return { erreur: erreur instanceof Error ? erreur.message : 'La restauration a échoué.' };
+  }
   const page = await pageParId(pageId);
   return { sections: page?.brouillon ?? [] };
+}
+
+/**
+ * Abandonne le brouillon et rend les sections en ligne.
+ *
+ * La sortie de secours d'une restauration ratée : la version en ligne n'est
+ * dans aucune ligne de l'historique, qui ne garde que les états d'avant.
+ */
+export async function actionRevenirEnLigne(
+  pageId: number,
+): Promise<{ sections: unknown[] } | { erreur: string }> {
+  await exigerConnexion();
+  await abandonnerBrouillon(pageId);
+  const page = await pageParId(pageId);
+  if (!page) return { erreur: 'Page introuvable.' };
+  return { sections: page.sections };
 }
