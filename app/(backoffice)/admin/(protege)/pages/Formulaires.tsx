@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { actionCreerPage, type EtatPage } from './actions';
+import { actionCreerPage, actionDupliquerPage, type EtatPage } from './actions';
 
 const VIDE: EtatPage = {};
 
@@ -25,17 +25,44 @@ function enAdresse(titre: string) {
     .replace(/^-+|-+$/g, '');
 }
 
-export function FormulaireNouvellePage() {
-  const [etat, action] = useActionState(actionCreerPage, VIDE);
-  const [titre, setTitre] = useState(etat.saisi?.titre ?? '');
-  const [chemin, setChemin] = useState(etat.saisi?.chemin ?? '');
-  const [cheminTouche, setCheminTouche] = useState(false);
+/** La page à dupliquer, telle que Kevin la voit dans l'éditeur. */
+export type SourceCopie = { id: number; titre: string; chemin: string; sections: unknown[] };
+
+/**
+ * Créer une page, vide ou copiée d'une autre.
+ *
+ * Un seul formulaire pour les deux gestes : ils demandent la même chose — un
+ * nom et une adresse libre — et doivent refuser les mêmes erreurs.
+ */
+export function FormulaireNouvellePage({ source }: { source?: SourceCopie } = {}) {
+  const [etat, action] = useActionState(source ? actionDupliquerPage : actionCreerPage, VIDE);
+  const [titre, setTitre] = useState(
+    etat.saisi?.titre ?? (source ? `${source.titre} (copie)` : ''),
+  );
+  const [chemin, setChemin] = useState(
+    etat.saisi?.chemin ?? (source ? `${source.chemin || 'accueil'}-copie` : ''),
+  );
+  // Une copie arrive avec une adresse proposée : la réécrire au fil du nom
+  // effacerait celle-ci dès la première lettre.
+  const [cheminTouche, setCheminTouche] = useState(Boolean(source));
 
   return (
     <form className="bo-form bo-encadre" action={action}>
       <h2 className="bo-sous-titre" style={{ color: 'var(--bo-texte)' }}>
-        Nouvelle page
+        {source ? `Dupliquer « ${source.titre} »` : 'Nouvelle page'}
       </h2>
+
+      {source ? (
+        <>
+          <input type="hidden" name="source" value={source.id} />
+          <input type="hidden" name="sections" value={JSON.stringify(source.sections)} />
+          <p className="bo-aide">
+            La copie reprend toutes les sections, telles qu’elles sont dans l’éditeur. Elle n’est
+            pas en ligne : elle le sera au premier « Enregistrer ». Le titre et la description
+            pour Google ne sont pas repris — à écrire dans ses réglages.
+          </p>
+        </>
+      ) : null}
 
       {etat.erreur ? (
         <p className="bo-erreur" role="alert">
@@ -78,7 +105,7 @@ export function FormulaireNouvellePage() {
         </p>
       </div>
 
-      <Bouton libelle="Créer la page" />
+      <Bouton libelle={source ? 'Créer la copie' : 'Créer la page'} />
     </form>
   );
 }

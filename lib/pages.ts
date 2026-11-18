@@ -141,6 +141,39 @@ export async function creerPage(donnees: { titre: string; chemin: string }) {
 }
 
 /**
+ * Crée une page à partir d'une autre.
+ *
+ * Les sections copiées sont celles que Kevin a sous les yeux dans l'éditeur,
+ * brouillon compris — c'est ce qu'il pense dupliquer. La copie naît **hors
+ * ligne** : elle n'apparaît sur le site qu'au premier « Enregistrer ».
+ *
+ * L'image de partage et le réglage d'indexation suivent. Le titre et la
+ * description pour les moteurs, non : deux pages qui se présentent à Google
+ * avec les mêmes mots se font concurrence, et la copie est faite pour être
+ * réécrite.
+ */
+export async function dupliquerPage(
+  sourceId: number,
+  donnees: { titre: string; chemin: string; sections: Section[] },
+) {
+  const source = await pageParId(sourceId);
+  if (!source) throw new Error('Page à dupliquer introuvable.');
+
+  const { insertId } = await ecrire(
+    `INSERT INTO pages (titre, chemin, sections, statut, meta_image, hors_indexation)
+     VALUES (?, ?, ?, 'brouillon', ?, ?)`,
+    [
+      donnees.titre.trim(),
+      normaliserChemin(donnees.chemin),
+      JSON.stringify(nettoyerSections(donnees.sections)),
+      source.metaImage,
+      source.horsIndexation ? 1 : 0,
+    ],
+  );
+  return insertId;
+}
+
+/**
  * Enregistre le brouillon. Le site en ligne ne bouge pas : c'est toute la
  * différence entre travailler et publier.
  */

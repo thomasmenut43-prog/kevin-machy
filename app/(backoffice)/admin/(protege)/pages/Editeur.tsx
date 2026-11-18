@@ -22,7 +22,7 @@ import {
   actionSupprimerPage,
 } from './actions';
 import { Champs } from './Champs';
-import { FormulaireNouvellePage } from './Formulaires';
+import { FormulaireNouvellePage, type SourceCopie } from './Formulaires';
 import { Reglages, Versions } from './Reglages';
 import { Dupliquer, Ordinateur, Poignee, Poubelle, Telephone } from './Icones';
 import e from './editeur.module.css';
@@ -75,6 +75,7 @@ export function Editeur({
   const [format, setFormat] = useState<'ordinateur' | 'mobile'>('ordinateur');
   const [nouvelle, setNouvelle] = useState(false);
   const [aSupprimer, setASupprimer] = useState(false);
+  const [aDupliquer, setADupliquer] = useState(false);
   // Le nom de la page effacée, rapporté depuis l'écran précédent.
   const [supprimee, setSupprimee] = useState<string | null>(null);
   const [sections, setSections] = useState<Section[]>(page.brouillon ?? page.sections);
@@ -288,6 +289,40 @@ export function Editeur({
             </select>
             <p className={e.adresse}>{page.chemin ? `/${page.chemin}/` : '/ — page d’accueil'}</p>
 
+            {/* Toutes les pages se dupliquent, l'accueil et les pages légales
+                compris : la copie, elle, n'a rien de système. */}
+            <button
+              type="button"
+              className={`${e.supprimerPage} ${e.dupliquerPage}`}
+              onClick={async () => {
+                // La copie quitte cette page : l'en-tête et le pied non publiés
+                // seraient perdus, comme en changeant de page.
+                if (
+                  (navModifiee || piedModifie) &&
+                  !window.confirm(
+                    'Vos réglages d’en-tête ou de pied de page ne sont pas encore en ligne. Dupliquer la page les perdra. Continuer ?',
+                  )
+                ) {
+                  return;
+                }
+                // La sauvegarde au repos a peut-être une frappe de retard : on
+                // la devance, pour que la page d'origine garde tout.
+                if (modifie) {
+                  try {
+                    await actionEnregistrerBrouillon(page.id, sections);
+                    setEtat('enregistre');
+                  } catch {
+                    setEtat('erreur');
+                  }
+                }
+                setADupliquer(true);
+              }}
+              title="Créer une nouvelle page à partir de celle-ci"
+            >
+              <Dupliquer />
+              <span>Dupliquer cette page</span>
+            </button>
+
             {/* Supprimer se fait d'ici, à côté du nom de la page : c'est là
                 qu'on la cherche, pas au fond d'un panneau de réglages.
                 L'accueil n'a pas ce bouton — le site s'y ouvre. */}
@@ -479,30 +514,38 @@ export function Editeur({
       ) : null}
 
       {nouvelle ? <NouvellePage onFermer={() => setNouvelle(false)} /> : null}
+      {aDupliquer ? (
+        <NouvellePage
+          source={{ id: page.id, titre: page.titre, chemin: page.chemin, sections }}
+          onFermer={() => setADupliquer(false)}
+        />
+      ) : null}
     </div>
   );
 }
 
 // ————————————————————————————— Sous-vues —————————————————————————————
 
-function NouvellePage({ onFermer }: { onFermer: () => void }) {
+function NouvellePage({ onFermer, source }: { onFermer: () => void; source?: SourceCopie }) {
   useEffect(() => {
     const echap = (ev: KeyboardEvent) => ev.key === 'Escape' && onFermer();
     window.addEventListener('keydown', echap);
     return () => window.removeEventListener('keydown', echap);
   }, [onFermer]);
 
+  const intitule = source ? 'Dupliquer la page' : 'Nouvelle page';
+
   return (
-    <div className={e.voile} role="dialog" aria-modal="true" aria-label="Nouvelle page">
+    <div className={e.voile} role="dialog" aria-modal="true" aria-label={intitule}>
       <div className={e.modaleEtroite}>
         <div className={e.modaleTete}>
-          <h2>Nouvelle page</h2>
+          <h2>{intitule}</h2>
           <button type="button" onClick={onFermer} aria-label="Fermer">
             ✕
           </button>
         </div>
         <div className={e.modaleCorps}>
-          <FormulaireNouvellePage />
+          <FormulaireNouvellePage source={source} />
         </div>
       </div>
     </div>

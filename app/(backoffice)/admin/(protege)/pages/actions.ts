@@ -3,12 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { utilisateurConnecte } from '@/lib/auth';
+import { estDoublon } from '@/lib/bdd';
 import { ecrireNavigation } from '@/lib/navigation';
 import { ecrirePied } from '@/lib/piedDePage';
 import {
   abandonnerBrouillon,
   creerPage,
   depublier,
+  dupliquerPage,
   enregistrerBrouillon,
   majReglages,
   normaliserChemin,
@@ -52,14 +54,57 @@ export async function actionCreerPage(_p: EtatPage, donnees: FormData): Promise<
   try {
     page = await creerPage({ titre, chemin });
   } catch (erreur) {
-    // 23505 : contrainte d'unicité. Deux pages ne peuvent pas partager une adresse.
-    if ((erreur as { code?: string }).code === '23505') {
+    // Contrainte d'unicité : deux pages ne peuvent pas partager une adresse.
+    // Le test visait le code de PostgreSQL (23505) depuis le passage à
+    // MariaDB : le doublon remontait en erreur brute au lieu de ce message.
+    if (estDoublon(erreur)) {
       return { erreur: 'Une page occupe déjà cette adresse.', saisi };
     }
     throw erreur;
   }
 
   redirect(`/admin/pages/${page!.id}/`);
+}
+
+/**
+ * Duplique la page ouverte sous un autre nom et une autre adresse.
+ *
+ * Les sections viennent du formulaire, pas de la base : Kevin duplique ce qu'il
+ * voit, y compris une modification que la sauvegarde au repos n'a pas encore
+ * emportée. Elles passent par `nettoyerSections` comme tout ce qui arrive du
+ * navigateur.
+ */
+export async function actionDupliquerPage(_p: EtatPage, donnees: FormData): Promise<EtatPage> {
+  await exigerConnexion();
+
+  const sourceId = Number(donnees.get('source'));
+  const titre = String(donnees.get('titre') ?? '').trim();
+  const chemin = normaliserChemin(String(donnees.get('chemin') ?? ''));
+  const saisi = { titre, chemin };
+
+  if (!Number.isInteger(sourceId) || sourceId <= 0) return { erreur: 'Page à dupliquer inconnue.', saisi };
+  if (!titre) return { erreur: 'Donnez un nom à la copie.', saisi };
+
+  const souci = verifierChemin(chemin);
+  if (souci) return { erreur: souci, saisi };
+
+  let sections: unknown;
+  try {
+    sections = JSON.parse(String(donnees.get('sections') ?? '[]'));
+  } catch {
+    return { erreur: 'Le contenu de la page n’a pas pu être lu. Rien n’a été créé.', saisi };
+  }
+
+  let id;
+  try {
+    id = await dupliquerPage(sourceId, { titre, chemin, sections: nettoyerSections(sections) });
+  } catch (erreur) {
+    if (estDoublon(erreur)) return { erreur: 'Une page occupe déjà cette adresse.', saisi };
+    throw erreur;
+  }
+
+  revalidatePath('/admin/pages');
+  redirect(`/admin/pages/${id}/`);
 }
 
 export async function actionEnregistrerBrouillon(id: number, sections: unknown) {
@@ -121,7 +166,7 @@ export async function actionReglagesPage(_p: EtatPage, donnees: FormData): Promi
       horsIndexation: donnees.get('horsIndexation') === 'on',
     });
   } catch (erreur) {
-    if ((erreur as { code?: string }).code === '23505') {
+    if (estDoublon(erreur)) {
       return { erreur: 'Une page occupe déjà cette adresse.', saisi };
     }
     throw erreur;

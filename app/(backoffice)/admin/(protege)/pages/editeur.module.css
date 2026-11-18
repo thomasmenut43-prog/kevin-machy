@@ -964,6 +964,13 @@
   background: var(--bo-danger-doux);
 }
 
+/* Posée avec `supprimerPage`, dont elle reprend l'allure, sans la couleur
+   d'alerte : dupliquer ne détruit rien. Déclarée après, elle l'emporte. */
+.dupliquerPage:hover {
+  color: var(--bo-accent);
+  background: var(--bo-accent-doux);
+}
+
 .confirmer {
   display: grid;
   gap: 10px;
