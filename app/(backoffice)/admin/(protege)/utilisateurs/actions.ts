@@ -15,6 +15,7 @@ import {
   utilisateurConnecte,
 } from '@/lib/auth';
 import { COTES_AVATAR, effacerAvatar, enregistrerAvatar } from '@/lib/medias';
+import { estDoublon } from '@/lib/bdd';
 
 async function exigerConnexion() {
   const utilisateur = await utilisateurConnecte();
@@ -50,7 +51,7 @@ export async function actionCreerCompte(_p: EtatCompte, donnees: FormData): Prom
   try {
     await creerCompte({ nom, email, motDePasse, role });
   } catch (erreur) {
-    if ((erreur as { code?: string }).code === '23505') {
+    if (estDoublon(erreur)) {
       return { erreur: 'Un compte utilise déjà cette adresse.', saisi };
     }
     throw erreur;
@@ -180,7 +181,7 @@ export async function actionMonEmail(_p: EtatCompte, donnees: FormData): Promise
   try {
     await majEmail(moi.id, email);
   } catch (erreur) {
-    if ((erreur as { code?: string }).code === '23505') {
+    if (estDoublon(erreur)) {
       return { erreur: 'Un compte utilise déjà cette adresse.', saisi };
     }
     throw erreur;
