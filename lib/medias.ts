@@ -349,7 +349,7 @@ export async function renommerDossier(id: number, nom: string) {
     await requete('UPDATE dossiers_medias SET nom = ? WHERE id = ?', [propre, id]);
     return {};
   } catch (erreur) {
-    if ((erreur as { code?: string }).code === '23505') {
+    if (estDoublon(erreur)) {
       return { erreur: 'Un dossier porte déjà ce nom.' };
     }
     throw erreur;
