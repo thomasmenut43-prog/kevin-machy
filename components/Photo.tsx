@@ -43,6 +43,8 @@ type PhotoProps = {
   className?: string;
   /** Ratio d'affichage si le cadre diffère du ratio de l'image encodée. */
   ratio?: number;
+  /** Point gardé visible quand le cadre rogne l'image (`object-position`). Voir lib/cadrage.ts. */
+  position?: string;
 };
 
 function srcSet(rec: ImageRecord, ext: string) {
@@ -53,7 +55,7 @@ function srcSet(rec: ImageRecord, ext: string) {
  * Sert une image pré-encodée : AVIF, repli WebP, repli JPEG.
  * Dimensions explicites pour éviter tout décalage de mise en page.
  */
-export function Photo({ name, alt, sizes, priority = false, className, ratio }: PhotoProps) {
+export function Photo({ name, alt, sizes, priority = false, className, ratio, position }: PhotoProps) {
   const rec: ImageRecord = IMAGES[name];
   const cadre = ratio ?? rec.ratio;
 
@@ -89,6 +91,7 @@ export function Photo({ name, alt, sizes, priority = false, className, ratio }: 
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}
         decoding={priority ? 'sync' : 'async'}
+        style={position ? { objectPosition: position } : undefined}
       />
     </picture>
   );
@@ -103,11 +106,16 @@ export function PhotoPleinEcran({
   tall,
   alt,
   priority = false,
+  positionLarge,
+  positionEtroite,
 }: {
   wide: ImageName;
   tall: ImageName;
   alt: string;
   priority?: boolean;
+  /** Points de cadrage, un par image : l'écran change d'image sous 768 px. */
+  positionLarge?: string;
+  positionEtroite?: string;
 }) {
   const large: ImageRecord = IMAGES[wide];
   const haut: ImageRecord = IMAGES[tall];
@@ -155,6 +163,17 @@ export function PhotoPleinEcran({
         loading={priority ? 'eager' : 'lazy'}
         fetchPriority={priority ? 'high' : undefined}
         decoding={priority ? 'sync' : 'async'}
+        // Une seule balise pour deux images : le point de chacune passe par
+        // une variable, que la feuille de style applique selon l'écran.
+        {...(positionLarge || positionEtroite
+          ? {
+              'data-cadrage': '',
+              style: {
+                '--cadrage-large': positionLarge ?? '50% 50%',
+                '--cadrage-etroit': positionEtroite ?? positionLarge ?? '50% 50%',
+              } as React.CSSProperties,
+            }
+          : {})}
         />
       </picture>
     </>

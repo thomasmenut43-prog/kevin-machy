@@ -9,7 +9,8 @@ import { BarreIris } from '@/components/BarreIris';
 import { styleApparence, styleSection, type Apparence, type ReglagesSection } from '@/lib/apparence';
 import type { Entreprise, Media, Section } from '@/lib/modeles';
 import { Boutons } from './Boutons';
-import { Image, ImagePleinEcran } from './Image';
+import { cleCadrage, positionCss } from '@/lib/cadrage';
+import { Image, ImagePleinEcran, type MediaPlace } from './Image';
 import { TexteRiche } from './TexteRiche';
 import s from './RenduSections.module.css';
 import p from '@/styles/pages.module.css';
@@ -116,13 +117,23 @@ function Enveloppe({
 
 function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
   const v = section.valeurs as Valeurs;
-  const img = (id?: number) => (id ? (ctx.medias.get(id) ?? null) : null);
+  // L'image d'un champ, avec le point de cadrage posé à côté d'elle dans
+  // l'éditeur (voir lib/cadrage.ts). On passe l'objet entier plutôt que l'id :
+  // le cadrage vit sous un autre nom, et l'oublier à un seul endroit suffirait
+  // à rogner un visage.
+  const img = (source: Valeurs | undefined, champ = 'image'): MediaPlace | null => {
+    const id = source?.[champ];
+    const media = id ? (ctx.medias.get(id) ?? null) : null;
+    if (!media) return null;
+    const position = positionCss(source?.[cleCadrage(champ)]);
+    return position ? { ...media, position } : media;
+  };
 
   switch (section.type) {
     // ————————————————————————————— Héros —————————————————————————————
     case 'heros': {
-      const fond = img(v.image);
-      const etroite = img(v.imageEtroite) ?? fond;
+      const fond = img(v);
+      const etroite = img(v, 'imageEtroite') ?? fond;
       const sobre = v.variante === 'sobre' || !fond;
 
       const contenu = (
@@ -170,7 +181,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
 
     // ———————————————————————— Texte et image ————————————————————————
     case 'texteImage': {
-      const media = img(v.image);
+      const media = img(v);
       const pleine = v.variante === 'imagePleineLargeur' || !media;
 
       const texte = (
@@ -264,7 +275,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
 
     // ————————————————————————————— Galeries —————————————————————————
     case 'galerie': {
-      const images = ((v.images ?? []) as Valeurs[]).map((i) => img(i.image)).filter(Boolean);
+      const images = ((v.images ?? []) as Valeurs[]).map((i) => img(i)).filter(Boolean);
 
       if (v.variante === 'visionneuse') {
         return (
@@ -329,7 +340,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
             {((v.cartes ?? []) as Valeurs[]).map((c, i) => (
               <Reveal key={i} retard={Math.min(i, 3) * 120}>
                 <Link href={c.href || '/'} className={s.collection}>
-                  <Image media={img(c.image)} sizes="(min-width: 860px) 30vw, 100vw" />
+                  <Image media={img(c)} sizes="(min-width: 860px) 30vw, 100vw" />
                   {c.numero ? <span className={s.collectionNum}>{c.numero}</span> : null}
                   <span className="h3">{c.titre}</span>
                   <span className={s.collectionTexte}>{c.texte}</span>
@@ -356,7 +367,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
     case 'bande': {
       const visuel = (
         <Reveal mode="voile" className="bande bande-haute">
-          <ImagePleinEcran large={img(v.image)} etroite={img(v.imageEtroite) ?? img(v.image)} />
+          <ImagePleinEcran large={img(v)} etroite={img(v, 'imageEtroite') ?? img(v)} />
         </Reveal>
       );
       const legende = v.legende ? (
@@ -407,7 +418,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
             {((v.jalons ?? []) as Valeurs[]).map((jalon, i) => (
               <div className={p.jalon} key={i}>
                 <Reveal mode="voile">
-                  <Image media={img(jalon.image)} sizes="(min-width: 820px) 34vw, 100vw" />
+                  <Image media={img(jalon)} sizes="(min-width: 820px) 34vw, 100vw" />
                 </Reveal>
                 <Reveal className={p.jalonTexte} retard={90}>
                   <span className={p.jalonNum}>{String(i + 1).padStart(2, '0')}</span>
@@ -583,9 +594,9 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
               <div key={i}>
                 {/* L'image d'abord, le texte dessous : c'est l'ordre de lecture
                     du site, et il tient aussi bien en colonne sur téléphone. */}
-                {img(etape.image) ? (
+                {img(etape) ? (
                   <Reveal mode="voile" retard={Math.min(i, 3) * 110}>
-                    <Image media={img(etape.image)} sizes="(min-width: 760px) 30vw, 100vw" />
+                    <Image media={img(etape)} sizes="(min-width: 760px) 30vw, 100vw" />
                   </Reveal>
                 ) : null}
                 <Reveal retard={Math.min(i, 3) * 110 + 80} style={{ marginTop: 'clamp(18px, 2vw, 26px)' }}>
@@ -826,7 +837,7 @@ function Contenu({ section, ctx }: { section: Section; ctx: Contexte }) {
           <Entete champ={v.entete} />
           <div className={s.logos}>
             {((v.logos ?? []) as Valeurs[]).map((l, i) => {
-              const media = img(l.image);
+              const media = img(l);
               if (!media) return null;
               const vignette = <Image key={i} media={media} sizes="200px" />;
               return l.lien ? (

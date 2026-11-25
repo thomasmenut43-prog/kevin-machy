@@ -9,6 +9,7 @@ import {
   OPTIONS_TAILLE,
 } from '@/cms/champs';
 import { COULEUR_LIBRE } from '@/lib/apparence';
+import { CENTRE, cleCadrage, lireCadrage, type Cadrage } from '@/lib/cadrage';
 import { urlMedia, type Dossier, type Media } from '@/lib/modeles';
 import { Descendre, Fermer, Monter, Poubelle } from './Icones';
 import { EditeurTexteRiche } from './TexteRicheEditeur';
@@ -82,6 +83,7 @@ export function Champs({ champs, valeurs, medias, onChange, vise, onVu, pages, d
                   valeurs={valeurs}
                   medias={medias}
                   onChange={(v) => poser(champ.nom, v)}
+                  onPatch={(patch) => onChange({ ...valeurs, ...patch })}
                 />
               </div>
             ))}
@@ -94,6 +96,7 @@ export function Champs({ champs, valeurs, medias, onChange, vise, onVu, pages, d
               valeurs={valeurs}
               medias={medias}
               onChange={(v) => poser(groupe[0].nom, v)}
+              onPatch={(patch) => onChange({ ...valeurs, ...patch })}
             />
           </div>
         ),
@@ -171,12 +174,19 @@ function UnChamp({
   valeurs,
   medias,
   onChange,
+  onPatch,
 }: {
   champ: Champ;
   valeur: any;
   valeurs: Record<string, any>;
   medias: Media[];
   onChange: (v: unknown) => void;
+  /**
+   * Pose plusieurs clés d'un coup. Pour l'image et son point de cadrage, qui
+   * changent ensemble : deux `onChange` successifs partiraient du même état et
+   * le second effacerait le premier.
+   */
+  onPatch: (patch: Record<string, unknown>) => void;
 }) {
   const id = useId();
 
@@ -248,14 +258,23 @@ function UnChamp({
     case 'page':
       return <ChampPage id={id} etiquette={etiquette} aide={aide} valeur={valeur} onChange={onChange} />;
 
-    case 'image':
+    case 'image': {
+      const cle = cleCadrage(champ.nom);
       return (
         <div className="bo-champ">
           {etiquette}
-          <ChoixImage valeur={valeur} medias={medias} onChange={onChange} />
+          <ChoixImage
+            valeur={valeur}
+            cadrage={valeurs[cle]}
+            medias={medias}
+            // Une autre image, un autre sujet : l'ancien point n'a plus de sens.
+            onChange={(id) => onPatch({ [champ.nom]: id, [cle]: undefined })}
+            onCadrage={(c) => onPatch({ [cle]: c })}
+          />
           {aide}
         </div>
       );
+    }
 
     case 'apparence':
       return <Apparence valeur={valeur ?? champ.defaut ?? {}} onChange={onChange} />;
@@ -371,12 +390,16 @@ function Liste({
 
 function ChoixImage({
   valeur,
+  cadrage,
   medias,
   onChange,
+  onCadrage,
 }: {
   valeur: any;
+  cadrage: unknown;
   medias: Media[];
   onChange: (v: unknown) => void;
+  onCadrage: (c: Cadrage | undefined) => void;
 }) {
   const [ouvert, setOuvert] = useState(false);
   const choisi = medias.find((x) => x.id === valeur);
@@ -392,12 +415,7 @@ function ChoixImage({
 
   return (
     <div className={e.choixImage}>
-      {choisi ? (
-        <figure className={e.apercuImage}>
-          <img src={urlMedia(choisi.tailles[0]?.fichier ?? choisi.fichier)} alt="" />
-          <figcaption>{choisi.alt}</figcaption>
-        </figure>
-      ) : null}
+      {choisi ? <ChoixCadrage media={choisi} cadrage={cadrage} onCadrage={onCadrage} /> : null}
 
       <div className={e.choixBoutons}>
         <button type="button" className="bo-bouton bo-bouton-discret" onClick={() => setOuvert(true)}>
@@ -426,6 +444,93 @@ function ChoixImage({
         />
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Le point qui doit rester visible quand le site rogne la photo.
+ *
+ * L'image est montrée **entière** — c'est la seule façon de désigner ce qui
+ * risque d'être coupé. Kevin clique (ou fait glisser) sur le sujet ; l'aperçu
+ * à droite suit aussitôt. Voir lib/cadrage.ts.
+ */
+function ChoixCadrage({
+  media,
+  cadrage,
+  onCadrage,
+}: {
+  media: Media;
+  cadrage: unknown;
+  onCadrage: (c: Cadrage | undefined) => void;
+}) {
+  const point = lireCadrage(cadrage) ?? CENTRE;
+  const centre = point.x === CENTRE.x && point.y === CENTRE.y;
+  const appui = useRef(false);
+
+  const viser = (ev: React.PointerEvent<HTMLDivElement>) => {
+    const cadre = ev.currentTarget.getBoundingClientRect();
+    if (!cadre.width || !cadre.height) return;
+    onCadrage({
+      x: Math.round(Math.min(100, Math.max(0, ((ev.clientX - cadre.left) / cadre.width) * 100))),
+      y: Math.round(Math.min(100, Math.max(0, ((ev.clientY - cadre.top) / cadre.height) * 100))),
+    });
+  };
+
+  // Au clavier aussi : les flèches déplacent le point de cinq pour cent.
+  const clavier = (ev: React.KeyboardEvent<HTMLDivElement>) => {
+    const pas: Record<string, [number, number]> = {
+      ArrowLeft: [-5, 0],
+      ArrowRight: [5, 0],
+      ArrowUp: [0, -5],
+      ArrowDown: [0, 5],
+    };
+    const d = pas[ev.key];
+    if (!d) return;
+    ev.preventDefault();
+    onCadrage({
+      x: Math.min(100, Math.max(0, point.x + d[0])),
+      y: Math.min(100, Math.max(0, point.y + d[1])),
+    });
+  };
+
+  return (
+    <figure className={e.apercuImage}>
+      <div
+        className={e.cadrage}
+        role="slider"
+        tabIndex={0}
+        aria-label="Point de cadrage"
+        aria-valuetext={`${point.x} % depuis la gauche, ${point.y} % depuis le haut`}
+        onPointerDown={(ev) => {
+          appui.current = true;
+          ev.currentTarget.setPointerCapture(ev.pointerId);
+          viser(ev);
+        }}
+        onPointerMove={(ev) => {
+          if (appui.current) viser(ev);
+        }}
+        onPointerUp={() => {
+          appui.current = false;
+        }}
+        onPointerCancel={() => {
+          appui.current = false;
+        }}
+        onKeyDown={clavier}
+      >
+        <img src={urlMedia(media.tailles[0]?.fichier ?? media.fichier)} alt="" draggable={false} />
+        <span className={e.cadragePoint} style={{ left: `${point.x}%`, top: `${point.y}%` }} />
+      </div>
+      <figcaption>
+        {centre
+          ? 'Photo coupée sur le site ? Cliquez sur ce qui doit rester visible.'
+          : 'Ce point reste visible quand la photo est coupée.'}{' '}
+        {!centre ? (
+          <button type="button" className={e.cadrageRecentrer} onClick={() => onCadrage(undefined)}>
+            Recentrer
+          </button>
+        ) : null}
+      </figcaption>
+    </figure>
   );
 }
 
