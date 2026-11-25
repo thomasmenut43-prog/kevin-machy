@@ -1,0 +1,47 @@
+# Redonner à Cloudflare le mot de passe de la base, après l'avoir changé.
+#
+# Sert une fois, pendant le retour chez Hostinger (voir docs/hostinger.md).
+# Le mot de passe de la base n'existe en clair nulle part : pour le poser dans
+# l'application Node de Hostinger, il faut en choisir un nouveau. Le site en
+# ligne, encore servi par Cloudflare, doit alors le recevoir aussitôt, sans
+# quoi il perdrait la base à la prochaine connexion qu'il ouvre.
+#
+# L'ordre, dans la même minute :
+#   1. Hostinger → Bases de données : nouveau mot de passe ;
+#   2. GitHub → secret DATABASE_URI : la nouvelle adresse complète ;
+#   3. ici : « Run workflow ».
+#
+# Les connexions déjà ouvertes par Hyperdrive survivent au changement de mot
+# de passe : MariaDB ne coupe pas une session authentifiée. Le site ne voit
+# donc rien, à condition de ne pas laisser passer des heures entre 1 et 3.
+#
+# Rien n'est affiché : l'adresse passe par l'environnement, jamais par la
+# ligne de commande écrite dans le journal, et le dépôt est public.
+
+name: Mot de passe de la base vers Cloudflare
+
+on:
+  workflow_dispatch:
+
+jobs:
+  hyperdrive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: La nouvelle adresse ouvre-t-elle la base ?
+        # Vérifier avant d'envoyer : une faute de frappe dans le secret
+        # couperait le site en ligne, alors qu'ici elle arrête tout.
+        run: npm run migrer -- --verifier
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+      - name: Mise à jour de la passerelle
+        run: npx wrangler hyperdrive update 5ec15d5b93d84f13ae16e4f44889027b --connection-string="$DATABASE_URI" > /dev/null
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

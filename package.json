@@ -12,6 +12,7 @@
     "build:full": "npm run images && next build",
     "dev": "next dev",
     "build": "next build",
+    "construire:hostinger": "npm run migrer -- --verifier && next build",
     "start": "next start",
     "paquet": "opennextjs-cloudflare build",
     "deployer": "npm run paquet && wrangler deploy",
@@ -32,6 +33,9 @@
     "convertir": "node scripts/convertir-pages.mjs",
     "predev": "docker compose up -d",
     "exporter": "node scripts/exporter.mjs"
+  },
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "mysql2": "^3.15.4",
