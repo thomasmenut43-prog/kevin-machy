@@ -1,6 +1,6 @@
 import 'server-only';
 import { ecrire, ligne, requete } from './bdd';
-import { envoyer, lireSmtp } from './courrier';
+import { envoyer, lireSmtp, type Resultat } from './courrier';
 
 /**
  * Les demandes reçues par le formulaire de contact.
@@ -200,4 +200,78 @@ export async function renvoyerNotification(id: number) {
     message: m.message,
     consentement: true,
   });
+}
+
+/**
+ * Où arrive la suite de la conversation : la boîte de Kevin.
+ *
+ * L'adresse de réponse d'abord, celle qu'il a choisie pour ça ; à défaut, la
+ * boîte qui reçoit les demandes, puis l'expéditeur. Rien n'est inventé : sans
+ * aucune des trois, l'envoi lui-même échoue et le dit.
+ */
+export async function boiteDeKevin() {
+  const r = await lireSmtp();
+  return r.reponseEmail || r.destinataire || r.expediteurEmail || null;
+}
+
+/** Le message d'origine, cité sous la réponse comme le fait tout logiciel de courrier. */
+function citation(m: Message) {
+  const quand = m.creeLe.toLocaleString('fr-FR', {
+    timeZone: 'Europe/Paris',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const cite = m.message
+    .split(/\r?\n/)
+    .map((l) => `> ${l}`)
+    .join('\n');
+  return `Le ${quand}, ${m.nom} a écrit :\n${cite}`;
+}
+
+/**
+ * Répondre à une demande depuis le BackOffice.
+ *
+ * Le bouton Répondre ouvrait un lien `mailto:`. Sans logiciel de courrier sur
+ * la machine — et Kevin relève le sien sur le web —, cliquer ne faisait rien,
+ * sans un mot. La réponse part donc d'ici, par le même chemin que les
+ * notifications, déjà réglé dans Réglages → E-mails.
+ *
+ * Trois choix :
+ *
+ * - **Le destinataire vient de la base**, jamais du navigateur. Ce formulaire
+ *   ne peut écrire qu'à quelqu'un qui a écrit le premier : il ne sert pas de
+ *   relais vers n'importe quelle adresse.
+ * - **La suite revient dans la boîte de Kevin.** Le visiteur qui répond écrit
+ *   à `boiteDeKevin()`, pas à l'adresse technique d'expédition.
+ * - **Une copie cachée part vers cette même boîte.** Rien n'est gardé en
+ *   base : c'est dans son propre courrier que Kevin retrouve ce qu'il a
+ *   répondu, au même endroit que la suite de l'échange.
+ */
+export async function repondre(
+  id: number,
+  reponse: { objet: string; texte: string },
+): Promise<Resultat> {
+  const m = await lireMessage(id);
+  if (!m) return { ok: false, message: 'Ce message n’existe plus.' };
+
+  // Un saut de ligne dans un objet ouvrirait la porte à des en-têtes ajoutés.
+  const objet = reponse.objet.replace(/[\r\n]+/g, ' ').trim().slice(0, 200);
+  const texte = reponse.texte.trim().slice(0, 20000);
+  if (!objet) return { ok: false, message: 'Indiquez un objet.' };
+  if (!texte) return { ok: false, message: 'La réponse est vide.' };
+
+  const boite = (await boiteDeKevin()) ?? undefined;
+  const resultat = await envoyer({
+    a: m.email,
+    objet,
+    texte: `${texte}\n\n\n${citation(m)}`,
+    repondreA: boite,
+    copieA: boite,
+  });
+
+  if (resultat.ok && !m.lu) await marquerLu(id, true);
+  return resultat;
 }

@@ -1,12 +1,16 @@
 import { utilisateurConnecte } from '@/lib/auth';
-import { listerMessages } from '@/lib/messages';
+import { boiteDeKevin, listerMessages } from '@/lib/messages';
 import { BoiteMessages } from './BoiteMessages';
 
 export const metadata = { title: 'Messages' };
 export const dynamic = 'force-dynamic';
 
 export default async function PageMessages() {
-  const [messages, utilisateur] = await Promise.all([listerMessages(), utilisateurConnecte()]);
+  const [messages, utilisateur, boite] = await Promise.all([
+    listerMessages(),
+    utilisateurConnecte(),
+    boiteDeKevin(),
+  ]);
   const nonLus = messages.filter((m) => !m.lu).length;
 
   return (
@@ -23,6 +27,7 @@ export default async function PageMessages() {
         messages={messages.map((m) => ({ ...m, creeLe: m.creeLe.toISOString() }))}
         nonLus={nonLus}
         administrateur={utilisateur?.role === 'administrateur'}
+        boite={boite}
       />
     </>
   );
