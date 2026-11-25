@@ -85,15 +85,36 @@ export async function actionEnvoyer(_p: EtatMedia, donnees: FormData): Promise<E
     };
   }
 
+  // Le navigateur envoie désormais une photo par requête (voir `FormulaireEnvoi`)
+  // et dit où elle se place dans la série : la numérotation de la description
+  // survit au découpage.
+  const numero = Number(donnees.get('numero') ?? 0);
+  const total = Number(donnees.get('total') ?? 0);
+
   let envoyees = 0;
   for (const [i, image] of images.entries()) {
     // Plusieurs images d'un coup partagent la même description, numérotée.
     // Kevin l'affinera image par image, mais aucune n'entre sans description.
-    const description = images.length > 1 ? `${alt} (${i + 1})` : alt;
-    const resultat = await enregistrerMedia(image, description, { aRemplacer });
-    if (!resultat.ok) return { erreur: resultat.message, envoyees, saisi: { alt } };
-    // Les images arrivent rangées : le classement après coup ne se fait jamais.
-    if (dossier) await rangerMedia(resultat.media.id, dossier);
+    const rang = numero > 0 ? numero : i + 1;
+    const description = Math.max(total, images.length) > 1 ? `${alt} (${rang})` : alt;
+
+    // Une panne ici — le guichet d'Hostinger qui refuse, la base qui ne répond
+    // pas — remontait en erreur levée. En production, Next la remplace par sa
+    // page « Recharger » : Kevin ne savait ni quelle photo, ni pourquoi. Elle
+    // devient un message, et le détail part dans le journal du Worker.
+    try {
+      const resultat = await enregistrerMedia(image, description, { aRemplacer });
+      if (!resultat.ok) return { erreur: resultat.message, envoyees, saisi: { alt } };
+      // Les images arrivent rangées : le classement après coup ne se fait jamais.
+      if (dossier) await rangerMedia(resultat.media.id, dossier);
+    } catch (erreur) {
+      console.error('[medias] envoi refusé :', erreur);
+      return {
+        erreur: 'Le serveur des photos n’a pas accepté cette image. Réessayez dans un instant.',
+        envoyees,
+        saisi: { alt },
+      };
+    }
     envoyees++;
   }
 

@@ -116,8 +116,12 @@ export async function enregistrerMedia(
   if (recue.largeur < 1 || recue.hauteur < 1) {
     return { ok: false, message: 'Ce fichier n’est pas une image lisible.' };
   }
-  if (recue.octets > OCTETS_MAX) {
-    return { ok: false, message: 'Fichier trop lourd. Vingt-cinq mégaoctets au maximum.' };
+  // Le plafond porte sur ce qui arrive, pas sur le fichier d'origine : depuis
+  // que le navigateur réduit les photos, un JPEG de quarante mégaoctets sorti
+  // d'un boîtier arrive à quelques mégaoctets. Le refuser sur son poids de
+  // départ bloquait justement les photos d'un photographe.
+  if (recue.principal.size > OCTETS_MAX) {
+    return { ok: false, message: 'Image trop lourde, même réduite. Vingt-cinq mégaoctets au maximum.' };
   }
 
   const illisible = { ok: false as const, message: 'Ce fichier n’est pas une image lisible.' };
