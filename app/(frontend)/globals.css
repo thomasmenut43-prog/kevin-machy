@@ -592,6 +592,18 @@ p + .lien {
   object-fit: cover;
 }
 
+/* Point de cadrage choisi dans l'éditeur (lib/cadrage.ts), pour les images
+   plein écran qui changent de fichier sous 768 px : chacune garde le sien. */
+img[data-cadrage] {
+  object-position: var(--cadrage-large, 50% 50%);
+}
+
+@media (max-width: 767px) {
+  img[data-cadrage] {
+    object-position: var(--cadrage-etroit, var(--cadrage-large, 50% 50%));
+  }
+}
+
 .photo-absente {
   display: grid;
   place-content: center;

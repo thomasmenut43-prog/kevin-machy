@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { encoderImage, ImageIllisible } from '@/lib/encoder-images';
 import { LARGEURS } from '@/lib/largeurs-medias';
@@ -757,11 +757,17 @@ function IconeDossierPlus() {
  * dans le navigateur, et ce temps-là doit se voir. `useFormStatus` ne connaît
  * que l'aller-retour serveur, donc il resterait muet pendant le plus long.
  */
-function BoutonEnvoi({ etape }: { etape: null | 'encodage' | 'envoi' }) {
-  const libelle =
-    etape === 'encodage' ? 'Redimensionnement…' : etape === 'envoi' ? 'Envoi…' : 'Envoyer';
+type Progression = { fait: number; total: number };
+type Bilan = { envoyees: number; echecs: { nom: string; raison: string }[] };
+
+function BoutonEnvoi({ progression }: { progression: Progression | null }) {
+  const libelle = !progression
+    ? 'Envoyer'
+    : progression.total > 1
+      ? `Envoi ${progression.fait + 1} sur ${progression.total}…`
+      : 'Envoi…';
   return (
-    <button className="bo-bouton" type="submit" disabled={etape !== null}>
+    <button className="bo-bouton" type="submit" disabled={progression !== null}>
       {libelle}
     </button>
   );
@@ -776,92 +782,138 @@ function FormulaireEnvoi({
   dossierChoisi: number | null;
   onFini: () => void;
 }) {
-  const [etat, action] = useActionState(actionEnvoyer, VIDE);
   const [noms, setNoms] = useState<string[]>([]);
-  const [etape, setEtape] = useState<null | 'encodage' | 'envoi'>(null);
+  const [progression, setProgression] = useState<Progression | null>(null);
+  const [bilan, setBilan] = useState<Bilan | null>(null);
   const [erreurLocale, setErreurLocale] = useState<string | null>(null);
 
-  // L'envoi réussi referme la fenêtre : rester devant un formulaire vide ne
-  // dit pas si quelque chose est arrivé.
+  // L'envoi entièrement réussi referme la fenêtre : rester devant un
+  // formulaire vide ne dit pas si quelque chose est arrivé. S'il reste des
+  // refus, elle reste ouverte pour qu'on les lise.
   useEffect(() => {
-    if (!etat.envoyees) return;
+    if (!bilan?.envoyees || bilan.echecs.length) return;
     const minuteur = setTimeout(onFini, 900);
     return () => clearTimeout(minuteur);
-  }, [etat.envoyees, onFini]);
+  }, [bilan, onFini]);
 
   /**
-   * Les images sont réduites ici, dans le navigateur, avant de partir.
+   * Les images sont réduites ici, dans le navigateur, puis envoyées **une par
+   * une**.
    *
-   * Le serveur ne sait plus le faire : `sharp` en est parti pour que
-   * l'application puisse tourner ailleurs que sur un serveur Node. Chaque
-   * image devient un WebP pleine taille et ses réductions, et le tout part
-   * dans un seul formulaire.
+   * Elles partaient toutes dans un seul formulaire. Pour un photographe, dix
+   * photos font vite plusieurs dizaines de mégaoctets : l'envoi dépassait le
+   * plafond des actions serveur et la mémoire du Worker, et Next affichait sa
+   * page « Recharger » — sans dire quelle photo, ni pourquoi. Constaté le
+   * 25 novembre 2026, dix essais de suite.
+   *
+   * Une photo par requête tient toujours dans les limites, montre où l'on en
+   * est, et un refus n'emporte plus les autres : le bilan dit lesquelles sont
+   * passées.
    */
   async function soumettre(evenement: React.FormEvent<HTMLFormElement>) {
     evenement.preventDefault();
-    if (etape) return;
+    if (progression) return;
 
     const formulaire = evenement.currentTarget;
     const saisie = new FormData(formulaire);
     const fichiers = [...(saisie.getAll('fichiers') as File[])].filter((f) => f.size > 0);
+    const alt = String(saisie.get('alt') ?? '').trim();
 
     if (!fichiers.length) {
       setErreurLocale('Choisissez au moins une image.');
       return;
     }
-
-    setErreurLocale(null);
-    setEtape('encodage');
-
-    const donnees = new FormData();
-    donnees.set('alt', String(saisie.get('alt') ?? ''));
-    if (saisie.get('aRemplacer')) donnees.set('aRemplacer', 'on');
-    if (saisie.get('dossier')) donnees.set('dossier', String(saisie.get('dossier')));
-
-    try {
-      for (const [rang, fichier] of fichiers.entries()) {
-        const image = await encoderImage(fichier, LARGEURS);
-        donnees.set(`img${rang}.principal`, image.principal, `${rang}.webp`);
-        donnees.set(`img${rang}.largeur`, String(image.largeur));
-        donnees.set(`img${rang}.hauteur`, String(image.hauteur));
-        donnees.set(`img${rang}.octets`, String(image.octets));
-        donnees.set(`img${rang}.variantes`, image.variantes.map((v) => v.largeur).join(','));
-        for (const v of image.variantes) {
-          donnees.set(`img${rang}.v${v.largeur}`, v.blob, `${rang}-${v.largeur}.webp`);
-        }
-      }
-      donnees.set('combien', String(fichiers.length));
-    } catch (erreur) {
-      setEtape(null);
-      setErreurLocale(
-        erreur instanceof ImageIllisible
-          ? 'Une des images n’a pas pu être lue. JPEG, PNG, WebP ou AVIF.'
-          : 'La préparation des images a échoué.',
-      );
+    // Vérifié ici aussi : sans description, inutile de préparer dix photos
+    // pour les voir toutes refusées.
+    if (!alt) {
+      setErreurLocale('Le texte alternatif est obligatoire : sans lui, ni référencement ni accessibilité.');
       return;
     }
 
-    setEtape('envoi');
-    setNoms([]);
-    action(donnees);
-    setEtape(null);
+    setErreurLocale(null);
+    setBilan(null);
+
+    let envoyees = 0;
+    const echecs: Bilan['echecs'] = [];
+
+    for (const [rang, fichier] of fichiers.entries()) {
+      setProgression({ fait: rang, total: fichiers.length });
+
+      let image;
+      try {
+        image = await encoderImage(fichier, LARGEURS);
+      } catch (erreur) {
+        echecs.push({
+          nom: fichier.name,
+          raison:
+            erreur instanceof ImageIllisible
+              ? 'image illisible — JPEG, PNG, WebP ou AVIF'
+              : 'préparation impossible dans le navigateur',
+        });
+        continue;
+      }
+
+      const donnees = new FormData();
+      donnees.set('alt', alt);
+      if (saisie.get('aRemplacer')) donnees.set('aRemplacer', 'on');
+      if (saisie.get('dossier')) donnees.set('dossier', String(saisie.get('dossier')));
+      donnees.set('numero', String(rang + 1));
+      donnees.set('total', String(fichiers.length));
+      donnees.set('combien', '1');
+      donnees.set('img0.principal', image.principal, '0.webp');
+      donnees.set('img0.largeur', String(image.largeur));
+      donnees.set('img0.hauteur', String(image.hauteur));
+      donnees.set('img0.octets', String(image.octets));
+      donnees.set('img0.variantes', image.variantes.map((v) => v.largeur).join(','));
+      for (const v of image.variantes) {
+        donnees.set(`img0.v${v.largeur}`, v.blob, `0-${v.largeur}.webp`);
+      }
+
+      try {
+        const r = await actionEnvoyer(VIDE, donnees);
+        if (r.erreur) echecs.push({ nom: fichier.name, raison: r.erreur });
+        else envoyees += r.envoyees ?? 0;
+      } catch {
+        // La requête elle-même n'a pas abouti : connexion coupée, serveur
+        // tombé. On passe à la suivante plutôt que de tout perdre.
+        echecs.push({ nom: fichier.name, raison: 'envoi interrompu — connexion ou serveur' });
+      }
+    }
+
+    setProgression(null);
+    if (envoyees) setNoms([]);
+    setBilan({ envoyees, echecs });
   }
 
   return (
     <form className="bo-form" onSubmit={soumettre}>
-      {/* Deux sources d'échec désormais : la préparation dans le navigateur, et
-          le serveur. Le visiteur n'a pas à savoir laquelle a parlé. */}
-      {erreurLocale ?? etat.erreur ? (
+      {erreurLocale ? (
         <p className="bo-erreur" role="alert">
-          {erreurLocale ?? etat.erreur}
+          {erreurLocale}
         </p>
       ) : null}
 
-      {etat.envoyees ? (
+      {bilan?.envoyees ? (
         <p className={m.succes} role="status">
-          {etat.envoyees} image{etat.envoyees > 1 ? 's' : ''} ajoutée
-          {etat.envoyees > 1 ? 's' : ''}.
+          {bilan.envoyees} image{bilan.envoyees > 1 ? 's' : ''} ajoutée
+          {bilan.envoyees > 1 ? 's' : ''}.
         </p>
+      ) : null}
+
+      {bilan?.echecs.length ? (
+        <div className="bo-erreur" role="alert">
+          <p>
+            {bilan.echecs.length} image{bilan.echecs.length > 1 ? 's' : ''} non ajoutée
+            {bilan.echecs.length > 1 ? 's' : ''} :
+          </p>
+          <ul>
+            {bilan.echecs.map((e, i) => (
+              <li key={i}>
+                {e.nom} — {e.raison}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
 
       <div className="bo-champ">
@@ -876,7 +928,8 @@ function FormulaireEnvoi({
           onChange={(ev) => setNoms([...(ev.target.files ?? [])].map((f) => f.name))}
         />
         <p className="bo-aide">
-          JPEG, PNG, WebP ou AVIF. Vingt-cinq mégaoctets par image au maximum. Les réductions sont faites ici, dans votre navigateur.
+          JPEG, PNG, WebP ou AVIF, quel que soit leur poids. Chaque image est réduite ici,
+          dans votre navigateur, puis envoyée une par une.
         </p>
         {noms.length ? (
           <p className="bo-aide">
@@ -888,7 +941,7 @@ function FormulaireEnvoi({
 
       <div className="bo-champ">
         <label htmlFor="alt">Texte alternatif</label>
-        <input id="alt" name="alt" type="text" defaultValue={etat.saisi?.alt ?? ''} required />
+        <input id="alt" name="alt" type="text" required />
         <p className="bo-aide">
           Décrivez ce qui se passe dans le cadre, jamais « photo de mariage ». Sert aux lecteurs
           d’écran et au référencement. Pour plusieurs images à la fois, il sera numéroté et vous
@@ -917,7 +970,7 @@ function FormulaireEnvoi({
         <span>Image d’attente, à remplacer avant la mise en ligne</span>
       </label>
 
-      <BoutonEnvoi etape={etape} />
+      <BoutonEnvoi progression={progression} />
     </form>
   );
 }

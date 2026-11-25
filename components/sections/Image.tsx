@@ -21,8 +21,14 @@ export function nomManifeste(fichier: string): ImageName | null {
   return m && m[1] in IMAGES ? (m[1] as ImageName) : null;
 }
 
+/**
+ * Un média tel qu'il est placé dans une section : la photo, plus le point de
+ * cadrage choisi pour cet emplacement (`object-position`, voir lib/cadrage.ts).
+ */
+export type MediaPlace = Media & { position?: string };
+
 type Props = {
-  media?: Media | null;
+  media?: MediaPlace | null;
   sizes?: string;
   className?: string;
   /** Réservé à l'image visible sans défiler : une seule par page. */
@@ -43,6 +49,7 @@ export function Image({ media, sizes = '100vw', className, prioritaire, ratio }:
         priority={prioritaire}
         className={className}
         ratio={ratio}
+        position={media.position}
       />
     );
   }
@@ -63,6 +70,7 @@ export function Image({ media, sizes = '100vw', className, prioritaire, ratio }:
       loading={prioritaire ? 'eager' : 'lazy'}
       fetchPriority={prioritaire ? 'high' : undefined}
       decoding="async"
+      style={media.position ? { objectPosition: media.position } : undefined}
     />
   );
 }
@@ -76,8 +84,8 @@ export function ImagePleinEcran({
   etroite,
   prioritaire,
 }: {
-  large?: Media | null;
-  etroite?: Media | null;
+  large?: MediaPlace | null;
+  etroite?: MediaPlace | null;
   prioritaire?: boolean;
 }) {
   if (!large) return null;
@@ -92,6 +100,10 @@ export function ImagePleinEcran({
         tall={nomEtroite ?? nomLarge}
         alt={large.alt}
         priority={prioritaire}
+        positionLarge={large.position}
+        // Sans image étroite propre, le téléphone montre la large : elle
+        // garde alors son propre cadrage.
+        positionEtroite={nomEtroite ? etroite?.position : large.position}
       />
     );
   }

@@ -1,6 +1,7 @@
 import 'server-only';
 import { PAR_TYPE } from '@/cms/catalogue';
 import type { Champ } from '@/cms/schema';
+import { cleCadrage, lireCadrage } from './cadrage';
 import { ecrire, ligne, requete, transaction, jsonDeLaBase } from './bdd';
 import { nouvelleCle, type Page, type Section } from './modeles';
 
@@ -392,9 +393,16 @@ function nettoyerChamps(champs: Champ[], valeurs: unknown): Record<string, unkno
       case 'booleen':
         if (typeof v === 'boolean') sortie[champ.nom] = v;
         break;
-      case 'image':
-        if (typeof v === 'number' && Number.isInteger(v) && v > 0) sortie[champ.nom] = v;
+      case 'image': {
+        if (typeof v === 'number' && Number.isInteger(v) && v > 0) {
+          sortie[champ.nom] = v;
+          // Le point de cadrage voyage avec l'image : il n'a de sens qu'à côté
+          // d'elle, et disparaît quand on la retire. Voir lib/cadrage.ts.
+          const cadrage = lireCadrage(entree[cleCadrage(champ.nom)]);
+          if (cadrage) sortie[cleCadrage(champ.nom)] = cadrage;
+        }
         break;
+      }
       case 'texteRiche':
         sortie[champ.nom] = nettoyerTexteRiche(v);
         break;
