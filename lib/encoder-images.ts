@@ -30,10 +30,24 @@
 const QUALITE_PRINCIPALE = 0.82;
 const QUALITE_VARIANTE = 0.8;
 
+/**
+ * Le plus grand côté de l'image principale, en pixels.
+ *
+ * Elle était gardée en pleine définition. Pour un photographe, c'est 45 ou
+ * 60 mégapixels : un WebP de dix mégaoctets par photo, que personne ne voit
+ * jamais — le site sert au plus la réduction de 2 400 pixels. Ce poids mort
+ * faisait déborder l'envoi (constaté le 25 novembre 2026 : « il y a un bug,
+ * rechargez la page », dix fois de suite).
+ *
+ * 3 200 pixels restent au-dessus de toute réduction et d'un écran 4K en
+ * largeur utile : rien de visible ne se perd.
+ */
+const COTE_MAX_PRINCIPALE = 3200;
+
 export type Variante = { largeur: number; blob: Blob };
 
 export type ImageEncodee = {
-  /** Dimensions de l'image redressée, donc celles du fichier principal. */
+  /** Dimensions du fichier principal : l'image redressée, réduite à `COTE_MAX_PRINCIPALE`. */
   largeur: number;
   hauteur: number;
   /** Poids du fichier d'origine, conservé pour la fiche du média. */
@@ -169,18 +183,22 @@ export async function encoderImage(
   try {
     if (!image.width || !image.height) throw new ImageIllisible();
 
-    const principal = await versWebp(image, image.width, QUALITE_PRINCIPALE);
+    const echelle = Math.min(1, COTE_MAX_PRINCIPALE / Math.max(image.width, image.height));
+    const largeurPrincipale = Math.max(1, Math.round(image.width * echelle));
+    const hauteurPrincipale = Math.max(1, Math.round((image.height * largeurPrincipale) / image.width));
+    const principal = await versWebp(image, largeurPrincipale, QUALITE_PRINCIPALE);
 
     const variantes: Variante[] = [];
     for (const largeur of largeurs) {
-      // Agrandir n'apporte rien : on ne produit que des réductions.
-      if (largeur > image.width) continue;
+      // Agrandir n'apporte rien : on ne produit que des réductions, jamais
+      // plus larges que l'image principale elle-même.
+      if (largeur > largeurPrincipale) continue;
       variantes.push({ largeur, blob: await versWebp(image, largeur, QUALITE_VARIANTE) });
     }
 
     return {
-      largeur: image.width,
-      hauteur: image.height,
+      largeur: largeurPrincipale,
+      hauteur: hauteurPrincipale,
       octets: fichier.size,
       principal,
       variantes,
