@@ -84,18 +84,6 @@
   align-content: start;
 }
 
-.panneauPied {
-  border-top: 1px solid var(--bo-filet);
-  padding: 16px 18px;
-  display: grid;
-  gap: 10px;
-}
-
-.panneauPied .bo-bouton,
-.panneauPied > button {
-  width: 100%;
-}
-
 /* —————————————————————————— Liste des sections —————————————————————— */
 
 .sections {
@@ -344,6 +332,23 @@
 .formats button[aria-pressed='true'] {
   color: var(--bo-accent);
   background: var(--bo-accent-doux);
+}
+
+/* Annuler et Enregistrer, en haut à droite. Plus bas que les boutons du
+   reste du BackOffice : la barre doit rester mince au-dessus de l'aperçu. */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actions :global(.bo-bouton) {
+  min-height: 32px;
+  font-size: 0.8125rem;
+}
+
+.actions .voirEnLigne {
+  margin-right: 6px;
 }
 
 .voirEnLigne {
@@ -983,7 +988,7 @@
    seulement deux secondes : c'est un accusé de réception, pas un état. */
 /* `:global` est obligatoire : dans un module, `.bo-bouton` serait renommé et
    ne toucherait jamais la classe globale du bouton. */
-.panneauPied :global(.bo-bouton[data-fait]) {
+.actions :global(.bo-bouton[data-fait]) {
   background: #2f7d55;
   border-color: #2f7d55;
 }

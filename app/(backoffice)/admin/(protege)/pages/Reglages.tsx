@@ -165,7 +165,7 @@ export function Reglages({ page, administrateur }: { page: Page; administrateur:
           </>
         ) : (
           <p className={e.aide}>
-            La page n’est visible que d’ici. Le bouton Enregistrer du bas la met en ligne.
+            La page n’est visible que d’ici. Le bouton Enregistrer, en haut à droite, la met en ligne.
           </p>
         )}
 

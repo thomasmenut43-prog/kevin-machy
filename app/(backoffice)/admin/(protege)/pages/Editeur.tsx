@@ -19,6 +19,7 @@ import {
   actionPublier,
   actionPublierNavigation,
   actionPublierPied,
+  actionRevenirEnLigne,
   actionSupprimerPage,
 } from './actions';
 import { Champs } from './Champs';
@@ -94,6 +95,13 @@ export function Editeur({
   const [etat, setEtat] = useState<'repos' | 'enregistre' | 'publie' | 'erreur'>('repos');
   const [publication, setPublication] = useState<'repos' | 'encours' | 'fait'>('repos');
   const [modifie, setModifie] = useState(false);
+  // Un brouillon attend en base : la page a des modifications non mises en
+  // ligne, même juste après un rechargement où `modifie` repart de zéro.
+  const [brouillonEnBase, setBrouillonEnBase] = useState(page.brouillon != null);
+  const [annulation, setAnnulation] = useState(false);
+  // L'en-tête et le pied tels qu'en ligne : ce qu'Annuler leur rend.
+  const navEnLigne = useRef(navigation);
+  const piedEnLigne = useRef(piedDePage);
 
   const apercu = useRef<HTMLIFrameElement>(null);
   const glisse = useRef<number | null>(null);
@@ -180,6 +188,7 @@ export function Editeur({
       try {
         await actionEnregistrerBrouillon(page.id, sections);
         setEtat('enregistre');
+        setBrouillonEnBase(true);
       } catch {
         setEtat('erreur');
       }
@@ -239,12 +248,17 @@ export function Editeur({
     setEtat('repos');
     try {
       await actionPublier(page.id, sections);
+      setBrouillonEnBase(false);
       if (navModifiee) {
-        setNav(await actionPublierNavigation(nav));
+        const publiee = await actionPublierNavigation(nav);
+        navEnLigne.current = publiee;
+        setNav(publiee);
         setNavModifiee(false);
       }
       if (piedModifie) {
-        setPied(await actionPublierPied(pied));
+        const publie = await actionPublierPied(pied);
+        piedEnLigne.current = publie;
+        setPied(publie);
         setPiedModifie(false);
       }
       setModifie(false);
@@ -254,6 +268,54 @@ export function Editeur({
     } catch {
       setEtat('erreur');
       setPublication('repos');
+    }
+  };
+
+  /** Recharge la page telle qu'en ligne, une fois le brouillon jeté côté serveur. */
+  const revenirEnLigne = (enLigne: Section[]) => {
+    // Pas `changer` : le brouillon vient d'être jeté, il ne faut pas le
+    // recréer à la prochaine sauvegarde au repos.
+    setSections(enLigne);
+    setModifie(false);
+    setBrouillonEnBase(false);
+    setEtat('repos');
+    setChoisie(null);
+    setVue('sections');
+  };
+
+  const aAnnuler = modifie || brouillonEnBase || navModifiee || piedModifie;
+
+  /**
+   * Le pendant d'Enregistrer : tout ce qui n'est pas en ligne repart, sections,
+   * en-tête et pied compris. Un brouillon n'entre jamais dans l'historique :
+   * ce qui est annulé ne se retrouve nulle part, d'où la confirmation.
+   */
+  const annuler = async () => {
+    if (
+      !window.confirm(
+        'Annuler toutes les modifications faites depuis le dernier enregistrement ? La page reviendra telle que les visiteurs la voient.',
+      )
+    ) {
+      return;
+    }
+    const etaitModifie = modifie;
+    setAnnulation(true);
+    // Coupe la sauvegarde au repos avant d'aller jeter le brouillon : sinon
+    // elle pourrait le recréer juste derrière.
+    setModifie(false);
+    try {
+      const r = await actionRevenirEnLigne(page.id);
+      if ('erreur' in r) throw new Error(r.erreur);
+      revenirEnLigne(r.sections as Section[]);
+      setNav(navEnLigne.current);
+      setNavModifiee(false);
+      setPied(piedEnLigne.current);
+      setPiedModifie(false);
+    } catch {
+      setModifie(etaitModifie);
+      setEtat('erreur');
+    } finally {
+      setAnnulation(false);
     }
   };
 
@@ -311,6 +373,7 @@ export function Editeur({
                   try {
                     await actionEnregistrerBrouillon(page.id, sections);
                     setEtat('enregistre');
+                    setBrouillonEnBase(true);
                   } catch {
                     setEtat('erreur');
                   }
@@ -405,15 +468,7 @@ export function Editeur({
                 setChoisie(null);
                 setVue('sections');
               }}
-              onRevenirEnLigne={(enLigne) => {
-                // Pas `changer` : le brouillon vient d'être jeté côté serveur,
-                // il ne faut pas le recréer à la prochaine sauvegarde au repos.
-                setSections(enLigne);
-                setModifie(false);
-                setEtat('repos');
-                setChoisie(null);
-                setVue('sections');
-              }}
+              onRevenirEnLigne={revenirEnLigne}
             />
           ) : (
             <ListeSections
@@ -450,27 +505,6 @@ export function Editeur({
             />
           )}
         </div>
-
-        {vue === 'sections' ? (
-          <div className={e.panneauPied}>
-            <button
-              type="button"
-              className="bo-bouton"
-              onClick={publier}
-              disabled={publication === 'encours'}
-              data-fait={publication === 'fait' ? '' : undefined}
-            >
-              {publication === 'encours'
-                ? 'Enregistrement…'
-                : publication === 'fait'
-                  ? 'Enregistré, le site est à jour'
-                  : 'Enregistrer'}
-            </button>
-            <p className={e.aide}>
-              Met le site en ligne à jour. Jusque-là, vos modifications ne sont visibles que d’ici.
-            </p>
-          </div>
-        ) : null}
       </div>
 
       {/* ————————————————————————— Aperçu en direct ————————————————————— */}
@@ -499,9 +533,37 @@ export function Editeur({
               <span className="visuellement-cache">Aperçu sur téléphone</span>
             </button>
           </div>
-          <a className={e.voirEnLigne} href={page.chemin ? `/${page.chemin}/` : '/'} target="_blank" rel="noopener noreferrer">
-            Ouvrir la page publiée
-          </a>
+          {/* En haut à droite, là où l'œil les cherche, et visibles quel que
+              soit le volet ouvert : au fond du panneau, Kevin devait défiler
+              pour les trouver. */}
+          <div className={e.actions}>
+            <a className={e.voirEnLigne} href={page.chemin ? `/${page.chemin}/` : '/'} target="_blank" rel="noopener noreferrer">
+              Ouvrir la page publiée
+            </a>
+            <button
+              type="button"
+              className="bo-bouton bo-bouton-discret"
+              onClick={annuler}
+              disabled={!aAnnuler || annulation || publication === 'encours'}
+              title="Revenir à la page telle que les visiteurs la voient"
+            >
+              {annulation ? 'Annulation…' : 'Annuler'}
+            </button>
+            <button
+              type="button"
+              className="bo-bouton"
+              onClick={publier}
+              disabled={publication === 'encours' || annulation}
+              data-fait={publication === 'fait' ? '' : undefined}
+              title="Met le site en ligne à jour. Jusque-là, vos modifications ne sont visibles que d’ici."
+            >
+              {publication === 'encours'
+                ? 'Enregistrement…'
+                : publication === 'fait'
+                  ? 'Enregistré, site à jour'
+                  : 'Enregistrer'}
+            </button>
+          </div>
         </div>
 
         <div className={e.scene} data-format={format}>
