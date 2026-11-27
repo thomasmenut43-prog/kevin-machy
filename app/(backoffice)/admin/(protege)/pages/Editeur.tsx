@@ -182,16 +182,29 @@ export function Editeur({
   }, [envoyerApercu, pages, page.id, navModifiee, piedModifie]);
 
   // ———————————————— Le brouillon se sauvegarde au repos ————————————————
+  // La sauvegarde partie, on la garde sous la main : Enregistrer et Annuler
+  // l'attendent avant d'agir. Couper le minuteur n'arrête pas une requête déjà
+  // envoyée, qui écrirait alors son brouillon après coup — et ferait revenir,
+  // au rechargement, des modifications annulées.
+  const sauvegardeEnCours = useRef<Promise<void> | null>(null);
+  const attendreSauvegarde = () => sauvegardeEnCours.current ?? Promise.resolve();
+
   useEffect(() => {
     if (!modifie) return;
-    const minuteur = setTimeout(async () => {
-      try {
-        await actionEnregistrerBrouillon(page.id, sections);
-        setEtat('enregistre');
-        setBrouillonEnBase(true);
-      } catch {
-        setEtat('erreur');
-      }
+    const minuteur = setTimeout(() => {
+      const envoi = (async () => {
+        try {
+          await actionEnregistrerBrouillon(page.id, sections);
+          setEtat('enregistre');
+          setBrouillonEnBase(true);
+        } catch {
+          setEtat('erreur');
+        }
+      })();
+      sauvegardeEnCours.current = envoi;
+      envoi.finally(() => {
+        if (sauvegardeEnCours.current === envoi) sauvegardeEnCours.current = null;
+      });
     }, DELAI_BROUILLON);
     return () => clearTimeout(minuteur);
   }, [sections, modifie, page.id]);
@@ -247,6 +260,7 @@ export function Editeur({
     setPublication('encours');
     setEtat('repos');
     try {
+      await attendreSauvegarde();
       await actionPublier(page.id, sections);
       setBrouillonEnBase(false);
       if (navModifiee) {
@@ -300,10 +314,11 @@ export function Editeur({
     }
     const etaitModifie = modifie;
     setAnnulation(true);
-    // Coupe la sauvegarde au repos avant d'aller jeter le brouillon : sinon
-    // elle pourrait le recréer juste derrière.
+    // Coupe la sauvegarde au repos avant d'aller jeter le brouillon, et attend
+    // celle qui serait déjà partie : sinon elle pourrait le recréer derrière.
     setModifie(false);
     try {
+      await attendreSauvegarde();
       const r = await actionRevenirEnLigne(page.id);
       if ('erreur' in r) throw new Error(r.erreur);
       revenirEnLigne(r.sections as Section[]);
