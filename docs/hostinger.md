@@ -33,6 +33,21 @@ attend parfois ces préchargements indéfiniment quand il recharge une page.
 `waitUntil: 'networkidle'` se bloque alors sur la page du Studio de l'Iris.
 Le serveur, lui, répond en deux millisecondes, et le site actuel fait de même.
 
+## Le serveur de construction de Hostinger est ancien
+
+Premier essai, le 27 novembre 2026 : la base s'ouvrait, mais la construction
+s'arrêtait net. La bibliothèque système du serveur (glibc < 2.29) est trop
+vieille pour le compilateur natif de Next 16, qui se rabat alors sur sa version
+WebAssembly. Celle-ci a deux limites :
+
+- elle ne sait pas lire un `next.config.ts` qui importe un autre fichier
+  TypeScript — d'où `next.config.mjs` et `lib/redirections.mjs`, en JavaScript ;
+- elle ne fait pas tourner Turbopack — d'où `next build --webpack` dans
+  `construire:hostinger`. Cloudflare, lui, garde Turbopack.
+
+Pour reproduire ces conditions sur un poste : `NEXT_TEST_WASM=1` force Next à
+prendre la version WebAssembly.
+
 ## ⚠ Le piège n° 1 : les photos sont dans le dossier du vieux WordPress
 
 L'ancien WordPress occupe toujours le site `dronezvous.com` du forfait. Or le
@@ -131,7 +146,7 @@ les visiteurs à la prochaine mise à jour de leurs pages. Donc :
 
 Si un bouton du BackOffice répond « Invalid Server Actions request », le
 mandataire de Hostinger réécrit l'en-tête `Host` : poser l'adresse en cause
-dans `experimental.serverActions.allowedOrigins` de `next.config.ts` —
+dans `experimental.serverActions.allowedOrigins` de `next.config.mjs` —
 l'adresse exacte, jamais un joker du type `*.hostingersite.com`, qui ouvrirait
 la porte à n'importe quel site hébergé là.
 

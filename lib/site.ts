@@ -21,7 +21,7 @@ export const SITE = {
    * coûte du trafic, sans date de retour.
    *
    * Reste à faire, et c'est l'essentiel du travail : les adresses des pages
-   * changent, elles. Voir `lib/redirections.ts`.
+   * changent, elles. Voir `lib/redirections.mjs`.
    *
    * Une seule forme fait autorité, et `www` redirige vers elle. Laisser vivre
    * les deux dédoublerait le référencement : Google verrait deux sites

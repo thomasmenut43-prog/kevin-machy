@@ -219,7 +219,7 @@ prix est payé en visiteurs, et rien ne dit quand il s'arrête.
 
 Garder le nom, à l'inverse, ne coûte qu'un nom qui vieillit mal. Et le travail
 qui comptait vraiment — la refonte des adresses de pages — reste entier : voir
-`lib/redirections.ts`.
+`lib/redirections.mjs`.
 
 ## Ce que ça change concrètement
 
@@ -295,5 +295,5 @@ Ouvrir l'indexation avant le premier geste aurait recréé le problème qu'on
 **Ce que la bascule emporte avec elle :** cinq pages que l'ancien site vend et
 que le nouveau ne présente pas encore — entreprise, drone, photobooth,
 formation, tirages — plus le blog et deux articles. Voir `SANS_EQUIVALENT` dans
-`lib/redirections.ts`. Tant que la décision n'est pas prise, elles répondront
+`lib/redirections.mjs`. Tant que la décision n'est pas prise, elles répondront
 « page introuvable ». C'est le dernier point à trancher avec Kevin.
