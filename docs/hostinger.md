@@ -15,7 +15,8 @@ de Kevin — ce qu'exige un onglet E-mails digne de ce nom.
 - **La base**, déjà chez Hostinger. Les deux sites, l'ancien et le nouveau,
   lisent la même pendant toute la transition.
 - **Les photos**, déjà chez Hostinger, sur `medias.dronezvous.com`.
-- **Le courrier** : MX, SPF, Resend, rien ne change.
+- **Le courrier** : MX et SPF ne changent pas. L'envoi passe par le SMTP de
+  la boîte de Kevin depuis le 27 novembre 2026 (voir 2.4).
 - **Le domaine et sa zone DNS**, qui restent chez Cloudflare. Les redirections
   de `kevinmachy.fr` et de `www` sont des règles Cloudflare : elles continuent.
 
@@ -186,7 +187,12 @@ Worker et un enregistrement `A` coexistent).
 
 ### 2.4 Ressaisir les clés
 
-BackOffice → Réglages → E-mails : la clé Resend, puis **« Envoyer un test »**.
+BackOffice → Réglages → E-mails : les réglages SMTP de la boîte de Kevin
+(`smtp.hostinger.com`, 465, TLS) et son mot de passe, puis **« Envoyer un
+test »**. Resend a été retiré le 27 novembre 2026, à la demande de Thomas :
+chez Hostinger, le site joint directement le serveur d'envoi de la boîte.
+Même écran, la réception (`imap.hostinger.com`, 993) branche l'onglet
+**Boîte mail** du BackOffice ; « Tester la réception » le vérifie.
 Même chose pour les avis Google s'ils sont branchés. Un message de contact
 arrivé entre la bascule et cette étape est en base : le bouton « Renvoyer la
 notification » le rattrape.
@@ -205,8 +211,10 @@ Cinq minutes, tant que le Worker existe :
 
 1. Cloudflare → DNS → supprimer l'enregistrement `A` `@` ;
 2. Workers & Pages → `kevin-machy` → Domaines → rajouter `dronezvous.com` ;
-3. Réglages → E-mails → ressaisir la clé Resend (le Worker ne lit pas celle
-   chiffrée par la nouvelle clé).
+3. Savoir que **les notifications ne partiront plus** : le Worker ne joint pas
+   le SMTP de Hostinger, et Resend a été retiré. Les demandes restent dans le
+   BackOffice ; « Renvoyer la notification » les rattrape au retour chez
+   Hostinger.
 
 ## Phase 3 — Après deux semaines sans retour en arrière
 

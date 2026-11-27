@@ -4,7 +4,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { ModaleParametres } from './ModaleParametres';
-import { Cadenas, Enveloppe, Externe, Images, Pages, Reglage, Sortie, Tableau } from './IconesMenu';
+import {
+  Cadenas,
+  Courrier,
+  Enveloppe,
+  Externe,
+  Images,
+  Pages,
+  Reglage,
+  Sortie,
+  Tableau,
+} from './IconesMenu';
 import type { Utilisateur } from '@/lib/auth';
 import { urlAvatar } from '@/lib/modeles';
 
@@ -26,6 +36,7 @@ const ONGLETS: Onglet[] = [
   { href: '/admin/pages/', libelle: 'Éditeur de site', Signe: Pages },
   { href: '/admin/medias/', libelle: 'Médiathèque', Signe: Images },
   { href: '/admin/messages/', libelle: 'Messages', Signe: Enveloppe, nonLus: true },
+  { href: '/admin/emails/', libelle: 'Boîte mail', Signe: Courrier, administrateur: true },
   { href: '/admin/boutique/', libelle: 'Boutique', Signe: Cadenas, verrouille: true },
 ];
 

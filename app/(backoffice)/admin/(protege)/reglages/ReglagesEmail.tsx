@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import {
   actionEffacerMotDePasse,
   actionEnregistrerSmtp,
+  actionTesterReception,
   actionTesterSmtp,
   type EtatReglages,
 } from './actions';
@@ -13,8 +14,6 @@ import r from './reglages.module.css';
 const VIDE: EtatReglages = {};
 
 type Affichable = {
-  methode: 'api' | 'smtp';
-  cleApiEnregistree: boolean;
   serveur: string;
   port: number;
   chiffrement: 'tls' | 'starttls' | 'aucun';
@@ -27,6 +26,8 @@ type Affichable = {
   accuseActif: boolean;
   accuseObjet: string;
   accuseTexte: string;
+  imapServeur: string;
+  imapPort: number;
   /** Ce qui, dans ces réglages, empêche toute notification de partir. */
   problemes: string[];
 };
@@ -54,8 +55,6 @@ function BoutonEnregistrer() {
  */
 function empreinteAffichee(v: Affichable) {
   return [
-    v.methode,
-    v.cleApiEnregistree,
     v.serveur,
     v.port,
     v.chiffrement,
@@ -68,6 +67,8 @@ function empreinteAffichee(v: Affichable) {
     v.accuseActif,
     v.accuseObjet,
     v.accuseTexte,
+    v.imapServeur,
+    v.imapPort,
   ].join('\u0000');
 }
 
@@ -80,9 +81,9 @@ export function ReglagesEmail({
   onEnregistre?: () => void;
 }) {
   const [etat, action] = useActionState(actionEnregistrerSmtp, VIDE);
-  const [methode, setMethode] = useState(reglages.methode);
   const [destination, setDestination] = useState(reglages.destinataire || reglages.expediteurEmail);
   const [test, setTest] = useState<EtatReglages>({});
+  const [reception, setReception] = useState<EtatReglages>({});
   const [enCours, demarrer] = useTransition();
 
   /*
@@ -112,29 +113,15 @@ export function ReglagesEmail({
     setDestination(reglages.destinataire || reglages.expediteurEmail);
   }, [reglages.destinataire, reglages.expediteurEmail]);
 
-  useEffect(() => setMethode(reglages.methode), [reglages.methode]);
-
   return (
     <>
       <form key={empreinteAffichee(reglages)} className="bo-form bo-encadre" action={action}>
         <h2 className={r.titre}>Comment les messages partent</h2>
         <p className="bo-aide">
-          Votre site doit pouvoir vous écrire quand quelqu’un remplit le formulaire. Il lui faut
-          pour cela un chemin de sortie.
+          Votre site vous écrit, et répond à vos clients, depuis votre propre boîte e-mail. Il lui
+          faut pour cela les réglages d’envoi (SMTP) de cette boîte. Chez Hostinger :
+          smtp.hostinger.com, port 465, TLS, et votre adresse complète comme identifiant.
         </p>
-
-        <div className="bo-champ">
-          <label htmlFor="methode">Chemin d’envoi</label>
-          <select
-            id="methode"
-            name="methode"
-            value={methode}
-            onChange={(ev) => setMethode(ev.target.value as 'api' | 'smtp')}
-          >
-            <option value="api">Par un service d’envoi — recommandé</option>
-            <option value="smtp">Par un serveur SMTP</option>
-          </select>
-        </div>
 
         {/* Ce qui est déjà en base et ne peut pas fonctionner. Affiché à
             l'ouverture, sans attendre un enregistrement : c'est précisément
@@ -162,45 +149,6 @@ export function ReglagesEmail({
             {etat.succes}
           </p>
         ) : null}
-
-        {methode === 'api' ? (
-          <>
-            <p className="bo-aide">
-              Un service d’envoi expédie vos messages par Internet, sans serveur de courrier à
-              régler. Collez ici la clé qu’il vous a donnée.
-            </p>
-
-            <div className="bo-champ">
-              <label htmlFor="cleApi">Clé du service d’envoi</label>
-              <input
-                id="cleApi"
-                name="cleApi"
-                type="password"
-                autoComplete="off"
-                placeholder={reglages.cleApiEnregistree ? '••••••••  enregistrée' : 're_…'}
-              />
-              <p className="bo-aide">
-                {reglages.cleApiEnregistree
-                  ? 'Une clé est enregistrée. Elle ne peut pas être réaffichée, seulement remplacée : laissez vide pour la garder.'
-                  : 'Elle est chiffrée avant d’être enregistrée, et ne sera jamais réaffichée.'}
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Ce chemin ne marche pas depuis l'hébergement actuel, et le dire
-                vaut mieux que de laisser quelqu'un chercher pendant une nuit.
-                Voir `envoyerParApi` dans lib/courrier.ts pour la mesure. */}
-            <p className="bo-erreur" role="alert">
-              Ce chemin ne fonctionne pas avec l’hébergement actuel du site. Le serveur d’envoi de
-              Hostinger est hébergé chez Cloudflare, et le site aussi : les deux refusent de se
-              parler. Vérifié le 8 octobre 2026 sur les ports 465 et 587.
-            </p>
-            <p className="bo-aide">
-              Il redeviendra utilisable si le site est un jour servi depuis Hostinger. D’ici là,
-              préférez le service d’envoi.
-            </p>
-
 
         <div className="bo-champ">
           <label htmlFor="serveur">Serveur SMTP</label>
@@ -260,10 +208,37 @@ export function ReglagesEmail({
             </button>
           ) : null}
         </div>
-          </>
-        )}
 
+        <h2 className={r.titre}>Comment les messages arrivent</h2>
+        <p className="bo-aide">
+          Pour lire votre boîte depuis l’onglet Boîte mail. Même identifiant et même mot de passe
+          que pour l’envoi. Chez Hostinger : imap.hostinger.com, port 993.
+        </p>
 
+        <div className={r.paire}>
+          <div className="bo-champ">
+            <label htmlFor="imapServeur">Serveur de réception (IMAP)</label>
+            <input
+              id="imapServeur"
+              name="imapServeur"
+              type="text"
+              defaultValue={reglages.imapServeur}
+              placeholder="imap.exemple.fr"
+            />
+          </div>
+
+          <div className="bo-champ">
+            <label htmlFor="imapPort">Port</label>
+            <input
+              id="imapPort"
+              name="imapPort"
+              type="number"
+              defaultValue={reglages.imapPort}
+              min={1}
+              max={65535}
+            />
+          </div>
+        </div>
 
         <h2 className={r.titre}>Expéditeur</h2>
 
@@ -403,6 +378,35 @@ export function ReglagesEmail({
           }
         >
           {enCours ? 'Envoi…' : 'Envoyer un e-mail de test'}
+        </button>
+
+        <p className="bo-aide" style={{ marginTop: 20 }}>
+          Et pour la réception : le site ouvre votre boîte et compte vos messages, sans rien y
+          toucher.
+        </p>
+        {reception.erreur ? (
+          <p className="bo-erreur" role="alert" style={{ marginTop: 8 }}>
+            {reception.erreur}
+          </p>
+        ) : null}
+        {reception.succes ? (
+          <p className={r.succes} role="status" style={{ marginTop: 8 }}>
+            {reception.succes}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="bo-bouton bo-bouton-discret"
+          style={{ marginTop: 12 }}
+          disabled={enCours}
+          onClick={() =>
+            demarrer(async () => {
+              setReception({});
+              setReception(await actionTesterReception());
+            })
+          }
+        >
+          {enCours ? 'Connexion…' : 'Tester la réception'}
         </button>
       </div>
     </>

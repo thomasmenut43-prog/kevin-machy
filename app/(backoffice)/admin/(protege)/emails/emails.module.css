@@ -1,0 +1,108 @@
+/*
+ * Ce qui manque à la feuille des Messages pour en faire une boîte mail.
+ * Le reste — les deux panneaux, la liste, la lecture — vient de
+ * `../messages/messages.module.css`, partagé exprès.
+ */
+
+.outils {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Les dossiers d'une vraie boîte sont plus nombreux que deux filtres. */
+.dossiers {
+  flex-wrap: wrap;
+}
+
+.plus {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  width: 100%;
+  padding: 14px;
+  color: var(--bo-accent-fort);
+  cursor: pointer;
+}
+
+.plus:hover:not(:disabled) {
+  background: var(--bo-surface-2);
+}
+
+.plus:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.redaction textarea {
+  font-family: inherit;
+  line-height: 1.55;
+}
+
+.pieces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pieces a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--bo-bord);
+  border-radius: 999px;
+  background: var(--bo-surface-2);
+  color: var(--bo-texte);
+  font-size: 0.8125rem;
+  text-decoration: none;
+  transition: border-color var(--bo-vitesse);
+}
+
+.pieces a:hover {
+  border-color: var(--bo-accent);
+}
+
+.taille {
+  color: var(--bo-texte-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.images {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 8px 12px;
+  border-radius: var(--bo-rayon-s);
+  background: var(--bo-surface-2);
+  color: var(--bo-texte-2);
+  font-size: 0.8125rem;
+}
+
+.lien {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--bo-accent-fort);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Fond blanc quel que soit le thème : le message a été mis en page pour lui. */
+.cadre {
+  display: block;
+  width: 100%;
+  min-height: 160px;
+  border: 1px solid var(--bo-filet);
+  border-radius: var(--bo-rayon-s);
+  background: #fff;
+}
