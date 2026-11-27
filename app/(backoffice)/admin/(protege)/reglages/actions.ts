@@ -16,6 +16,7 @@ import {
   envoyer,
   lireSmtp,
   lireSmtpAffichable,
+  motDePasseLisible,
   verifierSmtp,
 } from '@/lib/courrier';
 
@@ -101,46 +102,26 @@ export async function actionEnregistrerSmtp(
 ): Promise<EtatReglages> {
   await exigerAdministrateur();
 
-  const methode = donnees.get('methode') === 'smtp' ? ('smtp' as const) : ('api' as const);
   const expediteurEmail = String(donnees.get('expediteurEmail') ?? '').trim();
+  const serveur = String(donnees.get('serveur') ?? '').trim();
+  const port = Number(donnees.get('port') ?? 0);
+  const motDePasse = String(donnees.get('motDePasse') ?? '');
 
-  /*
-   * Ce que le formulaire n'affiche pas, il ne le soumet pas.
-   *
-   * Les champs du chemin non choisi ne sont pas rendus : `FormData` ne les
-   * porte donc pas, et les lire renverrait une chaîne vide. Les enregistrer
-   * telles quelles effacerait la configuration de l'autre chemin — basculer
-   * vers le service d'envoi suffisait à perdre les réglages SMTP, qui
-   * resserviront le jour où le site changera d'hébergement.
-   *
-   * Un champ absent veut donc dire « garde ce qui est en base », jamais
-   * « efface ». Même règle que pour le mot de passe et la clé, pour la même
-   * raison : le formulaire ne montre pas tout ce qu'il enregistre.
-   */
-  const actuel = await lireSmtp();
-  const enSmtp = methode === 'smtp';
-
-  const serveur = enSmtp ? String(donnees.get('serveur') ?? '').trim() : actuel.serveur;
-  const port = enSmtp ? Number(donnees.get('port') ?? 0) : actuel.port;
-
-  if (enSmtp) {
-    if (serveur && !port) return { erreur: 'Indiquez le port du serveur.' };
-    if (port && (port < 1 || port > 65535)) return { erreur: 'Ce port n’existe pas.' };
-  }
+  if (serveur && !port) return { erreur: 'Indiquez le port du serveur.' };
+  if (port && (port < 1 || port > 65535)) return { erreur: 'Ce port n’existe pas.' };
   if (expediteurEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(expediteurEmail)) {
     return { erreur: 'L’adresse d’expédition ne semble pas valide.' };
   }
 
-  const cleApi = enSmtp ? '' : String(donnees.get('cleApi') ?? '').trim();
-
+  const chiffrement = String(donnees.get('chiffrement') ?? 'tls');
   const futur = {
-    methode,
     serveur,
     port: port || 465,
-    chiffrement: enSmtp
-      ? (String(donnees.get('chiffrement') ?? 'tls') as 'tls' | 'starttls' | 'aucun')
-      : actuel.chiffrement,
-    identifiant: enSmtp ? String(donnees.get('identifiant') ?? '').trim() : actuel.identifiant,
+    chiffrement: (['tls', 'starttls', 'aucun'].includes(chiffrement) ? chiffrement : 'tls') as
+      | 'tls'
+      | 'starttls'
+      | 'aucun',
+    identifiant: String(donnees.get('identifiant') ?? '').trim(),
     expediteurNom: String(donnees.get('expediteurNom') ?? '').trim(),
     expediteurEmail,
     reponseEmail: String(donnees.get('reponseEmail') ?? '').trim(),
@@ -154,21 +135,18 @@ export async function actionEnregistrerSmtp(
   // `verifierSmtp` : ce garde-fou existe parce qu'une demande de photobooth
   // est restée trois jours sans notification, le serveur d'envoi étant resté
   // sur le `localhost` du développement.
-  // La clé peut arriver du formulaire ou dormir déjà en base : le garde-fou
-  // doit connaître les deux, sinon il crierait « aucune clé » à chaque
-  // enregistrement qui n'en resaisit pas une.
-  const cleApiEnregistree = Boolean(cleApi) || Boolean(actuel.cleApi);
+  // Le mot de passe peut arriver du formulaire ou dormir déjà en base : le
+  // garde-fou doit connaître les deux, sinon il crierait « mot de passe
+  // manquant » à chaque enregistrement qui ne le ressaisit pas.
+  const motDePasseEnregistre =
+    Boolean(motDePasse) || motDePasseLisible((await lireSmtp()).motDePasse);
 
-  const problemes = verifierSmtp({ ...futur, cleApiEnregistree });
+  const problemes = verifierSmtp({ ...futur, motDePasseEnregistre });
   if (problemes.length) return { erreur: problemes.join(' ') };
 
-  await ecrireSmtp({
-    ...futur,
-    // Un champ laissé vide veut dire « ne change rien », pas « efface » : ni le
-    // mot de passe ni la clé ne peuvent être réaffichés par le formulaire.
-    motDePasse: enSmtp ? String(donnees.get('motDePasse') ?? '') : '',
-    cleApi,
-  });
+  // Un champ laissé vide veut dire « ne change rien », pas « efface » : le mot
+  // de passe ne peut pas être réaffiché par le formulaire.
+  await ecrireSmtp({ ...futur, motDePasse });
 
   revalidatePath('/admin/reglages');
   return { succes: 'Réglages enregistrés.' };
