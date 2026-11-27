@@ -272,6 +272,9 @@ export async function repondre(
     copieA: boite,
   });
 
-  if (resultat.ok && !m.lu) await marquerLu(id, true);
+  // Une fois le courriel parti, plus rien ne doit faire croire le contraire :
+  // si la base refusait de marquer le message lu, l'erreur remonterait comme
+  // un échec d'envoi, et Kevin renverrait la même réponse une seconde fois.
+  if (resultat.ok && !m.lu) await marquerLu(id, true).catch(() => {});
   return resultat;
 }
