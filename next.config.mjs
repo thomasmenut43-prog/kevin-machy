@@ -1,7 +1,16 @@
-import type { NextConfig } from 'next';
-import { REDIRECTIONS } from './lib/redirections';
+import { REDIRECTIONS } from './lib/redirections.mjs';
 
 /**
+ * Pourquoi `.mjs` et pas `.ts`.
+ *
+ * Le serveur de construction de Hostinger a une bibliothèque système trop
+ * ancienne (glibc < 2.29) pour le compilateur natif de Next. Next se rabat
+ * alors sur sa version WebAssembly, qui ne sait pas suivre un `import` d'un
+ * fichier TypeScript sans extension depuis `next.config.ts` : la construction
+ * s'arrêtait là, le 27 novembre 2026. En JavaScript, Node lit ce fichier tel
+ * quel, partout. La même version WebAssembly ne fait pas tourner Turbopack :
+ * d'où `next build --webpack` dans `construire:hostinger`.
+ *
  * Deux constructions, une seule application.
  *
  * Par défaut, tout est bâti pour un serveur : le site **et** le BackOffice, qui
@@ -13,12 +22,13 @@ import { REDIRECTIONS } from './lib/redirections';
  */
 const statique = process.env.EXPORT_STATIQUE === '1';
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Un répertoire de construction distinct : sans lui, les deux constructions
   // se partagent `.next`, et les types que Next y engendre décrivent encore le
   // BackOffice que l'export vient d'écarter. La vérification échoue alors sur
   // des routes absentes, pour une raison qui n'a rien à voir avec le code.
-  ...(statique ? { output: 'export' as const, distDir: '.next-statique' } : {}),
+  ...(statique ? { output: /** @type {const} */ ('export'), distDir: '.next-statique' } : {}),
   trailingSlash: true,
   // Les images du site sont pré-encodées en AVIF/WebP/JPEG par
   // scripts/build-images.mjs. Celles de la médiathèque sont encodées à l'envoi

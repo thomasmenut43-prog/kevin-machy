@@ -72,7 +72,7 @@ traceurs » dans la politique — décrivent donc ce que le site fait réellemen
 
 L'ancien site portait `/politique-de-cookies-ue/`, qui décrivait cent huit
 cookies. Ce site n'en dépose aucun. La page n'a pas d'équivalent, et
-`lib/redirections.ts` l'envoie vers la politique de confidentialité.
+`lib/redirections.mjs` l'envoie vers la politique de confidentialité.
 
 ### La fiche d'identité remplace deux rubriques
 
@@ -106,7 +106,7 @@ n'est jamais remplacé** : le script comble les trous, il ne corrige pas ce qui 
 3. **Les activités citées.** Les CGV couvrent le photobooth, le drone, la
    formation et la vente de tirages, que le site ne présente pas encore. C'est
    voulu : Kevin les vend toujours. Voir `SANS_EQUIVALENT` dans
-   `lib/redirections.ts`.
+   `lib/redirections.mjs`.
 4. **La date de dernière mise à jour** passe à octobre 2026, puisque le document
    change. Elle est posée par `CORRECTIONS` ; à remonter à chaque révision.
 
