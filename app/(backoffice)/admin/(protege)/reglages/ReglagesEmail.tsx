@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import {
   actionEffacerMotDePasse,
   actionEnregistrerSmtp,
+  actionTesterReception,
   actionTesterSmtp,
   type EtatReglages,
 } from './actions';
@@ -25,6 +26,8 @@ type Affichable = {
   accuseActif: boolean;
   accuseObjet: string;
   accuseTexte: string;
+  imapServeur: string;
+  imapPort: number;
   /** Ce qui, dans ces réglages, empêche toute notification de partir. */
   problemes: string[];
 };
@@ -64,6 +67,8 @@ function empreinteAffichee(v: Affichable) {
     v.accuseActif,
     v.accuseObjet,
     v.accuseTexte,
+    v.imapServeur,
+    v.imapPort,
   ].join('\u0000');
 }
 
@@ -78,6 +83,7 @@ export function ReglagesEmail({
   const [etat, action] = useActionState(actionEnregistrerSmtp, VIDE);
   const [destination, setDestination] = useState(reglages.destinataire || reglages.expediteurEmail);
   const [test, setTest] = useState<EtatReglages>({});
+  const [reception, setReception] = useState<EtatReglages>({});
   const [enCours, demarrer] = useTransition();
 
   /*
@@ -201,6 +207,37 @@ export function ReglagesEmail({
               Effacer le mot de passe enregistré
             </button>
           ) : null}
+        </div>
+
+        <h2 className={r.titre}>Comment les messages arrivent</h2>
+        <p className="bo-aide">
+          Pour lire votre boîte depuis l’onglet Boîte mail. Même identifiant et même mot de passe
+          que pour l’envoi. Chez Hostinger : imap.hostinger.com, port 993.
+        </p>
+
+        <div className={r.paire}>
+          <div className="bo-champ">
+            <label htmlFor="imapServeur">Serveur de réception (IMAP)</label>
+            <input
+              id="imapServeur"
+              name="imapServeur"
+              type="text"
+              defaultValue={reglages.imapServeur}
+              placeholder="imap.exemple.fr"
+            />
+          </div>
+
+          <div className="bo-champ">
+            <label htmlFor="imapPort">Port</label>
+            <input
+              id="imapPort"
+              name="imapPort"
+              type="number"
+              defaultValue={reglages.imapPort}
+              min={1}
+              max={65535}
+            />
+          </div>
         </div>
 
         <h2 className={r.titre}>Expéditeur</h2>
@@ -341,6 +378,35 @@ export function ReglagesEmail({
           }
         >
           {enCours ? 'Envoi…' : 'Envoyer un e-mail de test'}
+        </button>
+
+        <p className="bo-aide" style={{ marginTop: 20 }}>
+          Et pour la réception : le site ouvre votre boîte et compte vos messages, sans rien y
+          toucher.
+        </p>
+        {reception.erreur ? (
+          <p className="bo-erreur" role="alert" style={{ marginTop: 8 }}>
+            {reception.erreur}
+          </p>
+        ) : null}
+        {reception.succes ? (
+          <p className={r.succes} role="status" style={{ marginTop: 8 }}>
+            {reception.succes}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="bo-bouton bo-bouton-discret"
+          style={{ marginTop: 12 }}
+          disabled={enCours}
+          onClick={() =>
+            demarrer(async () => {
+              setReception({});
+              setReception(await actionTesterReception());
+            })
+          }
+        >
+          {enCours ? 'Connexion…' : 'Tester la réception'}
         </button>
       </div>
     </>

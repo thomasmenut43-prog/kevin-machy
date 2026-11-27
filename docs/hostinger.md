@@ -191,6 +191,8 @@ BackOffice → Réglages → E-mails : les réglages SMTP de la boîte de Kevin
 (`smtp.hostinger.com`, 465, TLS) et son mot de passe, puis **« Envoyer un
 test »**. Resend a été retiré le 27 novembre 2026, à la demande de Thomas :
 chez Hostinger, le site joint directement le serveur d'envoi de la boîte.
+Même écran, la réception (`imap.hostinger.com`, 993) branche l'onglet
+**Boîte mail** du BackOffice ; « Tester la réception » le vérifie.
 Même chose pour les avis Google s'ils sont branchés. Un message de contact
 arrivé entre la bascule et cette étape est en base : le bouton « Renvoyer la
 notification » le rattrape.

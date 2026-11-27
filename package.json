@@ -38,6 +38,8 @@
     "node": ">=22"
   },
   "dependencies": {
+    "imapflow": "^2.12.2",
+    "mailparser": "^3.15.0",
     "mysql2": "^3.15.4",
     "next": "^16.3.4",
     "nodemailer": "^10.0.9",
@@ -47,6 +49,7 @@
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.20.6",
+    "@types/mailparser": "^3.9.0",
     "@types/node": "^26.4.1",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.2.18",

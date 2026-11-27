@@ -19,6 +19,7 @@ import {
   motDePasseLisible,
   verifierSmtp,
 } from '@/lib/courrier';
+import { echec, testerReception } from '@/lib/boite-mail';
 
 /** Les réglages d'envoi touchent tout le site : réservés aux administrateurs. */
 async function exigerAdministrateur() {
@@ -106,9 +107,14 @@ export async function actionEnregistrerSmtp(
   const serveur = String(donnees.get('serveur') ?? '').trim();
   const port = Number(donnees.get('port') ?? 0);
   const motDePasse = String(donnees.get('motDePasse') ?? '');
+  const imapServeur = String(donnees.get('imapServeur') ?? '').trim();
+  const imapPort = Number(donnees.get('imapPort') ?? 0);
 
   if (serveur && !port) return { erreur: 'Indiquez le port du serveur.' };
   if (port && (port < 1 || port > 65535)) return { erreur: 'Ce port n’existe pas.' };
+  if (imapPort && (imapPort < 1 || imapPort > 65535)) {
+    return { erreur: 'Le port de réception n’existe pas.' };
+  }
   if (expediteurEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(expediteurEmail)) {
     return { erreur: 'L’adresse d’expédition ne semble pas valide.' };
   }
@@ -129,6 +135,8 @@ export async function actionEnregistrerSmtp(
     accuseActif: donnees.get('accuseActif') === 'on',
     accuseObjet: String(donnees.get('accuseObjet') ?? '').trim(),
     accuseTexte: String(donnees.get('accuseTexte') ?? ''),
+    imapServeur,
+    imapPort: imapPort || 993,
   };
 
   // Une configuration qui ne peut pas marcher ne s'enregistre pas. Voir
@@ -177,6 +185,24 @@ export async function actionTesterSmtp(destination: string) {
   return resultat.ok
     ? { succes: `Message envoyé à ${a}. Vérifiez la réception, y compris les indésirables.` }
     : { erreur: resultat.message, detail: resultat.detail };
+}
+
+/**
+ * L'essai de la réception : se connecter à la boîte et compter ses messages.
+ *
+ * Rien n'est lu ni marqué : compter suffit à prouver que le serveur, le port,
+ * l'identifiant et le mot de passe vont ensemble.
+ */
+export async function actionTesterReception() {
+  await exigerAdministrateur();
+  try {
+    const { messages, nonLus } = await testerReception();
+    return {
+      succes: `Boîte ouverte : ${messages} message${messages > 1 ? 's' : ''} dans la réception, dont ${nonLus} non lu${nonLus > 1 ? 's' : ''}.`,
+    };
+  } catch (erreur) {
+    return { erreur: echec(erreur).message };
+  }
 }
 
 export async function actionEffacerMotDePasse() {

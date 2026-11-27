@@ -1,5 +1,6 @@
 import 'server-only';
 import nodemailer from 'nodemailer';
+import MailComposer from 'nodemailer/lib/mail-composer';
 import { ligne, poserReglage, requete, jsonDeLaBase } from './bdd';
 import { chiffrer, dechiffrer } from './secret';
 
@@ -19,7 +20,7 @@ import { chiffrer, dechiffrer } from './secret';
  * alors par un service d'envoi tiers, Resend, appelé en HTTP. Revenu chez
  * Hostinger, le site parle directement au serveur de Kevin : ce détour est
  * retiré, à la demande de Thomas. Les messages partent de la vraie boîte,
- * et la réception passera par la même (IMAP).
+ * et la réception passe par la même (IMAP, voir `lib/boite-mail.ts`).
  */
 
 export type ReglagesSmtp = {
@@ -38,9 +39,20 @@ export type ReglagesSmtp = {
   accuseActif: boolean;
   accuseObjet: string;
   accuseTexte: string;
+  /**
+   * La réception, pour la boîte mail du BackOffice (`lib/boite-mail.ts`).
+   *
+   * Seuls le serveur et le port lui sont propres : l'identifiant et le mot de
+   * passe sont ceux de l'envoi. C'est la même boîte, et deux mots de passe à
+   * tenir à jour pour une seule boîte finiraient par ne plus s'accorder.
+   */
+  imapServeur: string;
+  imapPort: number;
 };
 
 export const SMTP_PAR_DEFAUT: ReglagesSmtp = {
+  imapServeur: '',
+  imapPort: 993,
   serveur: '',
   port: 465,
   chiffrement: 'tls',
@@ -256,15 +268,37 @@ export type Resultat =
   | { ok: false; message: string; detail?: string };
 
 export type Courriel = {
+  /** Une adresse, ou plusieurs séparées par des virgules. */
   a: string;
   objet: string;
   texte: string;
   repondreA?: string;
+  /** Copie visible, depuis la boîte mail du BackOffice. */
+  cc?: string;
   /** Copie cachée : la trace d'une réponse, dans la boîte de Kevin. */
   copieA?: string;
+  /** Le `Message-ID` du message auquel on répond : rattache la réponse au fil. */
+  enReponseA?: string;
+  references?: string[];
 };
 
 export async function envoyer(courriel: Courriel): Promise<Resultat> {
+  const r = await envoyerEtGarder(courriel);
+  return r.ok ? { ok: true } : r;
+}
+
+/**
+ * Envoyer, et rendre le message tel qu'il est parti.
+ *
+ * Le serveur d'envoi ne range rien dans « Envoyés » : c'est le logiciel de
+ * courrier qui le fait, en déposant sa propre copie par IMAP. Pour que la
+ * boîte mail du BackOffice se comporte comme celui de Kevin, le message est
+ * donc composé ici une seule fois, envoyé, puis rendu octet pour octet — la
+ * copie rangée est celle qui est partie, avec le même `Message-ID`.
+ */
+export async function envoyerEtGarder(
+  courriel: Courriel,
+): Promise<{ ok: true; brut: Buffer } | { ok: false; message: string; detail?: string }> {
   const r = await lireSmtp();
   const envoyeur = transporteur(r);
 
@@ -273,15 +307,25 @@ export async function envoyer(courriel: Courriel): Promise<Resultat> {
   }
 
   try {
-    await envoyeur.sendMail({
-      from: `"${r.expediteurNom}" <${r.expediteurEmail}>`,
+    const noeud = new MailComposer({
+      from: { name: r.expediteurNom, address: r.expediteurEmail },
       to: courriel.a,
+      cc: courriel.cc || undefined,
+      // Absente de la copie rangée, comme dans tout logiciel de courrier ;
+      // l'enveloppe, elle, la porte bien.
+      bcc: courriel.copieA || undefined,
       subject: courriel.objet,
       text: courriel.texte,
       replyTo: courriel.repondreA || r.reponseEmail || undefined,
-      bcc: courriel.copieA || undefined,
-    });
-    return { ok: true };
+      inReplyTo: courriel.enReponseA || undefined,
+      references: courriel.references?.length ? courriel.references : undefined,
+      date: new Date(),
+    }).compile();
+
+    const enveloppe = noeud.getEnvelope();
+    const brut = await noeud.build();
+    await envoyeur.sendMail({ envelope: enveloppe, raw: brut });
+    return { ok: true, brut };
   } catch (erreur) {
     // Le message du serveur SMTP est remonté tel quel : « authentification
     // refusée » ou « nom d'hôte introuvable » disent à Kevin quoi corriger,
