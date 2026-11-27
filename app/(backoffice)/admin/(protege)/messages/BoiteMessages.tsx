@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import {
   actionMarquerLu,
   actionRenvoyerNotification,
+  actionRepondre,
   actionSupprimerMessage,
 } from './actions';
 import b from './messages.module.css';
@@ -69,14 +70,22 @@ async function copierAdresse(adresse: string): Promise<boolean> {
   }
 }
 
+type Brouillon = { objet: string; texte: string };
+
+/** « Marie Dupont » → « Marie » : on salue par le prénom. */
+const prenomDe = (nom: string) => nom.trim().split(/\s+/)[0] ?? nom;
+
 export function BoiteMessages({
   messages,
   nonLus,
   administrateur,
+  boite,
 }: {
   messages: Message[];
   nonLus: number;
   administrateur: boolean;
+  /** La boîte de Kevin, où reviennent les réponses des visiteurs. */
+  boite: string | null;
 }) {
   const [filtre, setFiltre] = useState<'tous' | 'nonlus'>('tous');
   const [vue, setVue] = useState<'liste' | 'message'>('liste');
@@ -95,6 +104,14 @@ export function BoiteMessages({
    */
   const [renvoye, setRenvoye] = useState<{ id: number; ok: boolean } | null>(null);
   const [adresseCopiee, setAdresseCopiee] = useState<number | null>(null);
+  /*
+   * Les réponses en cours d'écriture, une par message.
+   *
+   * Rangées par identifiant plutôt que dans le formulaire : aller relire une
+   * autre demande au milieu d'une réponse ne doit pas l'effacer.
+   */
+  const [redactions, setRedactions] = useState<Record<number, Brouillon>>({});
+  const [repondu, setRepondu] = useState<number | null>(null);
   const lecture = useRef<HTMLDivElement>(null);
 
   const visibles = useMemo(
@@ -145,6 +162,20 @@ export function BoiteMessages({
     setChoisi(m.id);
     setVue('message');
   };
+
+  const commencerReponse = (m: Message) => {
+    setRepondu(null);
+    setRedactions((r) => ({
+      ...r,
+      [m.id]: r[m.id] ?? {
+        objet: m.projet ? `Votre demande — ${m.projet}` : 'Votre demande de contact',
+        texte: `Bonjour ${prenomDe(m.nom)},\n\n`,
+      },
+    }));
+  };
+
+  const fermerReponse = (id: number) =>
+    setRedactions(({ [id]: _ferme, ...reste }) => reste);
 
   return (
     <>
@@ -235,9 +266,9 @@ export function BoiteMessages({
                   </span>
                   <span>
                     <strong>{actif.nom}</strong>
-                    <a className={b.adresse} href={`mailto:${actif.email}`}>
-                      {actif.email}
-                    </a>
+                    {/* Du texte, pas un lien `mailto:` : sans logiciel de
+                        courrier sur la machine, le lien ne faisait rien. */}
+                    <span className={b.adresse}>{actif.email}</span>
                   </span>
                   <time className={b.quandLong} dateTime={actif.creeLe}>
                     {dateLongue(actif.creeLe)}
@@ -314,20 +345,44 @@ export function BoiteMessages({
                 </p>
               ) : null}
 
+              {repondu === actif.id ? (
+                <p className={b.reussite} role="status">
+                  Réponse envoyée à {actif.email}.
+                  {boite ? ` Une copie est dans votre boîte ${boite}.` : ''}
+                </p>
+              ) : null}
+
+              {redactions[actif.id] ? (
+                <FormulaireReponse
+                  key={actif.id}
+                  message={actif}
+                  brouillon={redactions[actif.id]}
+                  boite={boite}
+                  onChange={(brouillon) =>
+                    setRedactions((r) => ({ ...r, [actif.id]: brouillon }))
+                  }
+                  onFermer={() => fermerReponse(actif.id)}
+                  onEnvoyee={() => {
+                    fermerReponse(actif.id);
+                    setRepondu(actif.id);
+                  }}
+                />
+              ) : null}
+
               <div className={b.actions}>
-                <a
-                  className="bo-bouton"
-                  href={`mailto:${actif.email}?subject=${encodeURIComponent(
-                    `Votre demande — ${actif.nom}`,
-                  )}`}
-                >
-                  Répondre
-                </a>
-                {/* Le lien ci-dessus ouvre le logiciel de courrier de la
-                    machine. Quand il n'y en a pas — et il n'y en a pas quand on
-                    relève son courrier sur le web — cliquer ne fait
-                    strictement rien, sans le moindre message. D'où ce second
-                    bouton : il ne dépend d'aucun réglage du poste. */}
+                {/* Il ouvrait un lien `mailto:`, qui ne fait strictement rien
+                    quand la machine n'a pas de logiciel de courrier — le cas
+                    de qui relève son courrier sur le web. La réponse s'écrit
+                    et part désormais d'ici. */}
+                {!redactions[actif.id] ? (
+                  <button
+                    type="button"
+                    className="bo-bouton"
+                    onClick={() => commencerReponse(actif)}
+                  >
+                    Répondre
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="bo-bouton bo-bouton-discret"
@@ -372,6 +427,131 @@ export function BoiteMessages({
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * La réponse, écrite sous le message auquel elle répond.
+ *
+ * Le destinataire n'est pas un champ : il est affiché, pas choisi. Le serveur
+ * le relit de toute façon en base à partir du message.
+ */
+function FormulaireReponse({
+  message,
+  brouillon,
+  boite,
+  onChange,
+  onFermer,
+  onEnvoyee,
+}: {
+  message: Message;
+  brouillon: Brouillon;
+  boite: string | null;
+  onChange: (b: Brouillon) => void;
+  onFermer: () => void;
+  onEnvoyee: () => void;
+}) {
+  const [enCours, demarrer] = useTransition();
+  const [erreur, setErreur] = useState<string | null>(null);
+  const zone = useRef<HTMLTextAreaElement>(null);
+  const prenom = prenomDe(message.nom);
+
+  // Le curseur attend après « Bonjour Marie, » : il n'y a plus qu'à écrire.
+  useEffect(() => {
+    const z = zone.current;
+    if (!z) return;
+    z.focus();
+    z.setSelectionRange(z.value.length, z.value.length);
+  }, []);
+
+  const salutationSeule = brouillon.texte.trim() === `Bonjour ${prenom},`;
+
+  return (
+    <form
+      className={b.reponse}
+      aria-label={`Réponse à ${message.nom}`}
+      onSubmit={(ev) => {
+        ev.preventDefault();
+        demarrer(async () => {
+          setErreur(null);
+          try {
+            const r = await actionRepondre(message.id, brouillon.objet, brouillon.texte);
+            if (r.ok) onEnvoyee();
+            else setErreur(r.message);
+          } catch {
+            setErreur('La réponse n’est pas partie. Réessayez dans un instant.');
+          }
+        });
+      }}
+    >
+      <p className={b.reponseA}>
+        <span>À</span>
+        {message.nom} · {message.email}
+      </p>
+
+      <div className="bo-champ">
+        <label htmlFor={`objet-${message.id}`}>Objet</label>
+        <input
+          id={`objet-${message.id}`}
+          value={brouillon.objet}
+          maxLength={200}
+          required
+          onChange={(ev) => onChange({ ...brouillon, objet: ev.target.value })}
+        />
+      </div>
+
+      <div className="bo-champ">
+        <label htmlFor={`reponse-${message.id}`}>Votre réponse</label>
+        <textarea
+          id={`reponse-${message.id}`}
+          ref={zone}
+          rows={9}
+          value={brouillon.texte}
+          maxLength={20000}
+          onChange={(ev) => onChange({ ...brouillon, texte: ev.target.value })}
+        />
+      </div>
+
+      <p className="bo-aide">
+        Le message de {prenom} sera cité sous votre réponse.
+        {boite
+          ? ` S’il vous répond, ce sera dans votre boîte ${boite}, où une copie de cet envoi vous attend aussi.`
+          : ''}
+      </p>
+
+      {erreur ? (
+        <p className={b.alerte} role="alert">
+          {erreur}
+        </p>
+      ) : null}
+
+      <div className={b.reponseBoutons}>
+        <button
+          type="submit"
+          className="bo-bouton"
+          disabled={enCours || salutationSeule || !brouillon.texte.trim()}
+        >
+          {enCours ? 'Envoi…' : 'Envoyer la réponse'}
+        </button>
+        <button
+          type="button"
+          className="bo-bouton bo-bouton-discret"
+          disabled={enCours}
+          onClick={() => {
+            if (
+              !salutationSeule &&
+              brouillon.texte.trim() &&
+              !window.confirm('Abandonner cette réponse ? Ce que vous avez écrit sera perdu.')
+            ) {
+              return;
+            }
+            onFermer();
+          }}
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
   );
 }
 

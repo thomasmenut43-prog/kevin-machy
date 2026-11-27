@@ -272,12 +272,16 @@ export type Resultat =
    */
   | { ok: false; message: string; detail?: string };
 
-export async function envoyer(courriel: {
+export type Courriel = {
   a: string;
   objet: string;
   texte: string;
   repondreA?: string;
-}): Promise<Resultat> {
+  /** Copie cachée : la trace d'une réponse, dans la boîte de Kevin. */
+  copieA?: string;
+};
+
+export async function envoyer(courriel: Courriel): Promise<Resultat> {
   const r = await lireSmtp();
 
   if (r.methode === 'api') return envoyerParApi(r, courriel);
@@ -295,6 +299,7 @@ export async function envoyer(courriel: {
       subject: courriel.objet,
       text: courriel.texte,
       replyTo: courriel.repondreA || r.reponseEmail || undefined,
+      bcc: courriel.copieA || undefined,
     });
     return { ok: true };
   } catch (erreur) {
@@ -333,10 +338,7 @@ export async function envoyer(courriel: {
  */
 const API_ENVOI = 'https://api.resend.com/emails';
 
-async function envoyerParApi(
-  r: ReglagesSmtp,
-  courriel: { a: string; objet: string; texte: string; repondreA?: string },
-): Promise<Resultat> {
+async function envoyerParApi(r: ReglagesSmtp, courriel: Courriel): Promise<Resultat> {
   const cle = r.cleApi ? dechiffrer(r.cleApi) : null;
   if (!cle || !r.expediteurEmail) {
     return { ok: false, message: 'Configuration e-mail incomplète. Voir Réglages → E-mails.' };
@@ -354,6 +356,7 @@ async function envoyerParApi(
         subject: courriel.objet,
         text: courriel.texte,
         ...(repondre ? { reply_to: repondre } : {}),
+        ...(courriel.copieA ? { bcc: [courriel.copieA] } : {}),
       }),
     });
 

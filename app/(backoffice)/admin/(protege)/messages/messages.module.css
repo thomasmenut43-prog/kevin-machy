@@ -370,6 +370,44 @@
   border-top: 1px solid var(--bo-filet);
 }
 
+/* La réponse, sous le message : encadrée comme une feuille posée dessus. */
+.reponse {
+  display: grid;
+  gap: 12px;
+  max-width: 68ch;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--bo-bord);
+  border-radius: var(--bo-rayon);
+  background: var(--bo-surface-2);
+}
+
+.reponse .alerte {
+  margin-bottom: 0;
+}
+
+.reponseA {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: var(--bo-texte);
+}
+
+.reponseA span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bo-texte-3);
+}
+
+.reponseBoutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .danger {
   appearance: none;
   font: inherit;

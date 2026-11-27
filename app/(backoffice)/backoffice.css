@@ -690,6 +690,29 @@ body:has(.bo) {
    états, sans que rien ne saute de place. */
 .bo-signe {
   display: grid;
+  position: relative;
+}
+
+/* Le nombre de messages non lus, à cheval sur le coin de l'enveloppe. Elle
+   tient dans la marge intérieure du lien : rien ne la rogne, menu replié. */
+.bo-pastille-menu {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--bo-danger);
+  color: #fff;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--bo-surface);
+  pointer-events: none;
 }
 
 .bo-reduire {

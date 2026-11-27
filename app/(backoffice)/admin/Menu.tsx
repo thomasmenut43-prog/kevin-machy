@@ -17,13 +17,15 @@ type Onglet = {
   verrouille?: boolean;
   /** Réservé aux administrateurs. */
   administrateur?: boolean;
+  /** Porte la pastille des messages non lus. */
+  nonLus?: boolean;
 };
 
 const ONGLETS: Onglet[] = [
   { href: '/admin/', libelle: 'Tableau de bord', Signe: Tableau },
   { href: '/admin/pages/', libelle: 'Éditeur de site', Signe: Pages },
   { href: '/admin/medias/', libelle: 'Médiathèque', Signe: Images },
-  { href: '/admin/messages/', libelle: 'Messages', Signe: Enveloppe },
+  { href: '/admin/messages/', libelle: 'Messages', Signe: Enveloppe, nonLus: true },
   { href: '/admin/boutique/', libelle: 'Boutique', Signe: Cadenas, verrouille: true },
 ];
 
@@ -35,11 +37,14 @@ function initialesDe(u: { prenom: string; nom: string }) {
 export function MenuBackOffice({
   utilisateur,
   nomEntreprise,
+  nonLus,
   deconnexion,
 }: {
   utilisateur: Utilisateur;
   /** Le nom réglé dans Paramètres → Mon entreprise, en tête de menu. */
   nomEntreprise: string;
+  /** Les demandes que personne n'a encore ouvertes. */
+  nonLus: number;
   deconnexion: () => Promise<void>;
 }) {
   const chemin = usePathname();
@@ -115,12 +120,30 @@ export function MenuBackOffice({
                 className="bo-lien"
                 href={onglet.href}
                 aria-current={estCourant(chemin, onglet.href) ? 'page' : undefined}
-                title={onglet.libelle}
+                title={
+                  onglet.nonLus && nonLus > 0
+                    ? `${onglet.libelle} — ${nonLus} non lu${nonLus > 1 ? 's' : ''}`
+                    : onglet.libelle
+                }
               >
                 <span className="bo-signe">
                   <onglet.Signe />
+                  {/* Sur l'icône, pas après le libellé : le menu vit replié,
+                      et l'icône est alors tout ce qui se voit. */}
+                  {onglet.nonLus && nonLus > 0 ? (
+                    <span className="bo-pastille-menu" aria-hidden="true">
+                      {nonLus > 9 ? '9+' : nonLus}
+                    </span>
+                  ) : null}
                 </span>
-                <span className="bo-libelle">{onglet.libelle}</span>
+                <span className="bo-libelle">
+                  {onglet.libelle}
+                  {onglet.nonLus && nonLus > 0 ? (
+                    <span className="visuellement-cache">
+                      {` — ${nonLus} non lu${nonLus > 1 ? 's' : ''}`}
+                    </span>
+                  ) : null}
+                </span>
               </Link>
             ),
         )}
